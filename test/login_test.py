@@ -15,7 +15,6 @@ def setupDatabase():
         (1, 'test1', 'aaaaaaa!A1'),
         (2, 'test2', 'aaaaaaa!A1'),
         (3, 'test3', 'aaaaaaa!A1'),
-        (4, 'test4', 'aaaaaaa!A1'),
     ]                         
   databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
   database.commit()
@@ -25,12 +24,16 @@ def setupDatabase():
 # Story: Account Creation
 
 # 1. username is unique
-def test_usernameUnique():
-  assert unique('test1') == False
-  assert unique('test2') == False
-  assert unique('test3') == False
-  assert unique('test4') == False
-  assert unique('test') == True
+@pytest.mark.parametrize('username, result',
+                        [
+                          ('test1', False), # exist
+                          ('test2', False), # exist
+                          ('test3', False), # exist
+                          ('test', True) # not exist
+                        ]
+)
+def test_usernameUnique(username, result):
+  assert unique(username) == result
 
 # 2. password valiation
 @pytest.mark.parametrize('password, result',
@@ -47,4 +50,6 @@ def test_passwordValidation(password, result):
   assert passwordValidator(password) == result
 
 # 3. username saved to a DB
+
+
 
