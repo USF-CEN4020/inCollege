@@ -13,3 +13,7 @@ from inCollege.main import *
                         )
 def test_passwordValidator(password, result):
   assert passwordValidator(password) == result
+
+def test_something():
+  pass() #test
+  pass()
