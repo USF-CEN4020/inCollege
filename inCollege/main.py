@@ -122,7 +122,16 @@ def gatherInput(prompt, failResponse, validator):
 
 	return userInput
 
-
+def loginStatus(username, password):
+  check = checkExistingAccts(username, password)
+  if check:
+    clear()
+    print("You have successfully logged in\n")
+    return True
+  else:
+    clear()
+    print("Incorrect username/password. Please try again.\n")
+    return False
 
 def login():
   if dbEmpty():
@@ -203,6 +212,7 @@ def mainInterface():
                     menuValidatorBuilder(['1','2','3'])))
 
   if sel == 1 or sel == 2:
+    underConstructionState(sel)
     clear()
     return underConstruction
   elif sel == 3:
@@ -227,6 +237,7 @@ def listSkills():
   if sel == '6':
     clear()
     return applicationEntry
+  underConstructionState(sel*2)
   clear()
   return underConstruction
 
@@ -237,7 +248,11 @@ def underConstruction():
   clear()
   return mainInterface
     
-
+def underConstructionState(sel):
+  if sel == '1' or sel == '2' or sel == '4' or sel == '6' or sel == '8' or sel == '10':
+    return True
+  else: 
+    return False
 
 def exitState():
   clear()
