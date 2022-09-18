@@ -12,6 +12,9 @@ def DB():
         (3, 'test3', 'aaaaaaa!A1'),
     ]                         
   databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
+  databaseCursor.execute("SELECT Count(*) FROM users")
+  global cnt 
+  cnt = len(databaseCursor.fetchall())
   database.commit()
   yield database
   print("-----teardown-----\n")
@@ -19,6 +22,8 @@ def DB():
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
+
+
 
 # Story: Account Creation
 # 1. username is unique
@@ -61,6 +66,15 @@ def test_passwordValidation(password, result):
 )
 def test_checkUsernameSaved(username, password, result):
   assert checkExistingAccts(username, password) == result
+
+# Story: Account Number Limit
+'''
+we can put whatever value as a parameter
+since it is replaced by the actual number of user in DB
+'''
+@pytest.mark.accountNumber
+def test_accountCount():
+  assert accountCount(0) == True # counting the number of users in actual DB 
 
 # Story: Login Status
 @pytest.mark.loginStatus
@@ -116,11 +130,6 @@ def test_listOptions(sel, result):
 )
 def test_skillsOptions(sel, result):
    assert listSkillsOptions(sel) == result
-
-# Story: Input Validation
-@pytest.mark.inputValidation
-
-
 
 # Story: Under Construction
 @pytest.mark.underConstruction

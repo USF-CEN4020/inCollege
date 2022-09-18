@@ -39,6 +39,12 @@ def listOptions(sel):
   else:
     return False
 
+def accountCount(count):
+  count = userCount()
+  if count > 5 or count < 0:
+    return False
+  else:
+    return True
 
 def listSkillsOptions(sel):
   if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
@@ -77,7 +83,7 @@ def userCount():
 	Queries the users database for how many users have registered
 
 	return: number of total users in the system
-'''
+  '''
 	rowsQuery = "SELECT Count(*) FROM users"
 	result = databaseCursor.execute(rowsQuery)
 	return result.fetchone()[0]
@@ -144,8 +150,8 @@ def gatherInput(prompt, failResponse, validator):
 	'''
 	Continuously prompts the user for input, validates the input it gets are returns it if its fine or gives an error message if its bad
 
-	:param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
-	:param failResponse: A message the user recieves if they give bad input
+	:param prompt: A string the user receives when being prompted for input, used in an "input(prompt)" call
+	:param failResponse: A message the user receives if they give bad input
 	:param validator: A function f(x) = x is a valid string for a given prompt
 	:return validated user input
 	'''
