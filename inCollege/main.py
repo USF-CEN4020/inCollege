@@ -35,6 +35,16 @@ def listUsers():
 clear = lambda: os.system('clear')
 isZero = lambda x : (x == 0)
 
+byKey = lambda x, y: (x[y])
+
+def idLookup(uId):
+    lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", uId)
+    return lookup.fetchone()
+
+def fieldById(field):
+    return lambda uId: (byKey(idLookup(uId), field))
+
+usernameById = fieldById("username")
 
 def userCount():
 	'''
@@ -60,6 +70,7 @@ def dbFull():
 		return False
 
 
+
 def unique(username):
 	lookup = databaseCursor.execute("SELECT COUNT(*) FROM users where username IS ?", (username,))
 	return lookup.fetchone()[0] == 0
@@ -70,9 +81,9 @@ def checkExistingAccts(username, password):
     (username, password))
   found = databaseCursor.fetchone()
   if found:
-    return True
+    return found[0]
   else:
-    return False
+    return -1
 
 def passwordValidator(password):
   c, d, s = 0, 0, 0
@@ -124,26 +135,26 @@ def gatherInput(prompt, failResponse, validator):
 
 
 
-def login():
+def login(idk):
   if dbEmpty():
     print("No existing accounts. Please create a new account.\n")
-    return applicationEntry
+    return applicationEntry, -1
   else:
     username = input("Username: ")
     password = input("Password: ")
   
-    exist = checkExistingAccts(username, password)
-    if exist:
+    id = checkExistingAccts(username, password)
+    if (id != -1):
       clear()
       print("You have successfully logged in\n")
-      return mainInterface
+      return mainInterface, id
     else:
       clear()
       print("Incorrect username/password. Please try again.\n")
-      return login
+      return login, -1
 
 
-def newAcct():
+def newAcct(idk):
 	'''
  	Creates a new account based on user input. Ensures there is room in the database and username and passwords are valid.
 	:sideeffect Adds a new user to the users table in the database
@@ -151,7 +162,7 @@ def newAcct():
 '''
 	if dbFull():
 		print("\nAll permitted accounts have been created, please come back later.\n")
-		return exitState
+		return exitState, -1
 	username = gatherInput(
             "Enter a username: ",
             "Username already exists. Please try again.",
@@ -174,9 +185,10 @@ def newAcct():
 	database.commit()
 
 	clear()
-	return mainInterface
+	return mainInterface, databaseCursor.lastrowid
 
-def applicationEntry():
+def applicationEntry(idk):
+
   prompt = "Please select an option below:\n"\
            "\t1. Log in to an existing account\n"\
            "\t2. Create a new account\n"\
@@ -186,13 +198,13 @@ def applicationEntry():
 
   if sel == 1:
     clear()
-    return login
+    return login, ()
   elif sel == 2:
     clear()
-    return newAcct
+    return newAcct, ()
 
 
-def mainInterface():
+def mainInterface(asId):
   prompt = "Please select an option below:\n"\
           "\t1. Search for a job\n"\
           "\t2. Find someone you know\n"\
@@ -204,16 +216,16 @@ def mainInterface():
 
   if sel == 1 or sel == 2:
     clear()
-    return underConstruction
+    return underConstruction, asId
   elif sel == 3:
     clear()
-    return listSkills
+    return listSkills, asId
   else:
     clear()
-    return applicationEntry
+    return applicationEntry, ()
 
 
-def listSkills():
+def listSkills(asId):
   prompt = "Please select a skill below:\n"\
           "\t1. Setup a database\n"\
           "\t2. Setup access roles\n"\
@@ -226,28 +238,32 @@ def listSkills():
                   menuValidatorBuilder(['1','2','3','4','5','6']))
   if sel == '6':
     clear()
-    return applicationEntry
+    return applicationEntry, asId
   clear()
-  return underConstruction
+  return underConstruction, asId
 
 
-def underConstruction():
+def underConstruction(asId):
   print("Under construction.\n")
   input("Press ENTER to continue.\n")
   clear()
-  return mainInterface
+  return mainInterface, asId
     
 
 
-def exitState():
+def exitState(asId):
   clear()
-  print("Goodbye")
+  if (asId == -1):
+    print("Goodbye")
+  else:
+    print("Goodbye,", usernameById(asId))
   exit()
 
 
 def stateLoop(state):
-	while (state is not exitState):
-		state = state()
+    data = ()
+    while (state is not exitState):
+        state, data = state(data)
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
