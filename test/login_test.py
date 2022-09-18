@@ -1,11 +1,9 @@
 import pytest
 import sqlite3
-import inCollege.main
 from inCollege.main import *
 
 @pytest.fixture(scope='module')
 def DB():
-  print("-----setup-----\n")
   database = sqlite3.connect("inCollege.db")
   databaseCursor = database.cursor()
   sampleAccounts = [

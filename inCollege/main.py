@@ -2,7 +2,6 @@ import sqlite3
 import os
 # from functools import lru_cache
 
-
 MAX_USERS = 5
 
 database = sqlite3.connect("inCollege.db")
@@ -17,7 +16,44 @@ database.commit()
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
+# test purpose
 
+def loginStatus(username, password):
+  check = checkExistingAccts(username, password)
+  if check:
+    clear()
+    return True
+  else:
+    clear()
+    return False
+
+def stateMainInterface(username, password):
+  if loginStatus(username, password) == True:
+    return True
+  else:
+    return False
+
+def listOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3':
+    return True
+  else:
+    return False
+
+
+def listSkillsOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
+    return True
+  else:
+    return False
+
+def stateUnderConstruction(sel):
+  if sel == '1' or sel == '2' or sel == '4' or sel == '6' or sel == '8' or sel == '10':
+    return True
+  else: 
+    return False
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 
 def clearUsers():
 	databaseCursor.execute('DELETE FROM users')
@@ -132,7 +168,6 @@ def login():
   
     exist = checkExistingAccts(username, password)
     if exist:
-      stateMainInterface(username, password)
       clear()
       print("You have successfully logged in\n")
       return mainInterface
@@ -170,7 +205,7 @@ def newAcct():
                  """, (username, password))
 	database.commit()
 	clear()
-	return mainInterface
+	return applicationEntry
 
 def applicationEntry():
   prompt = "Please select an option below:\n"\
@@ -254,40 +289,3 @@ if (__name__ == "__main__"):
 	print("Welcome to InCollege!\n")
 	
 	stateLoop(applicationEntry)
-
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
-# test purpose
-
-def loginStatus(username, password):
-  check = checkExistingAccts(username, password)
-  if check:
-    clear()
-    return True
-  else:
-    clear()
-    return False
-
-def listOptions(sel):
-  if sel == '1' or sel == '2' or sel == '3':
-    return True
-  else:
-    return False
-
-def stateMainInterface(username, password):
-  if loginStatus(username, password) == True:
-    return True
-  else:
-    return False
-
-def listSkillsOptions(sel):
-  if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
-    return True
-  else:
-    return False
-
-def stateUnderConstruction(sel):
-  if sel == '1' or sel == '2' or sel == '4' or sel == '6' or sel == '8' or sel == '10':
-    return True
-  else: 
-    return False
