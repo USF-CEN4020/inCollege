@@ -12,6 +12,9 @@ def DB():
         (3, 'test3', 'aaaaaaa!A1'),
     ]                         
   databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
+  databaseCursor.execute("SELECT Count(*) FROM users")
+  global cnt 
+  cnt = len(databaseCursor.fetchall())
   database.commit()
   yield database
   print("-----teardown-----\n")
@@ -19,6 +22,13 @@ def DB():
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
+
+# Story: Account Number Limit
+@pytest.mark.accountNumber
+def test_accountCount():
+  assert accountCount(0) == True # counting the number of users in actual DB 
+  # we can put whatever value as a parameter
+  # since it is replaced by the actual number of user in DB
 
 # Story: Account Creation
 # 1. username is unique

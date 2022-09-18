@@ -39,6 +39,12 @@ def listOptions(sel):
   else:
     return False
 
+def accountCount(count):
+  count = userCount()
+  if count > 5 or count < 0:
+    return False
+  else:
+    return True
 
 def listSkillsOptions(sel):
   if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
@@ -77,7 +83,7 @@ def userCount():
 	Queries the users database for how many users have registered
 
 	return: number of total users in the system
-'''
+  '''
 	rowsQuery = "SELECT Count(*) FROM users"
 	result = databaseCursor.execute(rowsQuery)
 	return result.fetchone()[0]
