@@ -8,10 +8,6 @@ def DB():
   print("-----setup-----\n")
   database = sqlite3.connect("inCollege.db")
   databaseCursor = database.cursor()
-  # databaseCursor.execute('''CREATE TABLE users(
-  #                           id INTEGER PRIMARY KEY ASC, 
-  #                           username TEXT, 
-  #                           password TEXT)''')
   sampleAccounts = [
         (1, 'test1', 'aaaaaaa!A1'),
         (2, 'test2', 'aaaaaaa!A1'),
@@ -23,8 +19,10 @@ def DB():
   print("-----teardown-----\n")
   database.close()
 
-# Story: Account Creation
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 
+# Story: Account Creation
 # 1. username is unique
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('username, result',
@@ -54,8 +52,17 @@ def test_passwordValidation(password, result):
   assert passwordValidator(password) == result
 
 # 3. username saved to a DB
-# def test_checkUsernameSaved():
-
+@pytest.mark.accountCreation
+@pytest.mark.parametrize('username, password, result',
+                         [
+                           ('test1', 'aaaaaaa!A1', True), # user exists
+                           ('test2', 'aaaaaaa!A1', True), # user exists
+                           ('test3', 'aaaaaaa!A1', True), # user exists
+                           ('test', 'aaaaaaa!A1', False) # No such user
+                         ]
+)
+def test_checkUsernameSaved(username, password, result):
+  assert checkExistingAccts(username, password) == result
 
 # Story: Login Status
 @pytest.mark.loginStatus
@@ -70,13 +77,60 @@ def test_passwordValidation(password, result):
 def test_loginStatus(username, password, result):
   assert loginStatus(username, password) == result
 
+# Story: User Additional Options
+@pytest.mark.userOptions
+@pytest.mark.parametrize('username, password, result',
+                        [
+                          ('test1', 'aaaaaaa!A1', True), # logged in -> move to options
+                          ('test2', 'aaaaaaa!A1', True), # logged in -> move to options
+                          ('test3', 'aaaaaaa!A1', True), # logged in -> move to options
+                          ('test', 'aaaaaaa!A1', False) # not logged in
+                        ]     
+                        )
+def test_stateMainInterface(username, password, result):
+  assert stateMainInterface(username, password) == result
+
+@pytest.mark.userOptions
+@pytest.mark.parametrize('sel, result',
+                        [
+                          ('1', True), # user option exists
+                          ('2', True), # user option exists
+                          ('3', True), # user option exists
+                          ('4', False) # user option doesn't exist
+                        ]     
+                        )
+def test_listOptions(sel, result):
+  assert listOptions(sel) == result
+
+
+# Story: Skills Options
+@pytest.mark.skillsOptions
+@pytest.mark.parametrize('sel, result',
+                         [
+                           ('1', True), # skill exists
+                           ('2', True), # skill exists
+                           ('3', True), # skill exists
+                           ('4', True), # skill exists
+                           ('5', True), # skill exists
+                           ('6', True), # back to previous page exists
+                           ('7', False) # No option exists
+                         ]
+)
+def test_skillsOptions(sel, result):
+   assert listSkillsOptions(sel) == result
+
+# Story: Input Validation
+@pytest.mark.inputValidation
+
+
+
 # Story: Under Construction
 @pytest.mark.underConstruction
 @pytest.mark.parametrize('sel, result',
                         [
-                          ('3', False), 
                           ('1', True), 
                           ('2', True), 
+                          ('3', False),
                           ('4', True),
                           ('6', True), 
                           ('8', True),
@@ -84,4 +138,5 @@ def test_loginStatus(username, password, result):
                         ]
                         )
 def test_underConstruction(sel, result):
-  assert underConstructionState(sel) == result
+  assert stateUnderConstruction(sel) == result
+
