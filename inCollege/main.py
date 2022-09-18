@@ -150,8 +150,8 @@ def gatherInput(prompt, failResponse, validator):
 	'''
 	Continuously prompts the user for input, validates the input it gets are returns it if its fine or gives an error message if its bad
 
-	:param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
-	:param failResponse: A message the user recieves if they give bad input
+	:param prompt: A string the user receives when being prompted for input, used in an "input(prompt)" call
+	:param failResponse: A message the user receives if they give bad input
 	:param validator: A function f(x) = x is a valid string for a given prompt
 	:return validated user input
 	'''
