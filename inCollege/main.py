@@ -2,7 +2,6 @@ import sqlite3
 import os
 # from functools import lru_cache
 
-
 MAX_USERS = 5
 
 database = sqlite3.connect("inCollege.db")
@@ -17,7 +16,44 @@ database.commit()
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
+# test purpose
 
+def loginStatus(username, password):
+  check = checkExistingAccts(username, password)
+  if check:
+    clear()
+    return True
+  else:
+    clear()
+    return False
+
+def stateMainInterface(username, password):
+  if loginStatus(username, password) == True:
+    return True
+  else:
+    return False
+
+def listOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3':
+    return True
+  else:
+    return False
+
+
+def listSkillsOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
+    return True
+  else:
+    return False
+
+def stateUnderConstruction(sel):
+  if sel == '1' or sel == '2' or sel == '4' or sel == '6' or sel == '8' or sel == '10':
+    return True
+  else: 
+    return False
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 
 def clearUsers():
 	databaseCursor.execute('DELETE FROM users')
@@ -122,8 +158,6 @@ def gatherInput(prompt, failResponse, validator):
 
 	return userInput
 
-
-
 def login():
   if dbEmpty():
     print("No existing accounts. Please create a new account.\n")
@@ -156,7 +190,6 @@ def newAcct():
             "Enter a username: ",
             "Username already exists. Please try again.",
             unique)
-
 	password = gatherInput(
             "\nPassword must meet the following requirements:\n"\
             "\t-Length of 8-12 characters\n"\
@@ -166,15 +199,13 @@ def newAcct():
             "\nPassword: ",
             "Password does not meet security requirements",
             passwordValidator)
-
 	databaseCursor.execute("""
                  INSERT INTO users (username, password) VALUES
                      (?, ?)
                  """, (username, password))
 	database.commit()
-
 	clear()
-	return mainInterface
+	return applicationEntry
 
 def applicationEntry():
   prompt = "Please select an option below:\n"\
@@ -191,7 +222,6 @@ def applicationEntry():
     clear()
     return newAcct
 
-
 def mainInterface():
   prompt = "Please select an option below:\n"\
           "\t1. Search for a job\n"\
@@ -203,15 +233,17 @@ def mainInterface():
                     menuValidatorBuilder(['1','2','3'])))
 
   if sel == 1 or sel == 2:
+    stateUnderConstruction(sel)
+    listOptions(sel)
     clear()
     return underConstruction
   elif sel == 3:
+    listOptions(sel)
     clear()
     return listSkills
   else:
     clear()
     return applicationEntry
-
 
 def listSkills():
   prompt = "Please select a skill below:\n"\
@@ -225,8 +257,11 @@ def listSkills():
   sel = gatherInput(prompt, "Invalid input. Please try again.\n",
                   menuValidatorBuilder(['1','2','3','4','5','6']))
   if sel == '6':
+    listSkillsOptions(sel)
     clear()
     return applicationEntry
+  stateUnderConstruction(sel*2)
+  listSkillsOptions(sel)
   clear()
   return underConstruction
 
@@ -236,8 +271,6 @@ def underConstruction():
   input("Press ENTER to continue.\n")
   clear()
   return mainInterface
-    
-
 
 def exitState():
   clear()
