@@ -135,10 +135,10 @@ def gatherInput(prompt, failResponse, validator):
 
 
 
-def login(idk):
+def login():
   if dbEmpty():
     print("No existing accounts. Please create a new account.\n")
-    return applicationEntry, -1
+    return applicationEntry, None
   else:
     username = input("Username: ")
     password = input("Password: ")
@@ -151,10 +151,10 @@ def login(idk):
     else:
       clear()
       print("Incorrect username/password. Please try again.\n")
-      return login, -1
+      return login, None
 
 
-def newAcct(idk):
+def newAcct():
 	'''
  	Creates a new account based on user input. Ensures there is room in the database and username and passwords are valid.
 	:sideeffect Adds a new user to the users table in the database
@@ -187,7 +187,7 @@ def newAcct(idk):
 	clear()
 	return mainInterface, databaseCursor.lastrowid
 
-def applicationEntry(idk):
+def applicationEntry():
 
   prompt = "Please select an option below:\n"\
            "\t1. Log in to an existing account\n"\
@@ -198,10 +198,10 @@ def applicationEntry(idk):
 
   if sel == 1:
     clear()
-    return login, ()
+    return login, None
   elif sel == 2:
     clear()
-    return newAcct, ()
+    return newAcct, None
 
 
 def mainInterface(asId):
@@ -222,7 +222,7 @@ def mainInterface(asId):
     return listSkills, asId
   else:
     clear()
-    return applicationEntry, ()
+    return applicationEntry, None
 
 
 def listSkills(asId):
@@ -238,7 +238,7 @@ def listSkills(asId):
                   menuValidatorBuilder(['1','2','3','4','5','6']))
   if sel == '6':
     clear()
-    return applicationEntry, asId
+    return applicationEntry, None
   clear()
   return underConstruction, asId
 
@@ -261,9 +261,12 @@ def exitState(asId):
 
 
 def stateLoop(state):
-    data = ()
+    data = None
     while (state is not exitState):
-        state, data = state(data)
+        if data is None:
+            state, data = state()
+        else:
+            state, data = state(data)
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
