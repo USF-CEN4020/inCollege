@@ -32,19 +32,25 @@ def listUsers():
 #----------------------------------------------------------------------------------------
 
 
-clear = lambda: os.system('clear')
-isZero = lambda x : (x == 0)
+clear = lambda: os.system('clear') # A function f() that clears all text from the terminal
+isZero = lambda x : (x == 0) # A function f(x) = x == 0
 
-byKey = lambda x, y: (x[y])
+byKey = lambda x, y: (x[y]) # A function f(x) = x[y]
 
 def idLookup(uId):
     lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", uId)
     return lookup.fetchone()
 
 def fieldById(field):
+    '''
+    Function generator for getting looking up an entries field by its id
+
+    param field: a column field of the users table
+    return: a function f(x) = (field of a user with id x)
+    '''
     return lambda uId: (byKey(idLookup(uId), field))
 
-usernameById = fieldById("username")
+usernameById = fieldById("username") # A function f(x) = (username of a user with id x)
 
 def userCount():
 	'''
@@ -77,6 +83,14 @@ def unique(username):
 
 
 def checkExistingAccts(username, password):
+  '''
+  Looks up an account from a username and password
+
+  param username: the username of the target user
+  param password: the password of the target user
+  return: the id of the specified user or -1 if the user does not exist
+  '''
+
   databaseCursor.execute("SELECT * FROM users WHERE username= ? and password= ?",
     (username, password))
   found = databaseCursor.fetchone()
@@ -121,7 +135,7 @@ def gatherInput(prompt, failResponse, validator):
 
 	:param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
 	:param failResponse: A message the user recieves if they give bad input
-	:param validator: A function f(x) = x is a valid string for a given prompt
+	:param validator: A function f(x) = (x is a valid string for a given prompt)
 	:return validated user input
 	'''
 	userInput = input(prompt)
@@ -157,6 +171,7 @@ def login():
 def newAcct():
 	'''
  	Creates a new account based on user input. Ensures there is room in the database and username and passwords are valid.
+
 	:sideeffect Adds a new user to the users table in the database
 	:return mainInterface state function
 '''
