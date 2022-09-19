@@ -25,8 +25,12 @@ def DB():
 
 
 
-# Story: Account Creation
-# 1. username is unique
+'''
+  Story: Account Creation
+  - Username is unique
+  - Password is: minimum of 8 characters, maximum of 12 characters, at least one capital letter, one digit, and one special character
+  - User accounts saved to a database
+'''
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('username, result',
                         [
@@ -39,7 +43,6 @@ def DB():
 def test_usernameUnique(username, result):
   assert unique(username) == result
 
-# 2. password valiation
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('password, result',
                         [
@@ -54,7 +57,6 @@ def test_usernameUnique(username, result):
 def test_passwordValidation(password, result):
   assert passwordValidator(password) == result
 
-# 3. username saved to a DB
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('username, password, result',
                          [
@@ -67,16 +69,21 @@ def test_passwordValidation(password, result):
 def test_checkUsernameSaved(username, password, result):
   assert checkExistingAccts(username, password) == result
 
-# Story: Account Number Limit
+
 '''
-we can put whatever value as a parameter
-since it is replaced by the actual number of user in DB
+  Story: Account Number Limit
+  - Only 5 accounts can be created
+  (we can put whatever value as a parameter since it is replaced by the actual number of user in DB)
 '''
 @pytest.mark.accountNumber
 def test_accountCount():
   assert accountCount(0) == True # counting the number of users in actual DB 
 
-# Story: Login Status
+'''
+  Story: Login Status
+  - If login credentials recognized in database, the following message is displayed: "You have successfully logged in"
+  - If the login credentials were not recognized in the database, the following message is displayed: "Incorrect username / password, please try again"
+'''
 @pytest.mark.loginStatus
 @pytest.mark.parametrize('username, password, result',
                         [
@@ -89,7 +96,13 @@ def test_accountCount():
 def test_loginStatus(username, password, result):
   assert loginStatus(username, password) == result
 
-# Story: User Additional Options
+'''
+  Story: User Additional Options
+  - After logging in, the user will presented with a menu allowing them to select one of the following options:
+    1. Search for a job
+    2. Find someone they know
+    3. Learn a skill
+'''
 @pytest.mark.userOptions
 @pytest.mark.parametrize('username, password, result',
                         [
@@ -115,7 +128,11 @@ def test_listOptions(sel, result):
   assert listOptions(sel) == result
 
 
-# Story: Skills Options
+'''
+  Story: Skills Options
+  - Sub-menu lists 5 skills that the user can select
+  - There will be a 6th option to return to the previous menu
+'''
 @pytest.mark.skillsOptions
 @pytest.mark.parametrize('sel, result',
                          [
@@ -131,7 +148,13 @@ def test_listOptions(sel, result):
 def test_skillsOptions(sel, result):
    assert listSkillsOptions(sel) == result
 
-# Story: Under Construction
+'''
+  Story: Under Construction
+  - Users will receive an “Under Construction” message if they select the following options:
+    1. Search for a job
+    2. Find someone you know
+    3. Any of the 5 skills listed
+'''
 @pytest.mark.underConstruction
 @pytest.mark.parametrize('sel, result',
                         [
