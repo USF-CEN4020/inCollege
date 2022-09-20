@@ -2,7 +2,6 @@ import sqlite3
 import os
 # from functools import lru_cache
 
-
 MAX_USERS = 5
 
 database = sqlite3.connect("inCollege.db")
@@ -17,7 +16,50 @@ database.commit()
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
+# test purpose
 
+def loginStatus(username, password):
+  check = checkExistingAccts(username, password)
+  if check:
+    clear()
+    return True
+  else:
+    clear()
+    return False
+
+def stateMainInterface(username, password):
+  if loginStatus(username, password) == True:
+    return True
+  else:
+    return False
+
+def listOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3':
+    return True
+  else:
+    return False
+
+def accountCount(count):
+  count = userCount()
+  if count > 5 or count < 0:
+    return False
+  else:
+    return True
+
+def listSkillsOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
+    return True
+  else:
+    return False
+
+def stateUnderConstruction(sel):
+  if sel == '1' or sel == '2' or sel == '4' or sel == '6' or sel == '8' or sel == '10':
+    return True
+  else: 
+    return False
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 
 def clearUsers():
 	databaseCursor.execute('DELETE FROM users')
@@ -57,7 +99,7 @@ def userCount():
 	Queries the users database for how many users have registered
 
 	return: number of total users in the system
-'''
+  '''
 	rowsQuery = "SELECT Count(*) FROM users"
 	result = databaseCursor.execute(rowsQuery)
 	return result.fetchone()[0]
@@ -147,8 +189,6 @@ def gatherInput(prompt, failResponse, validator):
 
 	return userInput
 
-
-
 def login():
   if dbEmpty():
     print("No existing accounts. Please create a new account.\n")
@@ -182,7 +222,6 @@ def newAcct():
             "Enter a username: ",
             "Username already exists. Please try again.",
             unique)
-
 	password = gatherInput(
             "\nPassword must meet the following requirements:\n"\
             "\t-Length of 8-12 characters\n"\
@@ -192,13 +231,11 @@ def newAcct():
             "\nPassword: ",
             "Password does not meet security requirements",
             passwordValidator)
-
 	databaseCursor.execute("""
                  INSERT INTO users (username, password) VALUES
                      (?, ?)
                  """, (username, password))
 	database.commit()
-
 	clear()
 	return mainInterface, databaseCursor.lastrowid
 
@@ -230,9 +267,12 @@ def mainInterface(asId):
                     menuValidatorBuilder(['1','2','3'])))
 
   if sel == 1 or sel == 2:
+    stateUnderConstruction(sel)
+    listOptions(sel)
     clear()
     return underConstruction, asId
   elif sel == 3:
+    listOptions(sel)
     clear()
     return listSkills, asId
   else:
@@ -252,6 +292,7 @@ def listSkills(asId):
   sel = gatherInput(prompt, "Invalid input. Please try again.\n",
                   menuValidatorBuilder(['1','2','3','4','5','6']))
   if sel == '6':
+    listSkillsOptions(sel)
     clear()
     return applicationEntry, None
   clear()
