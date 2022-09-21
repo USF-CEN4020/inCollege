@@ -1,9 +1,10 @@
 import sqlite3
 import os
-# from functools import lru_cache
+from functools import lru_cache
 
 
 MAX_USERS = 5
+MAX_JOBS = 5
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -11,6 +12,18 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
 														id INTEGER PRIMARY KEY ASC, 
 														username TEXT, 
 														password TEXT)''')
+database.commit()
+
+databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
+                                                        jobId INTEGER PRIMARY KEY ASC,
+                                                        title TEXT,
+                                                        description TEXT,
+                                                        employer TEXT,
+                                                        location TEXT,
+                                                        salary REAL,
+                                                        posterId INTEGER,
+                                                        FOREIGN KEY(posterId)
+                                                            REFERENCES users(id))''')
 
 database.commit()
 
@@ -33,7 +46,8 @@ def listUsers():
 
 
 clear = lambda: os.system('clear') # A function f() that clears all text from the terminal
-isZero = lambda x : (x == 0) # A function f(x) = x == 0
+isEqual = lambda x, y: (x == y)
+isZero = lambda x : (isEqual(x,0)) # A function f(x) = x == 0
 
 byKey = lambda x, y: (x[y]) # A function f(x) = x[y]
 
@@ -52,15 +66,18 @@ def fieldById(field):
 
 usernameById = fieldById("username") # A function f(x) = (username of a user with id x)
 
-def userCount():
-	'''
-	Queries the users database for how many users have registered
+def tableEntriesCount(table):
+    '''
+    Generates a function that returns the number of rows in a given table
 
-	return: number of total users in the system
-'''
-	rowsQuery = "SELECT Count(*) FROM users"
-	result = databaseCursor.execute(rowsQuery)
-	return result.fetchone()[0]
+    param table: a case-sensitive string of the name of a table that is to have its rows counted
+    return: A lambda f() = number of rows in table
+    '''
+    return lambda: (databaseCursor.execute("SELECT Count(*) FROM " + table).fetchone()[0]) # Need to look into how much of a vulnerabilty this is
+
+userCount = tableEntriesCount("users") # returns the number of total users in the system
+
+jobsCount = tableEntriesCount("jobs") # returns the number of total jobs in the system
 
 def dbEmpty():
 	if (userCount() == 0):
@@ -75,11 +92,15 @@ def dbFull():
 	else:
 		return False
 
+def jobsFull():
+    return (jobsCount() == MAX_JOBS)
 
+def vacuouslyTrue(string):
+    return True
 
 def unique(username):
-	lookup = databaseCursor.execute("SELECT COUNT(*) FROM users where username IS ?", (username,))
-	return lookup.fetchone()[0] == 0
+    lookup = databaseCursor.execute("SELECT COUNT(*) FROM users where username IS ?", (username,))
+    return lookup.fetchone()[0] == 0
 
 
 def checkExistingAccts(username, password):
@@ -99,6 +120,13 @@ def checkExistingAccts(username, password):
   else:
     return -1
 
+def numberValidator(number):
+    try:
+        float(number)
+        return True
+    except ValueError:
+        return False
+
 def passwordValidator(password):
   c, d, s = 0, 0, 0
   length = len(password)
@@ -117,37 +145,108 @@ def passwordValidator(password):
     return False
 
 
-#@lru_cache
+
+@lru_cache
 def menuValidatorBuilder(validOptions):
-	'''
-	Generates a validator from a list of valid options
+    '''
+    Generates a validator from a list of valid options
 
- 	:param validOptions: A list of valid inputs from a menu
-	:return a function f(x) that returns if x is in validOptions
-	'''
-	
-	return lambda menuInput: (menuInput in validOptions and menuInput != '')
+    :param validOptions: A string consisting of every valid input from a menu
+    :return a function f(x) that returns if x is in validOptions
+    '''
 
+    optionsList = list(validOptions)
+    return lambda menuInput: (menuInput in optionsList and menuInput != '')
 
 def gatherInput(prompt, failResponse, validator):
-	'''
+    '''
 	Continuously prompts the user for input, validates the input it gets are returns it if its fine or gives an error message if its bad
 
-	:param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
-	:param failResponse: A message the user recieves if they give bad input
-	:param validator: A function f(x) = (x is a valid string for a given prompt)
-	:return validated user input
-	'''
-	userInput = input(prompt)
+    :param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
+    :param failResponse: A message the user recieves if they give bad input
+    :param validator: A function f(x) = (x is a valid string for a given prompt)
+    :return validated user input
+    '''
+    
+    userInput = input(prompt)
+    while True:
+        if len(userInput) == 0:
+            clear()
+            print("Please input a response.\n")
+            userInput = input(prompt)
+        elif not validator(userInput):
+            clear()
+            print(failResponse)
+            userInput = input(prompt)
+        else:
+            return userInput
 
-	while (not validator(userInput)):
-		clear()
-		print(failResponse)
-		userInput = input(prompt)
 
-	return userInput
+def exitState(asId):
+  clear()
+  if (asId == -1):
+    print("Goodbye")
+  else:
+    print("Goodbye,", usernameById(asId))
+  exit()
 
 
+def jobPost(asId):
+    title = gatherInput("Enter job title: ", "", vacuouslyTrue)
+    description = gatherInput("Enter job description: ", "", vacuouslyTrue)
+    employer = gatherInput("Enter employer: ", "", vacuouslyTrue)
+    location = gatherInput("Enter job location: ", "", vacuouslyTrue)
+    salary = float(gatherInput("Enter salary (no dollar sign): ", "PLease enter a valid number without a dollar sign", numberValidator))
+
+    databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)",
+            (title, description, employer, location, salary, asId))
+
+    database.commit()
+
+    return jobInterface, (asId,)
+
+
+def jobInterface(asId):
+    prompt = "Please select an option below:\n"\
+        "\t1. Post a job\n"\
+        "\t2. Search for a job\n"\
+        "\t3. Go back\n"\
+        "Selection: "
+    sel = int(gatherInput(prompt, "Invalid input. Please try again\n", menuValidatorBuilder('123')))
+
+    if sel == 1:
+        clear()
+        return jobPost, (asId,)
+    elif sel == 2:
+        clear()
+        return underConstruction, (asId, jobInterface)
+    else:
+        clear()
+        return mainInterface, (asId,)
+
+def mainInterface(asId):
+  prompt = "Please select an option below:\n"\
+          "\t1. Search for a job\n"\
+          "\t2. Find someone you know\n"\
+          "\t3. Learn a new skill\n"\
+          "\t4. Log Out\n"\
+          "Selection: "
+  sel = int(
+        gatherInput(prompt, "Invalid input. Please try again.\n",
+                    menuValidatorBuilder('1234')))
+
+  if sel == 1:
+    clear()
+    return jobInterface, (asId,)
+  elif sel == 2:
+    clear()
+    return underConstruction, (asId, mainInterface)
+  elif sel == 3:
+    clear()
+    return listSkills, (asId,)
+  else:
+    clear()
+    return applicationEntry, None
 
 def login():
   if dbEmpty():
@@ -161,7 +260,7 @@ def login():
     if (id != -1):
       clear()
       print("You have successfully logged in\n")
-      return mainInterface, id
+      return mainInterface, (id,)
     else:
       clear()
       print("Incorrect username/password. Please try again.\n")
@@ -200,7 +299,7 @@ def newAcct():
 	database.commit()
 
 	clear()
-	return mainInterface, databaseCursor.lastrowid
+	return mainInterface, (databaseCursor.lastrowid,)
 
 def applicationEntry():
 
@@ -209,7 +308,7 @@ def applicationEntry():
            "\t2. Create a new account\n"\
            "Selection: "
   sel = int(gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder(['1','2'])))
+                    menuValidatorBuilder('12')))
 
   if sel == 1:
     clear()
@@ -219,25 +318,6 @@ def applicationEntry():
     return newAcct, None
 
 
-def mainInterface(asId):
-  prompt = "Please select an option below:\n"\
-          "\t1. Search for a job\n"\
-          "\t2. Find someone you know\n"\
-          "\t3. Learn a new skill\n"\
-          "Selection: "
-  sel = int(
-        gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder(['1','2','3'])))
-
-  if sel == 1 or sel == 2:
-    clear()
-    return underConstruction, asId
-  elif sel == 3:
-    clear()
-    return listSkills, asId
-  else:
-    clear()
-    return applicationEntry, None
 
 
 def listSkills(asId):
@@ -247,32 +327,25 @@ def listSkills(asId):
           "\t3. Use a microservice from the marketplace\n"\
           "\t4. Create budget alerts\n"\
           "\t5. Calculate OPEX costs\n"\
-          "\t6. Return to login\n"\
+          "\t6. Go Back\n"\
           "Selection: "
   sel = gatherInput(prompt, "Invalid input. Please try again.\n",
-                  menuValidatorBuilder(['1','2','3','4','5','6']))
+                  menuValidatorBuilder('123456'))
   if sel == '6':
     clear()
-    return applicationEntry, None
+    return mainInterface, (asId,)
   clear()
-  return underConstruction, asId
+  return underConstruction, (asId, listSkills)
 
 
-def underConstruction(asId):
+def underConstruction(asId, prevState):
   print("Under construction.\n")
   input("Press ENTER to continue.\n")
   clear()
-  return mainInterface, asId
+  return prevState, (asId, )
     
 
 
-def exitState(asId):
-  clear()
-  if (asId == -1):
-    print("Goodbye")
-  else:
-    print("Goodbye,", usernameById(asId))
-  exit()
 
 
 def stateLoop(state):
@@ -281,7 +354,7 @@ def stateLoop(state):
         if data is None:
             state, data = state()
         else:
-            state, data = state(data)
+            state, data = state(*data)
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
