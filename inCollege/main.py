@@ -2,7 +2,6 @@ import sqlite3
 import os
 from functools import lru_cache
 
-
 MAX_USERS = 5
 MAX_JOBS = 5
 
@@ -30,7 +29,50 @@ database.commit()
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
+# test purpose
 
+def loginStatus(username, password):
+  check = checkExistingAccts(username, password)
+  if check:
+    clear()
+    return True
+  else:
+    clear()
+    return False
+
+def stateMainInterface(username, password):
+  if loginStatus(username, password) == True:
+    return True
+  else:
+    return False
+
+def listOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3':
+    return True
+  else:
+    return False
+
+def accountCount(count):
+  count = userCount()
+  if count > 5 or count < 0:
+    return False
+  else:
+    return True
+
+def listSkillsOptions(sel):
+  if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
+    return True
+  else:
+    return False
+
+def stateUnderConstruction(sel):
+  if sel == '1' or sel == '2' or sel == '4' or sel == '6' or sel == '8' or sel == '10':
+    return True
+  else: 
+    return False
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
 
 def clearUsers():
 	databaseCursor.execute('DELETE FROM users')
@@ -70,6 +112,7 @@ def tableEntriesCount(table):
     '''
     Generates a function that returns the number of rows in a given table
 
+<<<<<<< HEAD
     param table: a case-sensitive string of the name of a table that is to have its rows counted
     return: A lambda f() = number of rows in table
     '''
@@ -78,6 +121,13 @@ def tableEntriesCount(table):
 userCount = tableEntriesCount("users") # returns the number of total users in the system
 
 jobsCount = tableEntriesCount("jobs") # returns the number of total jobs in the system
+=======
+	return: number of total users in the system
+  '''
+	rowsQuery = "SELECT Count(*) FROM users"
+	result = databaseCursor.execute(rowsQuery)
+	return result.fetchone()[0]
+>>>>>>> e03832ec0c530720d81428e5ecee7506c8018384
 
 def dbEmpty():
 	if (userCount() == 0):
@@ -181,6 +231,7 @@ def gatherInput(prompt, failResponse, validator):
         else:
             return userInput
 
+<<<<<<< HEAD
 
 def exitState(asId):
   clear()
@@ -248,6 +299,8 @@ def mainInterface(asId):
     clear()
     return applicationEntry, None
 
+=======
+>>>>>>> e03832ec0c530720d81428e5ecee7506c8018384
 def login():
   if dbEmpty():
     print("No existing accounts. Please create a new account.\n")
@@ -281,7 +334,6 @@ def newAcct():
             "Enter a username: ",
             "Username already exists. Please try again.",
             unique)
-
 	password = gatherInput(
             "\nPassword must meet the following requirements:\n"\
             "\t-Length of 8-12 characters\n"\
@@ -291,13 +343,11 @@ def newAcct():
             "\nPassword: ",
             "Password does not meet security requirements",
             passwordValidator)
-
 	databaseCursor.execute("""
                  INSERT INTO users (username, password) VALUES
                      (?, ?)
                  """, (username, password))
 	database.commit()
-
 	clear()
 	return mainInterface, (databaseCursor.lastrowid,)
 
@@ -318,6 +368,31 @@ def applicationEntry():
     return newAcct, None
 
 
+<<<<<<< HEAD
+=======
+def mainInterface(asId):
+  prompt = "Please select an option below:\n"\
+          "\t1. Search for a job\n"\
+          "\t2. Find someone you know\n"\
+          "\t3. Learn a new skill\n"\
+          "Selection: "
+  sel = int(
+        gatherInput(prompt, "Invalid input. Please try again.\n",
+                    menuValidatorBuilder(['1','2','3'])))
+
+  if sel == 1 or sel == 2:
+    stateUnderConstruction(sel)
+    listOptions(sel)
+    clear()
+    return underConstruction, asId
+  elif sel == 3:
+    listOptions(sel)
+    clear()
+    return listSkills, asId
+  else:
+    clear()
+    return applicationEntry, None
+>>>>>>> e03832ec0c530720d81428e5ecee7506c8018384
 
 
 def listSkills(asId):
@@ -332,6 +407,7 @@ def listSkills(asId):
   sel = gatherInput(prompt, "Invalid input. Please try again.\n",
                   menuValidatorBuilder('123456'))
   if sel == '6':
+    listSkillsOptions(sel)
     clear()
     return mainInterface, (asId,)
   clear()
