@@ -1,10 +1,13 @@
 import sqlite3
 import os
 from functools import lru_cache
+import random
 
 
 MAX_USERS = 5
 MAX_JOBS = 5
+
+
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -301,14 +304,35 @@ def newAcct():
 	clear()
 	return mainInterface, (databaseCursor.lastrowid,)
 
+def videoPlayer():
+
+    print("Video is now playing\n\n")
+
+    input("Press ENTER to continue.\n")
+    clear()
+
+    return applicationEntry, None
+
+
+testimonials = ["""InCollege helped me develop the skills I needed to land a job!
+                \t-Ron Willson""",
+                """My normal resume wasn't getting notice by employers. InCollege allowed my to market my skills and begin my carrer.
+                \t-Henry Close""",
+                """This program made finding an internship really easy.
+                \t-Taylor Oak"""]
+
 def applicationEntry():
+
+  print(random.choice(testimonials))
+  print()
 
   prompt = "Please select an option below:\n"\
            "\t1. Log in to an existing account\n"\
            "\t2. Create a new account\n"\
+           "\t3. Why you should join InCollege\n"\
            "Selection: "
   sel = int(gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder('12')))
+                    menuValidatorBuilder('123')))
 
   if sel == 1:
     clear()
@@ -316,6 +340,9 @@ def applicationEntry():
   elif sel == 2:
     clear()
     return newAcct, None
+  elif sel == 3:
+    clear()
+    return videoPlayer, None
 
 
 
