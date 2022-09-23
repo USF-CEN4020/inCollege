@@ -267,7 +267,7 @@ def login():
     else:
       clear()
       print("Incorrect username/password. Please try again.\n")
-      return login, None
+      return applicationEntry, None
 
 
 def newAcct():
@@ -316,7 +316,7 @@ def videoPlayer():
 
 testimonials = ["""InCollege helped me develop the skills I needed to land a job!
                 \t-Ron Willson""",
-                """My normal resume wasn't getting notice by employers. InCollege allowed my to market my skills and begin my carrer.
+                """My normal resume wasn't getting noticed by employers. InCollege allowed my to market my skills and begin my carrer.
                 \t-Henry Close""",
                 """This program made finding an internship really easy.
                 \t-Taylor Oak"""]
