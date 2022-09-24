@@ -110,9 +110,7 @@ def test_accountCount():
                         ]
                         )
 def test_loginStatus(username, password, result):
-  output = loginStatus(username, password)
-  print (output)
-  assert output == result
+  assert loginStatus(username, password) == result
 
 '''
   Story: User Additional Options

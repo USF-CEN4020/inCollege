@@ -37,12 +37,12 @@ database.commit()
 
 def loginStatus(username, password):
   check = checkExistingAccts(username, password)
-  if check:
-    clear()
-    return True
-  else:
+  if check == -1:
     clear()
     return False
+  else:
+    clear()
+    return True
 
 def stateMainInterface(username, password):
   if loginStatus(username, password) == True:
