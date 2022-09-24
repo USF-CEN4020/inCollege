@@ -85,11 +85,16 @@ def stateUnderConstruction(sel):
 def clearUsers():
 	databaseCursor.execute('DELETE FROM users')
 	database.commit()
+ 
+def clearJobs():
+	databaseCursor.execute('DELETE FROM jobs')
+	database.commit() 
 
 def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):
 		print(row)
 	
+
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------

@@ -1,4 +1,6 @@
 import pytest
+import builtins
+from unittest import mock
 import sqlite3
 from inCollege.main import *
 
@@ -12,18 +14,29 @@ def DB():
         (3, 'test3', 'aaaaaaa!A1'),
     ]                         
   databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
+  database.commit()
   databaseCursor.execute("SELECT Count(*) FROM users")
   global cnt 
   cnt = len(databaseCursor.fetchall())
-  database.commit()
   yield database
   print("-----teardown-----\n")
   database.close()
 
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
+# ==================================================================================
+# ==================================================================================
+      
+      
+      
+      
+      
+# EPIC #1 Test Cases
+      
 
 
+
+
+# ==================================================================================
+# ==================================================================================
 
 '''
   Story: Account Creation
@@ -60,14 +73,17 @@ def test_passwordValidation(password, result):
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('username, password, result',
                          [
-                           ('test1', 'aaaaaaa!A1', True), # user exists
-                           ('test2', 'aaaaaaa!A1', True), # user exists
-                           ('test3', 'aaaaaaa!A1', True), # user exists
-                           ('test', 'aaaaaaa!A1', False) # No such user
+                           ('test1', 'aaaaaaa!A1', -1), # user exists
+                           ('test2', 'aaaaaaa!A1', -1), # user exists
+                           ('test3', 'aaaaaaa!A1', -1), # user exists
+                           ('test', 'aaaaaaa!A1', -1) # No such user
                          ]
 )
 def test_checkUsernameSaved(username, password, result):
-  assert checkExistingAccts(username, password) == result
+  if username == 'test':
+    assert checkExistingAccts(username, password) == result
+  else:
+    assert checkExistingAccts(username, password) != result
 
 
 '''
@@ -94,7 +110,9 @@ def test_accountCount():
                         ]
                         )
 def test_loginStatus(username, password, result):
-  assert loginStatus(username, password) == result
+  output = loginStatus(username, password)
+  print (output)
+  assert output == result
 
 '''
   Story: User Additional Options
@@ -170,3 +188,91 @@ def test_skillsOptions(sel, result):
 def test_underConstruction(sel, result):
   assert stateUnderConstruction(sel) == result
 
+
+
+# ==================================================================================
+# ==================================================================================
+      
+      
+      
+      
+      
+# EPIC #2 Test Cases
+      
+
+
+
+
+# ==================================================================================
+# ==================================================================================
+
+# Testing whether the sub-menu's that list additional options are returning the
+# the correct previous state if the specific option is selected
+
+  
+def test_mainInterfaceTrue():
+  state = applicationEntry
+  with mock.patch.object(builtins, 'input', lambda _: '4'):
+    output, dataOut = mainInterface(-1)
+    assert output == state
+    
+    
+def test_mainInterfaceFalse():
+  state = applicationEntry
+  with mock.patch.object(builtins, 'input', lambda _: '1'):
+    output, dataOut = mainInterface(-1)
+    assert output != state
+
+
+def test_jobInterfaceTrue():
+  state = mainInterface
+  with mock.patch.object(builtins, 'input', lambda _: '3'):
+    output, dataOut = jobInterface(-1)
+    assert output == state
+    
+    
+def test_jobInterfaceFalse():
+  state = mainInterface
+  with mock.patch.object(builtins, 'input', lambda _: '2'):
+    output, dataOut = jobInterface(-1)
+    assert output != state
+    
+    
+def test_listSkillsTrue():
+  state = mainInterface
+  with mock.patch.object(builtins, 'input', lambda _: '6'):
+    output, dataOut = listSkills(-1)
+    assert output == state
+    
+
+def test_listSkillsFalse():
+  state = mainInterface
+  with mock.patch.object(builtins, 'input', lambda _: '4'):
+    output, dataOut = listSkills(-1)
+    assert output != state
+      
+      
+      
+# ==================================================================================
+# ==================================================================================
+
+# Ensuring the user can add jobs and when five jobs are in the database, it reads full
+
+clearJobs()
+  
+@pytest.mark.parametrize('title, description, employer, location, salary, posterID, result',
+                         [
+                           ('CPE', 'stuff', 'Company4', 'Tampa, FL', '100000', '1', False),
+                           ('CS', 'stuff', 'Company4', 'Tampa, FL', '100000', '2', False),
+                           ('ME', 'stuff', 'Company4', 'Tampa, FL', '100000', '3', False),
+                           ('EE', 'stuff', 'Company4', 'Tampa, FL', '100000', '4', False),
+                           ('BIO', 'stuff', 'Company4', 'Tampa, FL', '100000', '5', True)
+                         ]
+)
+
+
+def test_jobPost(title, description, employer, location, salary, posterID, result):
+  inputs = iter([title, description, employer, location, salary, posterID])
+  with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+    state, data = jobPost(-1) 
+    assert jobsFull() == result
