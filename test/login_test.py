@@ -275,6 +275,7 @@ def test_jobPost(title, description, employer, location, salary, posterID, resul
     assert jobsFull() == result
 
 # testing whether the user can look up the existing first and last name
+# and the extended account creation function
 
 clearUsers()
 
@@ -290,11 +291,8 @@ clearUsers()
 def test_userLookup(username, password, firstname, lastname, result):
   inputs = iter([username, password, firstname, lastname])
   with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-    state, data = newAcct()
+    state, data = newAcct() 
     assert checkExistingNames(firstname, lastname) == result
-
-# testing the extended account creation function
-# @pytest.mark.extendedAccountCreation
 
 
 # testing if the user can see a success story and have the option to play a related video
