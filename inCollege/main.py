@@ -1,3 +1,4 @@
+from pickle import NONE
 import sqlite3
 import os
 from functools import lru_cache
@@ -14,7 +15,9 @@ databaseCursor = database.cursor()
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
 														id INTEGER PRIMARY KEY ASC, 
 														username TEXT, 
-														password TEXT)''')
+														password TEXT,
+                            firstname TEXT,
+                            lastname TEXT)''')
 database.commit()
 
 databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
@@ -121,6 +124,12 @@ def fieldById(field):
 
 usernameById = fieldById("username") # A function f(x) = (username of a user with id x)
 
+
+#firstnameById = fieldById("firstname") # A function f(x) = (username of a user with id x)
+#lastnameById = fieldById("lastname") # A function f(x) = (username of a user with id x)
+
+
+
 def tableEntriesCount(table):
     '''
     Generates a function that returns the number of rows in a given table
@@ -174,6 +183,27 @@ def checkExistingAccts(username, password):
     return found[0]
   else:
     return -1
+
+
+def checkExistingNames(firstname, lastname):
+  '''
+  Looks up a name from firstname and lastname
+
+  param firstname:
+  param lastname:
+  return the id of the specified user or -1 if the user does not exist
+
+  '''
+
+  databaseCursor.execute("SELECT * FROM users WHERE firstname= ? and lastname= ?",(firstname, lastname))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+  else:
+    return -1
+      
+      
+
 
 def numberValidator(number):
     try:
@@ -295,7 +325,7 @@ def mainInterface(asId):
     return jobInterface, (asId,)
   elif sel == 2:
     clear()
-    return underConstruction, (asId, mainInterface)
+    return findPpl, (asId,)
   elif sel == 3:
     clear()
     return listSkills, (asId,)
@@ -305,7 +335,7 @@ def mainInterface(asId):
 
 def login():
   if dbEmpty():
-    print("No existing accounts. Please create a new account.\n")
+    print("\n\nNo existing accounts. Please create a new account.\n")
     return applicationEntry, None
   else:
     username = input("Username: ")
@@ -314,47 +344,52 @@ def login():
     id = checkExistingAccts(username, password)
     if (id != -1):
       clear()
-      print("You have successfully logged in\n")
+      print("\n\nYou have successfully logged in\n")
       return mainInterface, (id,)
     else:
       clear()
-      print("Incorrect username/password. Please try again.\n")
+      print("\n\nIncorrect username/password. Please try again.\n")
       return applicationEntry, None
 
 
 def newAcct():
-	'''
- 	Creates a new account based on user input. Ensures there is room in the database and username and passwords are valid.
+    '''
+    Creates a new account based on user input. Ensures there is room in the database and username and passwords are valid.
 
-	:sideeffect Adds a new user to the users table in the database
-	:return mainInterface state function
-'''
-	if dbFull():
-		print("\nAll permitted accounts have been created, please come back later.\n")
-		return exitState, -1
-	username = gatherInput(
-            "Enter a username: ",
-            "Username already exists. Please try again.",
-            unique)
+    :sideeffect Adds a new user to the users table in the database
+    :return mainInterface state function
+    '''
+    if dbFull():
+      print("\n\nAll permitted accounts have been created, please come back later.\n")
+      return exitState, -1
+    username = gatherInput(
+              "Enter a username: ",
+              "Username already exists. Please try again.",
+              unique)
 
-	password = gatherInput(
-            "\nPassword must meet the following requirements:\n"\
-            "\t-Length of 8-12 characters\n"\
-            "\t-Contain one capital letter\n"\
-            "\t-Contain one digit\n"\
-            "\t-Contain one of the following special characters: !, @, #, $, %, ^, &, *\n"\
-            "\nPassword: ",
-            "Password does not meet security requirements",
-            passwordValidator)
+    password = gatherInput(
+              "\nPassword must meet the following requirements:\n"\
+              "\t-Length of 8-12 characters\n"\
+              "\t-Contain one capital letter\n"\
+              "\t-Contain one digit\n"\
+              "\t-Contain one of the following special characters: !, @, #, $, %, ^, &, *\n"\
+              "\nPassword: ",
+              "Password does not meet security requirements",
+              passwordValidator)
 
-	databaseCursor.execute("""
-                 INSERT INTO users (username, password) VALUES
-                     (?, ?)
-                 """, (username, password))
-	database.commit()
+    firstname = gatherInput("\nEnter your first name:\n", "", vacuouslyTrue)
 
-	clear()
-	return mainInterface, (databaseCursor.lastrowid,)
+    lastname = gatherInput("\nEnter your last name: \n", "", vacuouslyTrue)
+
+
+    databaseCursor.execute("""
+                  INSERT INTO users (username, password, firstname, lastname) VALUES
+                      (?, ?, ?, ?)
+                  """, (username, password, firstname, lastname))
+    database.commit()
+
+    clear()
+    return mainInterface, (databaseCursor.lastrowid,)
 
 def videoPlayer():
 
@@ -382,9 +417,10 @@ def applicationEntry():
            "\t1. Log in to an existing account\n"\
            "\t2. Create a new account\n"\
            "\t3. Why you should join InCollege\n"\
+           "\t4. Find someone you know\n"\
            "Selection: "
   sel = int(gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder('123')))
+                    menuValidatorBuilder('1234')))
 
   if sel == 1:
     clear()
@@ -395,6 +431,9 @@ def applicationEntry():
   elif sel == 3:
     clear()
     return videoPlayer, None
+  elif sel == 4:
+    clear()
+    return findPpl, (-1,)
 
 
 
@@ -416,12 +455,33 @@ def listSkills(asId):
   clear()
   return underConstruction, (asId, listSkills)
 
+def findPpl(asId):
+      findFirstname = gatherInput("Enter first name: ", "", vacuouslyTrue)
+      findLastname = gatherInput("Enter last name: ", "", vacuouslyTrue)
+
+
+      findId = checkExistingNames(findFirstname, findLastname)
+      if (findId != -1):
+        clear()
+        print("\n\nThey are a part of the InCollege system\n")
+        
+      else:
+        clear()
+        print("\n\nThey are not yet a part of the InCollege system yet. Please try again.\n")
+      
+      if asId == -1:
+        return applicationEntry, None
+      else: 
+        return mainInterface, (asId,)
+       
+
+      
 
 def underConstruction(asId, prevState):
-  print("Under construction.\n")
-  input("Press ENTER to continue.\n")
-  clear()
-  return prevState, (asId, )
+      print("Under construction.\n")
+      input("Press ENTER to continue.\n")
+      clear()
+      return prevState, (asId, )
     
 
 
