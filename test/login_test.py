@@ -3,23 +3,24 @@ import builtins
 from unittest import mock
 import sqlite3
 from inCollege.main import *
-
+  
 @pytest.fixture(scope='module')
-def DB():
+def setupDatabase():
+  print("-----INSERT TO A DB-----\n")
   database = sqlite3.connect("inCollege.db")
   databaseCursor = database.cursor()
+  # databaseCursor.execute('''CREATE TABLE users(
+  #                           id INTEGER PRIMARY KEY ASC, 
+  #                           username TEXT, 
+  #                           password TEXT)''')
   sampleAccounts = [
-        (1, 'test1', 'aaaaaaa!A1'),
-        (2, 'test2', 'aaaaaaa!A1'),
-        (3, 'test3', 'aaaaaaa!A1'),
+        (1, 'test1', 'aaaaaaa!A1', 'first', 'last'),
+        (2, 'test2', 'aaaaaaa!A1', 'fname', 'lname'),
+        (3, 'test3', 'aaaaaaa!A1', 'f', 'l'),
     ]                         
-  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
+  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?, ?, ?)''', sampleAccounts)
   database.commit()
-  databaseCursor.execute("SELECT Count(*) FROM users")
-  global cnt 
-  cnt = len(databaseCursor.fetchall())
   yield database
-  print("-----teardown-----\n")
   database.close()
 
 # ==================================================================================
@@ -54,7 +55,9 @@ def DB():
                         ]
 )
 def test_usernameUnique(username, result):
-  assert unique(username) == result
+  output = unique(username)
+  print('Output = ' + str(output))
+  assert output == result
 
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('password, result',
@@ -277,22 +280,16 @@ def test_jobPost(title, description, employer, location, salary, posterID, resul
 # testing whether the user can look up the existing first and last name
 # and the extended account creation function
 
-clearUsers()
-
 @pytest.mark.userLookup
-@pytest.mark.parametrize('username, password, firstname, lastname, result',
+@pytest.mark.parametrize('firstname, lastname, result',
                         [
-                          ('test1', 'aaaaaaa!A1', 'first', 'last', 1),
-                          ('test2', 'aaaaaaa!A1', 'fname', 'lname', 2),
-                          ('test3', 'aaaaaaa!A1', 'f', 'l', 3),
-                          ('test4', 'aaaaaaa!A1', 'fff', 'lll', -1)
+                          ('first', 'last', 1),
+                          ('fname', 'lname', 2),
+                          ('f', 'l', 3)
                         ]
                         )
-def test_userLookup(username, password, firstname, lastname, result):
-  inputs = iter([username, password, firstname, lastname])
-  with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-    state, data = newAcct() 
-    assert checkExistingNames(firstname, lastname) == result
+def test_userLookup(firstname, lastname, result):
+  assert checkExistingNames(firstname, lastname) == result
 
 
 # testing if the user can see a success story and have the option to play a related video
