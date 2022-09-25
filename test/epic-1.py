@@ -1,11 +1,16 @@
 import pytest
 import sqlite3
 from inCollege.main import *
-
+  
 @pytest.fixture(scope='module')
-def DB():
+def setupDatabase():
+  print("-----INSERT TO A DB-----\n")
   database = sqlite3.connect("inCollege.db")
   databaseCursor = database.cursor()
+  # databaseCursor.execute('''CREATE TABLE users(
+  #                           id INTEGER PRIMARY KEY ASC, 
+  #                           username TEXT, 
+  #                           password TEXT)''')
   sampleAccounts = [
         (1, 'test1', 'aaaaaaa!A1', 'first', 'last', 1),
         (2, 'test2', 'aaaaaaa!A1', 'fname', 'lname', 2),
@@ -49,7 +54,9 @@ def DB():
                         ]
 )
 def test_usernameUnique(username, result):
-  assert unique(username) == result
+  output = unique(username)
+  print('Output = ' + str(output))
+  assert output == result
 
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('password, result',
