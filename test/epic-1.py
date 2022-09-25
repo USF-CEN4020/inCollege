@@ -1,29 +1,42 @@
 import pytest
 import sqlite3
 from inCollege.main import *
-
+  
 @pytest.fixture(scope='module')
-def DB():
+def setupDatabase():
+  print("-----INSERT TO A DB-----\n")
   database = sqlite3.connect("inCollege.db")
   databaseCursor = database.cursor()
+  # databaseCursor.execute('''CREATE TABLE users(
+  #                           id INTEGER PRIMARY KEY ASC, 
+  #                           username TEXT, 
+  #                           password TEXT)''')
   sampleAccounts = [
-        (1, 'test1', 'aaaaaaa!A1'),
-        (2, 'test2', 'aaaaaaa!A1'),
-        (3, 'test3', 'aaaaaaa!A1'),
-    ]                         
-  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
-  databaseCursor.execute("SELECT Count(*) FROM users")
-  global cnt 
-  cnt = len(databaseCursor.fetchall())
+        (1, 'test1', 'aaaaaaa!A1', 'first', 'last', 1),
+        (2, 'test2', 'aaaaaaa!A1', 'fname', 'lname', 2),
+        (3, 'test3', 'aaaaaaa!A1', 'f', 'l', 3),
+  ]                         
+  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?, ?, ?)''', sampleAccounts)
   database.commit()
+  databaseCursor.execute("SELECT Count(*) FROM users")
   yield database
-  print("-----teardown-----\n")
   database.close()
 
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
+# ==================================================================================
+# ==================================================================================
+      
+      
+      
+      
+      
+# EPIC #1 Test Cases
+      
 
 
+
+
+# ==================================================================================
+# ==================================================================================
 
 '''
   Story: Account Creation
@@ -41,7 +54,9 @@ def DB():
                         ]
 )
 def test_usernameUnique(username, result):
-  assert unique(username) == result
+  output = unique(username)
+  print('Output = ' + str(output))
+  assert output == result
 
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('password, result',
@@ -60,14 +75,17 @@ def test_passwordValidation(password, result):
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('username, password, result',
                          [
-                           ('test1', 'aaaaaaa!A1', True), # user exists
-                           ('test2', 'aaaaaaa!A1', True), # user exists
-                           ('test3', 'aaaaaaa!A1', True), # user exists
-                           ('test', 'aaaaaaa!A1', False) # No such user
+                           ('test1', 'aaaaaaa!A1', -1), # user exists
+                           ('test2', 'aaaaaaa!A1', -1), # user exists
+                           ('test3', 'aaaaaaa!A1', -1), # user exists
+                           ('test', 'aaaaaaa!A1', -1) # No such user
                          ]
 )
 def test_checkUsernameSaved(username, password, result):
-  assert checkExistingAccts(username, password) == result
+  if username == 'test':
+    assert checkExistingAccts(username, password) == result
+  else:
+    assert checkExistingAccts(username, password) != result
 
 
 '''
@@ -169,4 +187,5 @@ def test_skillsOptions(sel, result):
                         )
 def test_underConstruction(sel, result):
   assert stateUnderConstruction(sel) == result
+
 
