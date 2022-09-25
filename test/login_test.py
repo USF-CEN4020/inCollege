@@ -9,17 +9,14 @@ def DB():
   database = sqlite3.connect("inCollege.db")
   databaseCursor = database.cursor()
   sampleAccounts = [
-        (1, 'test1', 'aaaaaaa!A1'),
-        (2, 'test2', 'aaaaaaa!A1'),
-        (3, 'test3', 'aaaaaaa!A1'),
-    ]                         
-  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?)''', sampleAccounts)
+        (1, 'test1', 'aaaaaaa!A1', 'first', 'last'),
+        (2, 'test2', 'aaaaaaa!A1', 'fname', 'lname'),
+        (3, 'test3', 'aaaaaaa!A1', 'f', 'l'),
+  ]                         
+  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?, ?, ?)''', sampleAccounts)
   database.commit()
   databaseCursor.execute("SELECT Count(*) FROM users")
-  global cnt 
-  cnt = len(databaseCursor.fetchall())
   yield database
-  print("-----teardown-----\n")
   database.close()
 
 # ==================================================================================
@@ -187,7 +184,6 @@ def test_underConstruction(sel, result):
   assert stateUnderConstruction(sel) == result
 
 
-
 # ==================================================================================
 # ==================================================================================
       
@@ -277,22 +273,7 @@ def test_jobPost(title, description, employer, location, salary, posterID, resul
 # testing whether the user can look up the existing first and last name
 # and the extended account creation function
 
-clearUsers()
 
-@pytest.mark.userLookup
-@pytest.mark.parametrize('username, password, firstname, lastname, result',
-                        [
-                          ('test1', 'aaaaaaa!A1', 'first', 'last', 1),
-                          ('test2', 'aaaaaaa!A1', 'fname', 'lname', 2),
-                          ('test3', 'aaaaaaa!A1', 'f', 'l', 3),
-                          ('test4', 'aaaaaaa!A1', 'fff', 'lll', -1)
-                        ]
-                        )
-def test_userLookup(username, password, firstname, lastname, result):
-  inputs = iter([username, password, firstname, lastname])
-  with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-    state, data = newAcct() 
-    assert checkExistingNames(firstname, lastname) == result
 
 
 # testing if the user can see a success story and have the option to play a related video
@@ -302,5 +283,3 @@ def test_successStoryState():
   with mock.patch.object(builtins, 'input', lambda _: '3'):
     output, dataOut = videoPlayer()
     assert output == state
-    
-      
