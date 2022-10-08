@@ -9,6 +9,7 @@ MAX_USERS = 5
 MAX_JOBS = 5
 
 
+
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
@@ -313,7 +314,8 @@ def mainInterface(asId):
           "\t1. Search for a job\n"\
           "\t2. Find someone you know\n"\
           "\t3. Learn a new skill\n"\
-          "\t4. Log Out\n"\
+          "\t4. InCollege navigation links\n"\
+          "\t5. log Out\n"\
           "Selection: "
   sel = int(
         gatherInput(prompt, "Invalid input. Please try again.\n",
@@ -328,6 +330,9 @@ def mainInterface(asId):
   elif sel == 3:
     clear()
     return listSkills, (asId,)
+  elif sel == 4:
+    clear()
+    return inCollegeGroups, (asId,)
   else:
     clear()
     return applicationEntry, None
@@ -417,9 +422,10 @@ def applicationEntry():
            "\t2. Create a new account\n"\
            "\t3. Why you should join InCollege\n"\
            "\t4. Find someone you know\n"\
+           "\t5. InCollege navigation links\n"\
            "Selection: "
   sel = int(gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder('1234')))
+                    menuValidatorBuilder('123456')))
 
   if sel == 1:
     clear()
@@ -433,6 +439,9 @@ def applicationEntry():
   elif sel == 4:
     clear()
     return findPpl, (-1,)
+  elif sel == 5:
+    clear()
+    return inCollegeGroups, (-1,)
 
 
 
@@ -454,6 +463,9 @@ def listSkills(asId):
   clear()
   return underConstruction, (asId, listSkills)
 
+
+
+
 def findPpl(asId):
       findFirstname = gatherInput("Enter first name: ", "", vacuouslyTrue)
       findLastname = gatherInput("Enter last name: ", "", vacuouslyTrue)
@@ -472,17 +484,394 @@ def findPpl(asId):
         return applicationEntry, None
       else: 
         return mainInterface, (asId,)
-       
+
+
+
+def inCollegeGroups(asId):
+    prompt = "Please select an Incollege Group:\n"\
+             "\t1. Useful Links\n"\
+             "\t2. Incollege Important Links\n"\
+            "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12')))
+
+    if sel == 1:
+        clear()
+
+        return usefulLinks, (asId,)
+
+    elif sel == 2:
+        clear()
+
+        return importantLinks, (asId,)
+
+    if asId == -1:
+        return applicationEntry, None
+    else: 
+        return mainInterface, (asId,)
+
+
+
+def usefulLinks(asId):
+    prompt = "Please select an option: \n"\
+             "\t1. General \n"\
+             "\t2. Browser Incollege\n"\
+             "\t3. Business Solutions\n"\
+             "\t4. Directories\n"\
+             "\t5. Go Back\n"\
+            "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12345')))
+
+    if sel == 1:
+        clear()
+        return generalLinks, (asId,)
+
+    elif sel == 2:
+        clear()
+
+        return underConstruction(asId, usefulLinks)
+
+    elif sel == 3:
+        clear()
+        
+        return underConstruction(asId, usefulLinks)
+
+    elif sel == 4:
+        clear()
+        
+        return underConstruction(asId, usefulLinks) 
+    elif sel == 5:
+        clear()
+
+        return inCollegeGroups, (asId,)
+
+
+
+def importantLinks(asId):
+      prompt = "Please select a option below:\n"\
+              "\t1. A Copyright Notice\n"\
+              "\t2. About\n"\
+              "\t3. Accessibility\n"\
+              "\t4. User Agreement\n"\
+              "\t5. Privacy Policy\n"\
+              "\t6. Cookie Policy\n"\
+              "\t7. Copyright Policy\n"\
+              "\t8. Brand Policy\n"\
+              "\t9. Languages\n"\
+              "\t10. Go Back\n"\
+              "Selection: "
+      sel = int(gatherInput(prompt, "Invalid input. Please try again.\n", menuValidatorBuilder(('1','2','3','4','5','6','7','8','9','10'))))
+
+      if sel == 1:
+            clear()
+            return copyRightNotice, (asId,)
+      
+      elif sel == 2:
+            clear()
+            return about, (asId,)
+
+      elif sel == 3:
+            clear()
+            return accessbility, (asId,)
+
+      elif sel == 4:
+            clear()
+            return userAgreement, (asId,)
+
+      elif sel == 5:
+            clear()
+            return privacyPolicy, (asId,)
+      
+      elif sel == 6:
+            clear()
+            return cookiePolicy, (asId,)
+
+      elif sel == 7:
+            clear()
+            return copyRightPolicy, (asId,)
+        
+      elif sel == 8:
+            clear()
+            return brandPolicy, (asId,)
+      
+      elif sel == 9:
+            clear()
+            return languages, (asId,)
+      
+      elif sel == 10:
+            clear()
+            return inCollegeGroups, (asId,)
+
+
+
+def copyRightNotice(asId):
+      print("\n\nCopyright © 2022, InColeege, All rights reserved.\n\n\n")
+      return importantLinks, (asId,)
+
+
+
+def about(asId):
+     print("\n\nWelcome to InCollege, the best professional network for college students\n\n\n")
+     return importantLinks, (asId,)
+
+
+
+def accessbility(asId):
+      print("\n\nHere at InCollege we commit to do everything we can to ensure that\n" + 
+            "the products and services we deliver are accessible to everyone\n\n\n")
+      return importantLinks, (asId,)
+    
+
+
+def userAgreement(asId):
+      print("\n\nWhen you use our Services you agree to all of these terms. Your use of\n" + 
+            "our Services is also subject to our Cookie Policy and our Privacy Policy,\n" + 
+            "which covers how we collect, use, share, and store your personal information.\n\n\n")
+      return importantLinks, (asId,)
+
+
+
+def privacyPolicy(asId):
+      print("\n\nThis Privacy Policy describes Our policies and procedures on the collection,\n" +
+            "use and disclosure of Your information when You use the Service and tells You\n" +
+            "about Your privacy rights and how the law protects You.\n\n\n")
+
+      prompt = "Please select an option: \n"\
+              "\t1. Guest Control\n"\
+              "\t2. Go Back\n"\
+              "selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12'))) 
+
+      if sel == 1:
+            clear()
+            return guestControls, (asId,)
+
+      elif sel == 2:
+            return importantLinks, (asId,)
+
+
+
+def guestControls(asId):
+      #if asId == -1:
+      #      print("\n\tYou are not signed in\n\n")
+      #      return privacyPolicy, (asId,)
+      #else: 
+            prompt = "You can turn off Email, SMS, aand Advertising here: \n"\
+                    "\t1. Email\n"\
+                    "\t2. SMS\n"\
+                    "\t3. Targeted Advertising\n"\
+                    "\t4. Go Back\n"\
+                    "Selection: "
+            sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('1234')))
+
+            if sel == 1:
+                  clear()
+                  return email, (asId,)
+            
+            elif sel == 2:
+                  clear()
+                  return sms, (asId,)
+
+            elif sel == 3:
+                  clear()
+                  return targetedAdvertising, (asId,)
+            
+            elif sel == 4:
+                  return privacyPolicy, (asId,)
+
+
+
+def email(asId):
+      prompt = "Please select an option: \n"\
+             "\t1. Turn on Email \n"\
+             "\t2. Turn of Email \n"\
+             "\t3. Go Back\n"\
+             "Selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
+
+      if sel == 1:
+            clear()
+            print("\n\nEamil turned on\n")
+            return guestControls, (asId,)
+      elif sel == 2:
+            clear()
+            print("\n\nEmail turned off\n")
+            return guestControls, (asId,)
+      elif sel == 3:
+            clear()
+          
+            return guestControls, (asId,)      
+
+
+
+def sms(asId):
+      prompt = "Please select an option: \n"\
+             "\t1. Turn on SMS \n"\
+             "\t2. Turn of SMS \n"\
+             "\t3. Go Back\n"\
+             "Selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
+
+      if sel == 1:
+            clear()
+            print("\n\nSMS turned on\n")
+            return guestControls, (asId,)
+      elif sel == 2:
+            clear()
+            print("\n\nSMS turned off\n")
+            return guestControls, (asId,)
+      elif sel == 3:
+            clear()
+          
+            return guestControls, (asId,)   
+
+
+
+def targetedAdvertising(asId):
+      prompt = "Please select an option: \n"\
+             "\t1. Turn on Targeted Advertising \n"\
+             "\t2. Turn of Targeted Advertising \n"\
+             "\t3. Go Back\n"\
+             "Selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
+
+      if sel == 1:
+            clear()
+            print("\n\nAdvertising turned on\n")
+            return guestControls, (asId,)
+      elif sel == 2:
+            clear()
+            print("\n\nAdvertising turned off\n")
+            return guestControls, (asId,)
+      elif sel == 3:
+            clear()
+          
+            return guestControls, (asId,)   
+
+
+
+def cookiePolicy(asId):
+      print("\n\nThis Cookies Policy explains what Cookies are and how We use them.\n"+ 
+            "You should read this policy so You can understand what type of cookies\n" + 
+            "We use, or the information We collect using Cookies and how that information is used.\n\n\n")
+      return importantLinks, (asId,)
+
+
+
+def copyRightPolicy(asId):
+      print("\n\nCopyright Policy. You may not post, distribute, or reproduce in any way any\n" +
+            "copyrighted material, trademarks, or other proprietary information without \n" +
+            "obtaining the prior written consent of the owner of such proprietary rights.\n" +
+            "If you believe that your work has been copied and posted on the Websites in\n" +
+            "a way that constitutes copyright infringement, please provide us with the \n" +
+            "following information: \n\n\n")
+      return importantLinks, (asId,)
+
+
+
+def brandPolicy(asId):
+      print("\n\nOur trademarks and other brand features are protected by law.\n" +  
+            "You wll need our permission in order to use them.\n" +
+            "For permission requests, please contact TrademarkRequest@InCollege.com\n\n\n")
+      return importantLinks, (asId,)
+
+
+
+def languages(asId):
+      #if asId == -1:
+      #      print("\tYou are not signed in\n\n")
+      #      return privacyPolicy, (asId,)
+      #else:
+            prompt = "Please select a language: \n"\
+                    "\t1. English\n"\
+                    "\t2. Spanish\n"\
+                    "\t3. Go Back\n"\
+                    "Selection: "
+            sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))      
+
+            if sel == 1:
+              clear()
+              print("\n\nLanguage now is English\n\n")
+              return importantLinks, (asId,)
+            
+            elif sel == 2:
+                  clear()
+                  print("\n\nLanguage now is Spanish\n\n")
+                  return importantLinks, (asId,)
+            
+            elif sel == 3:
+                  clear()
+                  return importantLinks, (asId,)
+
+
+        
+def generalLinks(asId):
+    prompt = "Please select an option: \n"\
+             "\t1. Sign Up \n"\
+             "\t2. Help Center\n"\
+             "\t3. About\n"\
+             "\t4. Press\n"\
+             "\t5. Blog\n"\
+             "\t6. Careers\n"\
+             "\t7. Developers\n"\
+             "\t8. Go Back \n"\
+            "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12345678')))
+
+    if sel == 1:
+       clear()
+       return newAcct, None
+
+    elif sel == 2:
+       clear()
+
+       print("\n\nWe're here to help\n\n")
+       return generalLinks, (asId,)
+
+    elif sel == 3:
+        clear()
+
+        print("\n\nIn College: Welcome to In College, the world's largest college student network with many users in many countries and territories worldwide\n\n")
+        return generalLinks, (asId,)
+ 
+    elif sel == 4:
+        clear()
+
+        print("\n\nIn College Pressroom: Stay on top of the latest news, updates, and reports\n\n")
+        return generalLinks, (asId,)
+
+    elif sel == 5:
+        clear()
+        
+        return underConstruction(asId, generalLinks)
+
+    elif sel == 6:
+        clear()
+        
+        return underConstruction(asId, generalLinks)
+
+    elif sel == 7:
+        clear()
+
+        return underConstruction(asId, generalLinks)
+
+    elif sel == 8:
+        clear()
+
+        return usefulLinks, (asId,)
+
+
+
+
+
 
       
 
 def underConstruction(asId, prevState):
-      print("Under construction.\n")
-      input("Press ENTER to continue.\n")
+      print("\n\nUnder construction.\n")
+      input("\nPress ENTER to continue.\n")
       clear()
       return prevState, (asId, )
     
-
 
 
 
