@@ -9,7 +9,6 @@ MAX_USERS = 5
 MAX_JOBS = 5
 
 
-
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
