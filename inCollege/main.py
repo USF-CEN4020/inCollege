@@ -33,6 +33,20 @@ databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
 
 database.commit()
 
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS userSettings(
+                            userId INTEGER,
+                            receiveEmail INTEGER,
+                            receiveSMS INTEGER,
+                            targetedAds INTEGER,
+                            language TEXT,
+                            FOREIGN KEY(userId)
+                                REFERENCES users(id))''')
+
+database.commit()
+
+DEFAULT_GUEST_CONTROLS = (1, 1, 1)
+DEFAULT_LANGUAGE_SETTINGS = ('english',)
+
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
@@ -96,7 +110,14 @@ def clearJobs():
 def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):
 		print(row)
+
+def clearUserSetting(uId):
+  databaseCursor.execute("DELETE FROM userSettings WHERE userId = ?", (uId,))
+  database.commit()
 	
+def enterToContinue():
+  input("\nPress ENTER to continue.\n")
+  clear()
 
 
 #----------------------------------------------------------------------------------------
@@ -167,6 +188,11 @@ def unique(username):
     return lookup.fetchone()[0] == 0
 
 
+def acctSettingsInitilized(userId):
+  lookup = databaseCursor.execute("SELECT COUNT(*) FROM userSettings WHERE userId IS ?", (userId,))
+  return lookup.fetchone()[0] == 1
+
+
 def checkExistingAccts(username, password):
   '''
   Looks up an account from a username and password
@@ -183,6 +209,30 @@ def checkExistingAccts(username, password):
     return found[0]
   else:
     return -1
+
+
+def checkUserGuestControls(userId):
+
+  
+  databaseCursor.execute("SELECT receiveEmail, receiveSMS, targetedAds FROM userSettings WHERE userId = ?", (userId,))
+  found = databaseCursor.fetchone()
+
+  if found:
+    return found
+  else:
+    return DEFAULT_GUEST_CONTROLS
+
+
+def checkUserLanguage(userId):
+
+
+  databaseCursor.execute("SELECT language FROM userSettings where userId = ?", (userId,))
+  found = databaseCursor.fetchone()
+
+  if found:
+    return found[0]
+  else:
+    return DEFAULT_LANGUAGE_SETTINGS
 
 
 def checkExistingNames(firstname, lastname):
@@ -236,19 +286,34 @@ def menuValidatorBuilder(validOptions):
     '''
     Generates a validator from a list of valid options
 
-    :param validOptions: A string consisting of every valid input from a menu
+    :param validOptions: A string or tuple consisting of every valid input from a menu
     :return a function f(x) that returns if x is in validOptions
     '''
 
     optionsList = list(validOptions)
     return lambda menuInput: (menuInput in optionsList and menuInput != '')
 
+
+@lru_cache
+def binaryOptionValidatorBuilder(firstOption, secondOption):
+  '''
+  Generates a validator that excepts a case-insensitive version of a binary choise
+
+  :param firstOption: A string that represent one of the two options
+  :param secondOption: A string that represent one of the two options
+  :return a function f(x) that returns if lower(x) == lower(firstOption) or lower(secondOption)
+  '''
+
+  firstOption = firstOption.lower()
+  secondOption = secondOption.lower()
+  return lambda textInput: (textInput == firstOption or textInput == secondOption)
+
 def gatherInput(prompt, failResponse, validator):
     '''
 	Continuously prompts the user for input, validates the input it gets are returns it if its fine or gives an error message if its bad
 
-    :param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
-    :param failResponse: A message the user recieves if they give bad input
+    :param prompt: A string the user receives when being prompted for input, used in an "input(prompt)" call
+    :param failResponse: A message the user receives if they give bad input
     :param validator: A function f(x) = (x is a valid string for a given prompt)
     :return validated user input
     '''
@@ -314,7 +379,8 @@ def mainInterface(asId):
           "\t1. Search for a job\n"\
           "\t2. Find someone you know\n"\
           "\t3. Learn a new skill\n"\
-          "\t4. Log Out\n"\
+          "\t4. InCollege navigation links\n"\
+          "\t5. log Out\n"\
           "Selection: "
   sel = int(
         gatherInput(prompt, "Invalid input. Please try again.\n",
@@ -329,6 +395,9 @@ def mainInterface(asId):
   elif sel == 3:
     clear()
     return listSkills, (asId,)
+  elif sel == 4:
+    clear()
+    return inCollegeGroups, (asId,)
   else:
     clear()
     return applicationEntry, None
@@ -394,10 +463,8 @@ def newAcct():
 def videoPlayer():
 
     print("Video is now playing\n\n")
-
-    input("Press ENTER to continue.\n")
-    clear()
-
+    enterToContinue()
+    
     return applicationEntry, None
 
 
@@ -418,9 +485,10 @@ def applicationEntry():
            "\t2. Create a new account\n"\
            "\t3. Why you should join InCollege\n"\
            "\t4. Find someone you know\n"\
+           "\t5. InCollege navigation links\n"\
            "Selection: "
   sel = int(gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder('1234')))
+                    menuValidatorBuilder('123456')))
 
   if sel == 1:
     clear()
@@ -434,7 +502,9 @@ def applicationEntry():
   elif sel == 4:
     clear()
     return findPpl, (-1,)
-
+  elif sel == 5:
+    clear()
+    return inCollegeGroups, (-1,)
 
 
 
@@ -455,6 +525,8 @@ def listSkills(asId):
   clear()
   return underConstruction, (asId, listSkills)
 
+
+
 def findPpl(asId):
       findFirstname = gatherInput("Enter first name: ", "", vacuouslyTrue)
       findLastname = gatherInput("Enter last name: ", "", vacuouslyTrue)
@@ -473,17 +545,352 @@ def findPpl(asId):
         return applicationEntry, None
       else: 
         return mainInterface, (asId,)
-       
 
+
+
+def inCollegeGroups(asId):
+    prompt = "Please select an Incollege Group:\n"\
+             "\t1. Useful Links\n"\
+             "\t2. Incollege Important Links\n"\
+             "\t3. Go Back\n"\
+            "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
+
+    if sel == 1:
+        clear()
+        return usefulLinks, (asId,)
+
+    elif sel == 2:
+        clear()
+        return importantLinks, (asId,)
+    else:
+        if asId == -1:
+            return applicationEntry, None
+        else: 
+            return mainInterface, (asId,)
+
+
+
+def usefulLinks(asId):
+    prompt = "Please select an option: \n"\
+             "\t1. General \n"\
+             "\t2. Browser Incollege\n"\
+             "\t3. Business Solutions\n"\
+             "\t4. Directories\n"\
+             "\t5. Go Back\n"\
+            "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12345')))
+
+    if sel == 1:
+        clear()
+        return generalLinks, (asId,)
+
+    elif sel == 2 or sel == 3 or sel == 4:
+        clear()
+
+        return underConstruction, (asId, usefulLinks)
       
+    elif sel == 5:
+        clear()
 
-def underConstruction(asId, prevState):
-      print("Under construction.\n")
-      input("Press ENTER to continue.\n")
-      clear()
-      return prevState, (asId, )
+        return inCollegeGroups, (asId,)
+
+
+
+def importantLinks(asId):
+      prompt = "Please select a option below:\n"\
+              "\t1. A Copyright Notice\n"\
+              "\t2. About\n"\
+              "\t3. Accessibility\n"\
+              "\t4. User Agreement\n"\
+              "\t5. Privacy Policy\n"\
+              "\t6. Cookie Policy\n"\
+              "\t7. Copyright Policy\n"\
+              "\t8. Brand Policy\n"\
+              "\t9. Languages\n"\
+              "\t10. Go Back\n"\
+              "Selection: "
+      sel = int(gatherInput(prompt, "Invalid input. Please try again.\n", menuValidatorBuilder(('1','2','3','4','5','6','7','8','9','10'))))
+
+      if sel == 1:
+            clear()
+            return copyRightNotice, (asId,)
+      
+      elif sel == 2:
+            clear()
+            return about, (asId,)
+
+      elif sel == 3:
+            clear()
+            return accessbility, (asId,)
+
+      elif sel == 4:
+            clear()
+            return userAgreement, (asId,)
+
+      elif sel == 5:
+            clear()
+            return privacyPolicy, (asId,)
+      
+      elif sel == 6:
+            clear()
+            return cookiePolicy, (asId,)
+
+      elif sel == 7:
+            clear()
+            return copyRightPolicy, (asId,)
+        
+      elif sel == 8:
+            clear()
+            return brandPolicy, (asId,)
+      
+      elif sel == 9:
+            clear()
+            return languages, (asId,)
+      
+      elif sel == 10:
+            clear()
+            return inCollegeGroups, (asId,)
+
+
+
+def copyRightNotice(asId):
+      print("\n\nCopyright © 2022, InColeege, All rights reserved.\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
+
+
+
+def about(asId):
+      print("\n\nWelcome to InCollege, the best professional network for college students\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
+
+
+
+def accessbility(asId):
+      print("\n\nHere at InCollege we commit to do everything we can to ensure that\n" + 
+            "the products and services we deliver are accessible to everyone\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
     
 
+
+def userAgreement(asId):
+      print("\n\nWhen you use our Services you agree to all of these terms. Your use of\n" + 
+            "our Services is also subject to our Cookie Policy and our Privacy Policy,\n" + 
+            "which covers how we collect, use, share, and store your personal information.\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
+
+
+
+def privacyPolicy(asId):
+      print("\n\nThis Privacy Policy describes Our policies and procedures on the collection,\n" +
+            "use and disclosure of Your information when You use the Service and tells You\n" +
+            "about Your privacy rights and how the law protects You.\n\n\n")
+
+      
+      if (asId == -1):
+        return importantLinks, (asId,)
+
+      controls = checkUserGuestControls(asId)
+
+      print("Your current privacy settings:")
+      
+      if (controls[0] == 1):
+        print("\tInCollege Emails: ENABLED")
+      else:
+        print("\tInCollege Emails: DISABLED")
+
+      if (controls[1] == 1):
+        print("\tInCollege SMS: ENABLED")
+      else:
+        print("\tInCollege SMS: DISABLED")
+
+      if (controls[2] == 1):
+        print("\tTargeted Emails : ENABLED")
+      else:
+        print("\tTargeted Emails : DISABLED")
+
+      print()
+
+      prompt = "Please select an option: \n"\
+              "\t1. Edit Guest Controls\n"\
+              "\t2. Go Back\n"\
+              "selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12'))) 
+
+      if sel == 1:
+            clear()
+            return guestControls, (asId,)
+
+      elif sel == 2:
+            clear()
+            return importantLinks, (asId,)
+
+
+isYes = lambda x: (1 if x.lower() == "yes" else 0)
+
+def guestControls(asId):
+
+  email = gatherInput("Would you like to receive emails from InCollege? (yes / no) ",
+                      "Please enter either \"yes\" or \"no\".",
+                      binaryOptionValidatorBuilder("yes", "no"))
+
+  sms = gatherInput("Would you like to receive text messages from InCollege? (yes / no) ",
+                      "Please enter either \"yes\" or \"no\".",
+                      binaryOptionValidatorBuilder("yes", "no"))
+
+  targetedAds = gatherInput("Would you like personalized advertising from InCollege? (yes / no) ",
+                      "Please enter either \"yes\" or \"no\".",
+                      binaryOptionValidatorBuilder("yes", "no"))
+
+
+  if (not acctSettingsInitilized(asId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (asId, isYes(email), isYes(sms), isYes(targetedAds), "english"))
+    
+  else:
+    databaseCursor.execute('''UPDATE userSettings SET
+                                                    receiveEmail = ?,
+                                                    receiveSMS = ?,
+                                                    targetedAds = ?
+                                                  WHERE
+                                                    userId = ?''', (isYes(email), isYes(sms), isYes(targetedAds), asId)) 
+
+  database.commit()
+
+  clear()
+  return privacyPolicy, (asId,)
+
+def cookiePolicy(asId):
+      print("\n\nThis Cookies Policy explains what Cookies are and how We use them.\n"+ 
+            "You should read this policy so You can understand what type of cookies\n" + 
+            "We use, or the information We collect using Cookies and how that information is used.\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
+
+
+
+def copyRightPolicy(asId):
+      print("\n\nCopyright Policy. You may not post, distribute, or reproduce in any way any\n" +
+            "copyrighted material, trademarks, or other proprietary information without \n" +
+            "obtaining the prior written consent of the owner of such proprietary rights.\n" +
+            "If you believe that your work has been copied and posted on the Websites in\n" +
+            "a way that constitutes copyright infringement, please provide us with the \n" +
+            "following information: \n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
+
+
+
+def brandPolicy(asId):
+      print("\n\nOur trademarks and other brand features are protected by law.\n" +  
+            "You wll need our permission in order to use them.\n" +
+            "For permission requests, please contact TrademarkRequest@InCollege.com\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
+
+
+
+def languages(asId):
+
+      print("InCollege is available in ENGLISH and SPANISH.\n")
+
+      if (asId == -1):
+        return importantLinks, (asId,)
+
+      currLanguage = checkUserLanguage(asId).upper()
+
+      print("Your current language is: " + currLanguage)
+
+      prompt = "Please select an option: \n"\
+              "\t1. Change Language\n"\
+              "\t2. Go Back\n"\
+              "Selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12')))      
+
+      if sel == 1:
+        clear()
+        return setLanguage, (asId,)
+      
+      elif sel == 2:
+        clear()
+        return importantLinks, (asId,)
+
+
+
+def setLanguage(asId):
+
+  lang = gatherInput("Please select a language. (English or Spanish) ",
+                      "Only English and Spanish are available at this time.",
+                      binaryOptionValidatorBuilder("english", "spanish")).lower()
+
+  if (not acctSettingsInitilized(asId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (asId, 1, 1, 1, lang))
+  else:
+    databaseCursor.execute("UPDATE userSettings SET language = ? WHERE userId = ?", (lang, asId))
+  
+  database.commit()
+
+  clear()
+  return languages, (asId,)
+
+
+
+def generalLinks(asId):
+    prompt = "Please select an option: \n"\
+             "\t1. Sign Up \n"\
+             "\t2. Help Center\n"\
+             "\t3. About\n"\
+             "\t4. Press\n"\
+             "\t5. Blog\n"\
+             "\t6. Careers\n"\
+             "\t7. Developers\n"\
+             "\t8. Go Back \n"\
+            "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12345678')))
+
+    if sel == 1:
+       clear()
+       return newAcct, None
+
+    elif sel == 2:
+       clear()
+
+       print("\n\nWe're here to help\n\n")
+       return generalLinks, (asId,)
+
+    elif sel == 3:
+        clear()
+
+        print("\n\nIn College: Welcome to In College, the world's largest college student network with many users in many countries and territories worldwide\n\n")
+        return generalLinks, (asId,)
+ 
+    elif sel == 4:
+        clear()
+
+        print("\n\nIn College Pressroom: Stay on top of the latest news, updates, and reports\n\n")
+        return generalLinks, (asId,)
+
+    elif sel == 5 or sel == 6 or sel == 7:
+        clear()
+        
+        return underConstruction(asId, generalLinks)
+
+    elif sel == 8:
+        clear()
+
+        return usefulLinks, (asId,)
+
+
+
+
+def underConstruction(asId, prevState):
+      print("\n\nUnder construction.\n")
+      enterToContinue()
+      return prevState, (asId, )
+    
 
 
 
