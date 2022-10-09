@@ -33,6 +33,20 @@ databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
 
 database.commit()
 
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS userSettings(
+                            userId INTEGER,
+                            receiveEmail INTEGER,
+                            receiveSMS INTEGER,
+                            targetedAds INTEGER,
+                            language TEXT,
+                            FOREIGN KEY(userId)
+                                REFERENCES users(id))''')
+
+database.commit()
+
+DEFAULT_GUEST_CONTROLS = (1, 1, 1)
+DEFAULT_LANGUAGE_SETTINGS = ('english',)
+
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
 
@@ -167,6 +181,11 @@ def unique(username):
     return lookup.fetchone()[0] == 0
 
 
+def acctSettingsInitilized(userId):
+  lookup = databaseCursor.execute("SELECT COUNT(*) FROM userSettings WHERE userId IS ?", (userId,))
+  return lookup.fetchone()[0] == 1
+
+
 def checkExistingAccts(username, password):
   '''
   Looks up an account from a username and password
@@ -183,6 +202,30 @@ def checkExistingAccts(username, password):
     return found[0]
   else:
     return -1
+
+
+def checkUserGuestControls(userId):
+
+  
+  databaseCursor.execute("SELECT receiveEmail, receiveSMS, targetedAds FROM userSettings WHERE userId = ?", (userId,))
+  found = databaseCursor.fetchone()
+
+  if found:
+    return found
+  else:
+    return DEFAULT_GUEST_CONTROLS
+
+
+def checkUserLanguage(userId):
+
+
+  databaseCursor.execute("SELECT language FROM userSettings where userId = ?", (userId,))
+  found = databaseCursor.fetchone()
+
+  if found:
+    return found[0]
+  else:
+    return DEFAULT_LANGUAGE_SETTINGS
 
 
 def checkExistingNames(firstname, lastname):
@@ -236,19 +279,34 @@ def menuValidatorBuilder(validOptions):
     '''
     Generates a validator from a list of valid options
 
-    :param validOptions: A string consisting of every valid input from a menu
+    :param validOptions: A string or tuple consisting of every valid input from a menu
     :return a function f(x) that returns if x is in validOptions
     '''
 
     optionsList = list(validOptions)
     return lambda menuInput: (menuInput in optionsList and menuInput != '')
 
+
+@lru_cache
+def binaryOptionValidatorBuilder(firstOption, secondOption):
+  '''
+  Generates a validator that excepts a case-insensitive version of a binary choise
+
+  :param firstOption: A string that represent one of the two options
+  :param secondOption: A string that represent one of the two options
+  :return a function f(x) that returns if lower(x) == lower(firstOption) or lower(secondOption)
+  '''
+
+  firstOption = firstOption.lower()
+  secondOption = secondOption.lower()
+  return lambda textInput: (textInput == firstOption or textInput == secondOption)
+
 def gatherInput(prompt, failResponse, validator):
     '''
 	Continuously prompts the user for input, validates the input it gets are returns it if its fine or gives an error message if its bad
 
-    :param prompt: A string the user recieves when being prompted for input, used in an "input(prompt)" call
-    :param failResponse: A message the user recieves if they give bad input
+    :param prompt: A string the user receives when being prompted for input, used in an "input(prompt)" call
+    :param failResponse: A message the user receives if they give bad input
     :param validator: A function f(x) = (x is a valid string for a given prompt)
     :return validated user input
     '''
@@ -445,7 +503,6 @@ def applicationEntry():
 
 
 
-
 def listSkills(asId):
   prompt = "Please select a skill below:\n"\
           "\t1. Setup a database\n"\
@@ -462,7 +519,6 @@ def listSkills(asId):
     return mainInterface, (asId,)
   clear()
   return underConstruction, (asId, listSkills)
-
 
 
 
@@ -491,23 +547,22 @@ def inCollegeGroups(asId):
     prompt = "Please select an Incollege Group:\n"\
              "\t1. Useful Links\n"\
              "\t2. Incollege Important Links\n"\
+             "\t3. Go Back\n"\
             "Selection: "
-    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12')))
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
 
     if sel == 1:
         clear()
-
         return usefulLinks, (asId,)
 
     elif sel == 2:
         clear()
-
         return importantLinks, (asId,)
-
-    if asId == -1:
-        return applicationEntry, None
-    else: 
-        return mainInterface, (asId,)
+    else:
+        if asId == -1:
+            return applicationEntry, None
+        else: 
+            return mainInterface, (asId,)
 
 
 
@@ -528,17 +583,17 @@ def usefulLinks(asId):
     elif sel == 2:
         clear()
 
-        return underConstruction(asId, usefulLinks)
+        return underConstruction, (asId, usefulLinks)
 
     elif sel == 3:
         clear()
         
-        return underConstruction(asId, usefulLinks)
+        return underConstruction, (asId, usefulLinks)
 
     elif sel == 4:
         clear()
         
-        return underConstruction(asId, usefulLinks) 
+        return underConstruction, (asId, usefulLinks) 
     elif sel == 5:
         clear()
 
@@ -635,8 +690,33 @@ def privacyPolicy(asId):
             "use and disclosure of Your information when You use the Service and tells You\n" +
             "about Your privacy rights and how the law protects You.\n\n\n")
 
+      
+      if (asId == -1):
+        return importantLinks, (asId,)
+
+      controls = checkUserGuestControls(asId)
+
+      print("Your current privacy settings:")
+      
+      if (controls[0] == 1):
+        print("\tInCollege Emails: ENABLED")
+      else:
+        print("\tInCollege Emails: DISABLED")
+
+      if (controls[1] == 1):
+        print("\tInCollege SMS: ENABLED")
+      else:
+        print("\tInCollege SMS: DISABLED")
+
+      if (controls[2] == 1):
+        print("\tTargeted Emails : ENABLED")
+      else:
+        print("\tTargeted Emails : DISABLED")
+
+      print()
+
       prompt = "Please select an option: \n"\
-              "\t1. Guest Control\n"\
+              "\t1. Edit Guest Controls\n"\
               "\t2. Go Back\n"\
               "selection: "
       sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12'))) 
@@ -646,108 +726,42 @@ def privacyPolicy(asId):
             return guestControls, (asId,)
 
       elif sel == 2:
+            clear()
             return importantLinks, (asId,)
 
 
+isYes = lambda x: (1 if x.lower() == "yes" else 0)
 
 def guestControls(asId):
-      #if asId == -1:
-      #      print("\n\tYou are not signed in\n\n")
-      #      return privacyPolicy, (asId,)
-      #else: 
-            prompt = "You can turn off Email, SMS, aand Advertising here: \n"\
-                    "\t1. Email\n"\
-                    "\t2. SMS\n"\
-                    "\t3. Targeted Advertising\n"\
-                    "\t4. Go Back\n"\
-                    "Selection: "
-            sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('1234')))
 
-            if sel == 1:
-                  clear()
-                  return email, (asId,)
-            
-            elif sel == 2:
-                  clear()
-                  return sms, (asId,)
+  email = gatherInput("Would you like to receive emails from InCollege? (yes / no) ",
+                      "Please enter either \"yes\" or \"no\".",
+                      binaryOptionValidatorBuilder("yes", "no"))
 
-            elif sel == 3:
-                  clear()
-                  return targetedAdvertising, (asId,)
-            
-            elif sel == 4:
-                  return privacyPolicy, (asId,)
+  sms = gatherInput("Would you like to receive text messages from InCollege? (yes / no) ",
+                      "Please enter either \"yes\" or \"no\".",
+                      binaryOptionValidatorBuilder("yes", "no"))
+
+  targetedAds = gatherInput("Would you like personalized advertising from InCollege? (yes / no) ",
+                      "Please enter either \"yes\" or \"no\".",
+                      binaryOptionValidatorBuilder("yes", "no"))
 
 
+  if (not acctSettingsInitilized(asId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (asId, isYes(email), isYes(sms), isYes(targetedAds), "english"))
+    
+  else:
+    databaseCursor.execute('''UPDATE userSettings SET
+                                                    receiveEmail = ?,
+                                                    receiveSMS = ?,
+                                                    targetedAds = ?
+                                                  WHERE
+                                                    userId = ?''', (isYes(email), isYes(sms), isYes(targetedAds), asId)) 
 
-def email(asId):
-      prompt = "Please select an option: \n"\
-             "\t1. Turn on Email \n"\
-             "\t2. Turn of Email \n"\
-             "\t3. Go Back\n"\
-             "Selection: "
-      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
+  database.commit()
 
-      if sel == 1:
-            clear()
-            print("\n\nEamil turned on\n")
-            return guestControls, (asId,)
-      elif sel == 2:
-            clear()
-            print("\n\nEmail turned off\n")
-            return guestControls, (asId,)
-      elif sel == 3:
-            clear()
-          
-            return guestControls, (asId,)      
-
-
-
-def sms(asId):
-      prompt = "Please select an option: \n"\
-             "\t1. Turn on SMS \n"\
-             "\t2. Turn of SMS \n"\
-             "\t3. Go Back\n"\
-             "Selection: "
-      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
-
-      if sel == 1:
-            clear()
-            print("\n\nSMS turned on\n")
-            return guestControls, (asId,)
-      elif sel == 2:
-            clear()
-            print("\n\nSMS turned off\n")
-            return guestControls, (asId,)
-      elif sel == 3:
-            clear()
-          
-            return guestControls, (asId,)   
-
-
-
-def targetedAdvertising(asId):
-      prompt = "Please select an option: \n"\
-             "\t1. Turn on Targeted Advertising \n"\
-             "\t2. Turn of Targeted Advertising \n"\
-             "\t3. Go Back\n"\
-             "Selection: "
-      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
-
-      if sel == 1:
-            clear()
-            print("\n\nAdvertising turned on\n")
-            return guestControls, (asId,)
-      elif sel == 2:
-            clear()
-            print("\n\nAdvertising turned off\n")
-            return guestControls, (asId,)
-      elif sel == 3:
-            clear()
-          
-            return guestControls, (asId,)   
-
-
+  clear()
+  return privacyPolicy, (asId,)
 
 def cookiePolicy(asId):
       print("\n\nThis Cookies Policy explains what Cookies are and how We use them.\n"+ 
@@ -777,33 +791,50 @@ def brandPolicy(asId):
 
 
 def languages(asId):
-      #if asId == -1:
-      #      print("\tYou are not signed in\n\n")
-      #      return privacyPolicy, (asId,)
-      #else:
-            prompt = "Please select a language: \n"\
-                    "\t1. English\n"\
-                    "\t2. Spanish\n"\
-                    "\t3. Go Back\n"\
-                    "Selection: "
-            sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))      
 
-            if sel == 1:
-              clear()
-              print("\n\nLanguage now is English\n\n")
-              return importantLinks, (asId,)
-            
-            elif sel == 2:
-                  clear()
-                  print("\n\nLanguage now is Spanish\n\n")
-                  return importantLinks, (asId,)
-            
-            elif sel == 3:
-                  clear()
-                  return importantLinks, (asId,)
+      print("InCollege is available in ENGLISH and SPANISH.\n")
+
+      if (asId == -1):
+        return importantLinks, (asId,)
+
+      currLanguage = checkUserLanguage(asId).upper()
+
+      print("Your current language is: " + currLanguage)
+
+      prompt = "Please select an option: \n"\
+              "\t1. Change Language\n"\
+              "\t2. Go Back\n"\
+              "Selection: "
+      sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('12')))      
+
+      if sel == 1:
+        clear()
+        return setLanguage, (asId,)
+      
+      elif sel == 2:
+        clear()
+        return importantLinks, (asId,)
 
 
-        
+
+def setLanguage(asId):
+
+  lang = gatherInput("Please select a language. (English or Spanish) ",
+                      "Only English and Spanish are available at this time.",
+                      binaryOptionValidatorBuilder("english", "spanish")).lower()
+
+  if (not acctSettingsInitilized(asId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (asId, 1, 1, 1, lang))
+  else:
+    databaseCursor.execute("UPDATE userSettings SET language = ? WHERE userId = ?", (lang, asId))
+  
+  database.commit()
+
+  clear()
+  return languages, (asId,)
+
+
+
 def generalLinks(asId):
     prompt = "Please select an option: \n"\
              "\t1. Sign Up \n"\
@@ -861,10 +892,6 @@ def generalLinks(asId):
 
 
 
-
-
-
-      
 
 def underConstruction(asId, prevState):
       print("\n\nUnder construction.\n")
