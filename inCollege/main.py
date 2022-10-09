@@ -110,6 +110,10 @@ def clearJobs():
 def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):
 		print(row)
+
+def clearUserSetting(uId):
+  databaseCursor.execute("DELETE FROM userSettings WHERE userId = ?", (uId,))
+  database.commit()
 	
 def enterToContinue():
   input("\nPress ENTER to continue.\n")

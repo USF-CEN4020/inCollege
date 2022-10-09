@@ -81,3 +81,32 @@ def test_importantLinks(select, result):
   with mock.patch.object(builtins, 'input', lambda _: select):
     output, dataOut = importantLinks(-1)
     assert output == state
+
+
+
+@pytest.mark.languageSetting
+@pytest.mark.parametrize('lang',
+                        ['english', 'spanish'])
+def test_setLang(lang):
+    clearUserSetting(-2)
+    with mock.patch.object(builtins, 'input', lambda _: lang):
+        output, dataOut = setLanguage(-2)
+    assert checkUserLanguage(-2) == lang
+
+
+@pytest.mark.guestControl
+@pytest.mark.parametrize('emailChoice, smsChoice, adChoice, emailSet, smsSet, adSet',
+                        [( 'yes', 'yes', 'yes', 1,1,1),
+                         ( 'yes', 'yes', 'no', 1,1,0),
+                         ( 'yes', 'no', 'yes', 1,0,1),
+                         ( 'yes', 'no', 'no', 1,0,0),
+                         ( 'no', 'yes', 'yes', 0,1,1),
+                         ( 'no', 'yes', 'no', 0,1,0),
+                         ( 'no', 'no', 'yes', 0,0,1),
+                         ( 'no', 'no', 'no', 0,0,0)])
+def test_setGuestControls(emailChoice, smsChoice, adChoice, emailSet, smsSet, adSet):
+    clearUserSetting(-2)
+    iterChoice = iter([emailChoice, smsChoice, adChoice])
+    with mock.patch.object(builtins, 'input', lambda _: next(iterChoice)):
+        output, dataout = guestControls(-2)
+    assert checkUserGuestControls(-2) == (emailSet, smsSet, adSet)
