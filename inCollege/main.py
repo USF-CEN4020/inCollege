@@ -111,6 +111,9 @@ def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):
 		print(row)
 	
+def enterToContinue():
+  input("\nPress ENTER to continue.\n")
+  clear()
 
 
 #----------------------------------------------------------------------------------------
@@ -456,10 +459,8 @@ def newAcct():
 def videoPlayer():
 
     print("Video is now playing\n\n")
-
-    input("Press ENTER to continue.\n")
-    clear()
-
+    enterToContinue()
+    
     return applicationEntry, None
 
 
@@ -580,20 +581,11 @@ def usefulLinks(asId):
         clear()
         return generalLinks, (asId,)
 
-    elif sel == 2:
+    elif sel == 2 or sel == 3 or sel == 4:
         clear()
 
         return underConstruction, (asId, usefulLinks)
-
-    elif sel == 3:
-        clear()
-        
-        return underConstruction, (asId, usefulLinks)
-
-    elif sel == 4:
-        clear()
-        
-        return underConstruction, (asId, usefulLinks) 
+      
     elif sel == 5:
         clear()
 
@@ -660,19 +652,22 @@ def importantLinks(asId):
 
 def copyRightNotice(asId):
       print("\n\nCopyright © 2022, InColeege, All rights reserved.\n\n\n")
+      enterToContinue()
       return importantLinks, (asId,)
 
 
 
 def about(asId):
-     print("\n\nWelcome to InCollege, the best professional network for college students\n\n\n")
-     return importantLinks, (asId,)
+      print("\n\nWelcome to InCollege, the best professional network for college students\n\n\n")
+      enterToContinue()
+      return importantLinks, (asId,)
 
 
 
 def accessbility(asId):
       print("\n\nHere at InCollege we commit to do everything we can to ensure that\n" + 
             "the products and services we deliver are accessible to everyone\n\n\n")
+      enterToContinue()
       return importantLinks, (asId,)
     
 
@@ -681,6 +676,7 @@ def userAgreement(asId):
       print("\n\nWhen you use our Services you agree to all of these terms. Your use of\n" + 
             "our Services is also subject to our Cookie Policy and our Privacy Policy,\n" + 
             "which covers how we collect, use, share, and store your personal information.\n\n\n")
+      enterToContinue()
       return importantLinks, (asId,)
 
 
@@ -767,6 +763,7 @@ def cookiePolicy(asId):
       print("\n\nThis Cookies Policy explains what Cookies are and how We use them.\n"+ 
             "You should read this policy so You can understand what type of cookies\n" + 
             "We use, or the information We collect using Cookies and how that information is used.\n\n\n")
+      enterToContinue()
       return importantLinks, (asId,)
 
 
@@ -778,6 +775,7 @@ def copyRightPolicy(asId):
             "If you believe that your work has been copied and posted on the Websites in\n" +
             "a way that constitutes copyright infringement, please provide us with the \n" +
             "following information: \n\n\n")
+      enterToContinue()
       return importantLinks, (asId,)
 
 
@@ -786,6 +784,7 @@ def brandPolicy(asId):
       print("\n\nOur trademarks and other brand features are protected by law.\n" +  
             "You wll need our permission in order to use them.\n" +
             "For permission requests, please contact TrademarkRequest@InCollege.com\n\n\n")
+      enterToContinue()
       return importantLinks, (asId,)
 
 
@@ -870,19 +869,9 @@ def generalLinks(asId):
         print("\n\nIn College Pressroom: Stay on top of the latest news, updates, and reports\n\n")
         return generalLinks, (asId,)
 
-    elif sel == 5:
+    elif sel == 5 or sel == 6 or sel == 7:
         clear()
         
-        return underConstruction(asId, generalLinks)
-
-    elif sel == 6:
-        clear()
-        
-        return underConstruction(asId, generalLinks)
-
-    elif sel == 7:
-        clear()
-
         return underConstruction(asId, generalLinks)
 
     elif sel == 8:
@@ -895,8 +884,7 @@ def generalLinks(asId):
 
 def underConstruction(asId, prevState):
       print("\n\nUnder construction.\n")
-      input("\nPress ENTER to continue.\n")
-      clear()
+      enterToContinue()
       return prevState, (asId, )
     
 
