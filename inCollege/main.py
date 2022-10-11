@@ -5,7 +5,7 @@ from functools import lru_cache
 import random
 
 
-MAX_USERS = 5
+MAX_USERS = 10
 MAX_JOBS = 5
 
 
