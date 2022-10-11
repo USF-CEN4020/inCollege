@@ -1,7 +1,10 @@
 import pytest
 import sqlite3
 from inCollege.main import *
-  
+from inCollege.testFunc import *
+
+
+
 @pytest.fixture(scope='module')
 def setupDatabase():
   print("-----INSERT TO A DB-----\n")
