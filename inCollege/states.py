@@ -2,7 +2,6 @@ from main import *
 from manageDB import *
 
 
-
 # initial state
 testimonials = ["""InCollege helped me develop the skills I needed to land a job!
                 \t-Ron Willson""",
