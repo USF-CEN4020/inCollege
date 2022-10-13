@@ -29,8 +29,14 @@ byKey = lambda x, y: (x[y]) # A function f(x) = x[y]
 #----------------------------------------------------------------------------------------
 
 
+
 def enterToContinue():
   input("\nPress ENTER to continue.\n")
+  clear()
+
+
+def enterToGoBack():
+  input("\nPress ENTER to go back.\n")
   clear()
 
 

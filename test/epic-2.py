@@ -3,7 +3,7 @@ import builtins
 from unittest import mock
 import sqlite3
 from inCollege.main import *
-from inCollege.states import *
+from inCollege.states.baseStates import *
 from inCollege.manageDB import *
 
 

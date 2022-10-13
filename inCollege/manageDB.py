@@ -44,6 +44,15 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS userSettings(
 database.commit()
 
 
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS friendships(
+                            acceptRequest INTEGER,
+                            userId INTEGER,
+                            friendUsername TEXT,
+                            FOREIGN KEY(userId) 
+                                REFERENCES users(id))''')
+database.commit()
+
+
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -166,6 +175,16 @@ def checkExistingAccts(username, password):
     return -1
 
 
+def checkExistingUsername(username):
+  databaseCursor.execute("SELECT * FROM users WHERE username= ?",
+    (username,))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+  else:
+    return -1
+
+
 def checkUserGuestControls(userId):
   databaseCursor.execute("SELECT receiveEmail, receiveSMS, targetedAds FROM userSettings WHERE userId = ?", (userId,))
   found = databaseCursor.fetchone()
@@ -195,9 +214,18 @@ def checkExistingNames(firstname, lastname):
   return the id of the specified user or -1 if the user does not exist
 
   '''
-  databaseCursor.execute("SELECT * FROM users WHERE firstname= ? and lastname= ?",(firstname, lastname))
+  databaseCursor.execute("SELECT * FROM users WHERE firstname= ? and lastname= ?", (firstname, lastname))
   found = databaseCursor.fetchone()
   if found:
+    return found[0]
+  else:
+    return -1
+
+
+def checkExistingFriend(userId, friendUsername):
+  databaseCursor.execute("SELECT * FROM friendships WHERE userId= ? and friendUsername= ?", (userId, friendUsername))
+  found = databaseCursor.fetchone()
+  if found: # return 0 if the request is not accepted or 1 if the request is accepted
     return found[0]
   else:
     return -1

@@ -44,36 +44,49 @@ def applicationEntry():
 
 # main state
 def mainInterface(asId):
-  prompt = "Please select an option below:\n"\
-          "\t1. Search for a job\n"\
-          "\t2. Find your network\n"\
-          "\t3. Show my network\n"\
-          "\t4. Learn a new skill\n"\
-          "\t5. InCollege navigation links\n"\
-          "\t6. log Out\n"\
-          "Selection: "
-  sel = int(
-        gatherInput(prompt, "Invalid input. Please try again.\n",
-                    menuValidatorBuilder('12345')))
+    # # if there's any request for connection, show the invitation and ask if the user wants to accept it or reject it
+    # accept = gatherInput("You have a friend request! Would you like to accept it? (yes / no) ",
+    #                   "Please enter either \"yes\" or \"no\".",
+    #                   binaryOptionValidatorBuilder("yes", "no"))
 
-  if sel == 1:
-    clear()
-    return jobInterface, (asId,)
-  elif sel == 2:
-    clear()
-    return findFriends, (asId,)
-  elif sel == 3:
-    clear()
-    return friendsList, (asId,)
-  elif sel == 4:
-    clear()
-    return listSkills, (asId,)
-  elif sel == 5:
-    clear()
-    return inCollegeGroups, (asId,)
-  else:
-    clear()
-    return applicationEntry, None
+    # if accept == 'yes':
+    #     # add friends into the DB of both friends
+    #     pass
+    # else:
+    #     # nothing happened
+    #     pass
+
+
+    prompt = "Please select an option below:\n"\
+            "\t1. Search for a job\n"\
+            "\t2. Find your network\n"\
+            "\t3. Show my network\n"\
+            "\t4. Learn a new skill\n"\
+            "\t5. InCollege navigation links\n"\
+            "\t6. log Out\n"\
+            "Selection: "
+    sel = int(
+            gatherInput(prompt, "Invalid input. Please try again.\n",
+                        menuValidatorBuilder('123456')))
+
+    if sel == 1:
+        clear()
+        return jobInterface, (asId,)
+    elif sel == 2:
+        clear()
+        return findFriendsbyType, (asId,)
+    elif sel == 3:
+        clear()
+        return friendsList, (asId,)
+    elif sel == 4:
+        clear()
+        return listSkills, (asId,)
+    elif sel == 5:
+        clear()
+        return inCollegeGroups, (asId,)
+    elif sel == 6:
+        clear()
+        return applicationEntry, None
 
 
 # login
@@ -221,8 +234,7 @@ def findPpl(asId):
 
 
 # friends network
-def findFriends(asId):
-    # 1. look up friends by major, university, or last name
+def findFriendsbyType(asId):
     prompt = "Search by below options:\n"\
           "\t1. Last name\n"\
           "\t2. University\n"\
@@ -230,45 +242,123 @@ def findFriends(asId):
           "\t4. Go Back\n"\
           "Selection: "
     sel = gatherInput(prompt, "Invalid input. Please try again.\n",
-                  menuValidatorBuilder('123'))
+                  menuValidatorBuilder('1234'))
 
-    # 2. once option is selected, show the list of friends we can connect to from db
-    # 3. user can select the friend by userID to request the connection
-    # 4. once user selects the friends to connect with, it goes to the function: requestFriend()
     if sel == '1':
-        findLastname = gatherInput("Enter last name: ", "", vacuouslyTrue)
+      clear()
+      return findFriends, (asId, sel)
 
     elif sel == '2':
-        findUniversity = gatherInput("Enter the University: ", "", vacuouslyTrue)
+      clear()
+      return findFriends, (asId, sel)
 
     elif sel == '3':
-        findMajor = gatherInput("Enter the major: ", "", vacuouslyTrue)
+      clear()
+      return findFriends, (asId, sel)
+
+    elif sel == '4': 
+      clear()
+      return mainInterface, (asId,)
+
+
+def findFriends(asId, sel):
+  if sel == '1':
+    findLastname = gatherInput("Enter last name: ", "", vacuouslyTrue)
+    print("\n\n")
+    lastnameCursor =  databaseCursor.execute("SELECT * FROM users WHERE lastname IS ?", (findLastname,))
+    lastnameRows = lastnameCursor.fetchall()
+    numOfRow = len(lastnameRows)
+    for row in lastnameRows:
+      print("Index     : ", row[0])
+      print("Username  : ", row[1])
+      print("Firstname : ", row[3])
+      print("Lastname  : ", row[4])
+      print("University: ", row[5])
+      print("Major     : ", row[6])
+      print("\n")
+
+  elif sel == '2':
+    findUniversity = gatherInput("Enter the University: ", "", vacuouslyTrue)
+    print("\n\n")
+    universityCursor =  databaseCursor.execute("SELECT * FROM users WHERE university IS ?", (findUniversity,))
+    universityRows = universityCursor.fetchall()
+    numOfRow = len(universityRows)
+    for row in universityRows:
+      print("Index     : ", row[0])
+      print("Username  : ", row[1])
+      print("Firstname : ", row[3])
+      print("Lastname  : ", row[4])
+      print("University: ", row[5])
+      print("Major     : ", row[6])
+      print("\n")
+
+  elif sel == '3':
+    findMajor = gatherInput("Enter the major: ", "", vacuouslyTrue)
+    print("\n\n")
+    majorCursor =  databaseCursor.execute("SELECT * FROM users WHERE major IS ?", (findMajor,))
+    majorRows = majorCursor.fetchall()
+    numOfRow = len(majorRows)
+    for row in majorRows:
+      print("Index     : ", row[0])
+      print("Username  : ", row[1])
+      print("Firstname : ", row[3])
+      print("Lastname  : ", row[4])
+      print("University: ", row[5])
+      print("Major     : ", row[6])
+      print("\n")
+
+  selectedUsername = gatherInput("Enter the username of friend you would like to connect with (enter 0 to go back): ", "", vacuouslyTrue)
+
+  if selectedUsername == '0':
+    clear()
+    return findFriendsbyType, (asId,)
+
+  else:
+    clear()
+    return requestFriends, (asId, selectedUsername)
     
-    else: 
-        return mainInterface, (asId,)
 
+def requestFriends(asId, selectedUsername):
+  # check the entered username exists
+  exist = checkExistingUsername(selectedUsername)
+  if exist == -1:
+    print("Username not found. Please enter the correct username in the list.\n\n\n")
 
-def requestFriend(asId):
-    # send the request message to the friend
-    print("Request has been sent!\n")
-    pass
+    enterToGoBack()
+    return findFriendsbyType, (asId,)
+
+  # check the selected friend is already under a network list
+  isAccepted = checkExistingFriend(asId, selectedUsername)
+  if isAccepted == 0: # pending
+    print("You have a pending request to ", selectedUsername)
+    print("Please wait for them to accept your request and choose other friends.\n\n\n")
+
+    enterToGoBack()
+    return findFriendsbyType, (asId,)
+
+  elif isAccepted == 1: # already a friend
+    print("You already have ", selectedUsername, " in your network list.\n\n\n")
+    print("Please choose other friends.")
+
+    enterToGoBack()
+    return findFriendsbyType, (asId,)
+
+  elif isAccepted == -1: # not added to the network list
+    databaseCursor.execute("INSERT INTO friendships (acceptRequest, userId, friendUsername) VALUES (?, ?, ?)", (0, asId, selectedUsername))
+    database.commit() 
+
+    print("You network request to", selectedUsername, "has been sent succesfully.\n")
+    print(selectedUsername, "will be added to your network list as soon as they accept your request.\n\n\n")
+
+    enterToContinue()
+    return findFriendsbyType, (asId,)
 
 
 def friendsList(asId):
-    # if there's any request for connection, show the invitation and ask if the user wants to accept it or reject it
-    accept = gatherInput("You have a friend request! Would you like to accept it? (yes / no) ",
-                      "Please enter either \"yes\" or \"no\".",
-                      binaryOptionValidatorBuilder("yes", "no"))
-
-    if accept == 'yes':
-        # add friends into the DB of both friends
-        pass
-    else:
-        # nothing happened
-        pass
-    
     # show the friend list from DB here
-    
+    pass
+
+    # options for disconnecting
 
 
 
@@ -607,7 +697,7 @@ def exitState(asId):
   else:
     print("Goodbye,", usernameById(asId))
   exit()
-    
+
 
 def stateLoop(state):
     data = None
@@ -618,8 +708,10 @@ def stateLoop(state):
             state, data = state(*data)
 
 
+
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
+
 
 
 if (__name__ == "__main__"):
