@@ -258,17 +258,20 @@ def pendingRequest(asId):
 
     for username in usernameList:
       if acceptedUsername == username:
-        databaseCursor.execute('''UPDATE friendships SET
-                                                    acceptRequest= ?
-                                                  WHERE
-                                                    receiverId= ?''', (1, asId)) 
+        databaseCursor.execute('''UPDATE friendships 
+                                    SET
+                                      acceptRequest= 1
+                                    WHERE
+                                      receiverId= ?''', (asId,)) 
+        database.commit()
+        
     usernameList.remove(acceptedUsername)
 
     return acceptRequestDone, (asId, acceptedUsername, usernameList)
 
 
 def acceptRequestDone(asId, acceptedUsername, usernameList):
-  print("You have accepted the request from <", acceptedUsername, "> successfully.")
+  print("\nYou have accepted the request from <", acceptedUsername, "> successfully.")
 
   if usernameList:
     addMore = gatherInput("Would you like to accept more requests? (yes / no) ",
