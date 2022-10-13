@@ -46,10 +46,10 @@ database.commit()
 
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS friendships(
                             acceptRequest INTEGER,
-                            userId INTEGER,
-                            friendUsername TEXT,
-                            FOREIGN KEY(userId) 
-                                REFERENCES users(id))''')
+                            senderId INTEGER,
+                            receiverId INTEGER,
+                            FOREIGN KEY(senderId) REFERENCES users(id),
+                            FOREIGN KEY(receiverId) REFERENCES users(id))''')
 database.commit()
 
 
@@ -80,8 +80,14 @@ def clearUserSetting(uId):
 	
 
 def idLookup(uId):
-    lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", uId)
-    return lookup.fetchone()
+  lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", (uId,))
+  return lookup.fetchone()
+
+
+def usernameLookup(uId):
+  lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", (uId,))
+  user = lookup.fetchone()
+  return user[1]
 
 
 
@@ -222,10 +228,19 @@ def checkExistingNames(firstname, lastname):
     return -1
 
 
-def checkExistingFriend(userId, friendUsername):
-  databaseCursor.execute("SELECT * FROM friendships WHERE userId= ? and friendUsername= ?", (userId, friendUsername))
+def checkExistingFriend(userId, friendId):
+  databaseCursor.execute("SELECT * FROM friendships WHERE senderId= ? and receiverId= ?", (userId, friendId))
   found = databaseCursor.fetchone()
   if found: # return 0 if the request is not accepted or 1 if the request is accepted
     return found[0]
+  else:
+    return -1
+
+
+def checkExistingPendingRequest(userId):
+  databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest= ? AND receiverId= ?", (0, userId))
+  found = databaseCursor.fetchall()
+  if found: 
+    return found
   else:
     return -1
