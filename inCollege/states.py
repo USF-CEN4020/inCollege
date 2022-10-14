@@ -837,6 +837,6 @@ def stateLoop(state):
 
 
 if (__name__ == "__main__"):
-	print("Welcome to InCollege!\n")
+  print("Welcome to InCollege!\n")
 	
-	stateLoop(applicationEntry)
+  stateLoop(applicationEntry)
