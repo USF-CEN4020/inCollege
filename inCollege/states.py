@@ -264,7 +264,8 @@ def pendingRequest(asId):
                                     WHERE
                                       receiverId= ?''', (asId,)) 
         database.commit()
-        
+        break
+
     usernameList.remove(acceptedUsername)
 
     return acceptRequestDone, (asId, acceptedUsername, usernameList)
@@ -418,35 +419,41 @@ def requestFriends(asId, selectedUsername, selectedFriendId):
 def friendsList(asId):
   print("Your Network List: \n")
 
-  friendsCursor =  databaseCursor.execute("SELECT * FROM friendships WHERE (acceptRequest = 1 AND senderId = ?) OR (acceptRequest = 1 AND receiverId = ?)", (asId, asId))
-  friendsRows = friendsCursor.fetchall()
+  friendshipsCursor =  databaseCursor.execute("SELECT * FROM friendships WHERE (acceptRequest = 1 AND senderId = ?) OR (acceptRequest = 1 AND receiverId = ?)", (asId, asId))
+  friendshipsRows = friendshipsCursor.fetchall()
 
-  friendsList = []
+  friendsKeyList = []
 
-  for row in friendsRows:
-    if row[1] != asId and row[2] != asId and row not in friendsList:
-      friendsList.append(row)
+  for row in friendshipsRows:
+    if row[0] == 1 and row[1] == asId :
+      friendsKeyList.append(row[2])
+    if row[0] == 1 and row[2] == asId:
+      friendsKeyList.append(row[1])
 
-  if not friendsList:
+  if not friendsKeyList:
     print("NONE\n\n\n")
     enterToContinue()
     return mainInterface, (asId,)
   
   else:
     count = 0
-    for friendKey in friendsList:
-      friendsListCursor =  databaseCursor.execute("SELECT * FROM users WHERE id = ?", (friendKey,))
-      friendsListRows = friendsListCursor.fetchall()
-      count += 1
-      print(count)
-      print("Username  : ", row[1])
-      print("Firstname : ", row[3])
-      print("Lastname  : ", row[4])
-      print("University: ", row[5])
-      print("Major     : ", row[6])
-      print("\n")
 
-  print("\n")
+    for friendKey in friendsKeyList:
+      friendsCursor = databaseCursor.execute("SELECT * FROM users WHERE id = ?", (friendKey,))
+      friendsRows = friendsCursor.fetchall()
+
+      for friend in friendsRows:
+        if friend[0] == friendKey:
+          count += 1
+          print(count)
+          print("Username  : ", friend[1])
+          print("Firstname : ", friend[3])
+          print("Lastname  : ", friend[4])
+          print("University: ", friend[5])
+          print("Major     : ", friend[6])
+          print("\n")
+
+  print("\n\n")
   enterToContinue()
   return mainInterface, (asId,)
 
