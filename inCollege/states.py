@@ -252,7 +252,7 @@ def pendingRequest(asId):
       usernameList.append(requesterUsername)
       print("\nYou have a pending request from <", requesterUsername, ">.\n")
 
-    print("Would you like to be connected with them?\n")
+    print("\n\nWould you like to be connected with them?\n")
     acceptedUsername = gatherInput("Please enter the username to accept the request (if not, enter 0): ", "", vacuouslyTrue)
 
     if acceptedUsername == '0':
@@ -427,7 +427,7 @@ def friendsList(asId):
   friendsKeyList = []
 
   for row in friendshipsRows:
-    if row[0] == 1 and row[1] == asId :
+    if row[0] == 1 and row[1] == asId:
       friendsKeyList.append(row[2])
     if row[0] == 1 and row[2] == asId:
       friendsKeyList.append(row[1])
@@ -472,7 +472,6 @@ def friendsList(asId):
           clear()
           return disconnectFriends, (asId, disconnectSel, friendsList)
         
-
 
 def disconnectFriends(asId, disconnectUsername, friendList):
   for friend in friendList:
