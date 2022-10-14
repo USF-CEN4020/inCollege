@@ -90,6 +90,11 @@ def usernameLookup(uId):
   return user[1]
 
 
+def deleteFromFriendList(userId, friendId):
+  databaseCursor.execute("DELETE FROM friendships WHERE (acceptRequest = 1 AND senderId = ? AND receiverId = ?) OR (acceptRequest = 1 AND receiverId = ? AND senderId = ?)", (userId, friendId, userId, friendId))
+  database.commit()
+
+
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -229,7 +234,7 @@ def checkExistingNames(firstname, lastname):
 
 
 def checkExistingFriend(userId, friendId):
-  databaseCursor.execute("SELECT * FROM friendships WHERE senderId= ? and receiverId= ?", (userId, friendId))
+  databaseCursor.execute("SELECT * FROM friendships WHERE senderId= ? AND receiverId= ?", (userId, friendId))
   found = databaseCursor.fetchone()
   if found: # return 0 if the request is not accepted or 1 if the request is accepted
     return found[0]

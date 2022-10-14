@@ -444,8 +444,11 @@ def friendsList(asId):
       friendsCursor = databaseCursor.execute("SELECT * FROM users WHERE id = ?", (friendKey,))
       friendsRows = friendsCursor.fetchall()
 
+      friendsList = []
+
       for friend in friendsRows:
         if friend[0] == friendKey:
+          friendsList.append([friend[0], friend[1]]) # contain key and username 
           count += 1
           print(count)
           print("Username  : ", friend[1])
@@ -455,9 +458,30 @@ def friendsList(asId):
           print("Major     : ", friend[6])
           print("\n")
 
-  print("\n\n")
-  enterToContinue()
-  return mainInterface, (asId,)
+        print("\n\n")
+
+        # continue to disconnecting
+        print("Would you like to disconnect with someone on your network?\n")
+        disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
+
+        if disconnectSel == '0':
+          clear()
+          return mainInterface, (asId,)
+
+        else:
+          clear()
+          return disconnectFriends, (asId, disconnectSel, friendsList)
+        
+
+
+def disconnectFriends(asId, disconnectUsername, friendList):
+  for friend in friendList:
+    if disconnectUsername == friend[1]:
+      deleteFromFriendList(asId, friend[0])
+      print("You have successfully removed <", friend[1], "> from your network.\n\n\n")
+
+      enterToContinue()
+      return mainInterface, (asId,)
 
 
 # InCollege navigation links
