@@ -253,7 +253,10 @@ def pendingRequest(asId):
       print("\nYou have a pending request from <", requesterUsername, ">.\n")
 
     print("Would you like to be connected with them?\n")
-    acceptedUsername = gatherInput("Please enter the username to accept the request: ", "", vacuouslyTrue)
+    acceptedUsername = gatherInput("Please enter the username to accept the request (if not, enter 0): ", "", vacuouslyTrue)
+
+    if acceptedUsername == '0':
+      return mainInterface, (asId,)
 
     for username in usernameList:
       if acceptedUsername == username:
