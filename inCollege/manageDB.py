@@ -69,6 +69,10 @@ def clearJobs():
 	database.commit() 
 
 
+def clearFriendships():
+  databaseCursor.execute('DELETE FROM friendships')
+
+
 def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):
 		print(row)
