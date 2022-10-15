@@ -1,4 +1,4 @@
-from main import *
+from commons import *
 from manageDB import *
 
 

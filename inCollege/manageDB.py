@@ -1,4 +1,4 @@
-from inCollege.main import *
+from .commons import *
 import sqlite3
 
 

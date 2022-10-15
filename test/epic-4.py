@@ -1,11 +1,9 @@
 import pytest
-import sys
 import builtins
 from unittest import mock
-import sqlite3
-from inCollege.main import *
 from inCollege.manageDB import clearFriendships, clearUsers
 from inCollege.states import findFriends, findFriendsbyType, newAcct, requestFriends
+from inCollege.commons import *
 
 # ==================================================================================
 # ==================================================================================
@@ -58,7 +56,7 @@ def test_sendFriendRequestByLookup(senderId, recieverUsername, lookupSelection, 
 
 
 @pytest.mark.friends
-@pytest.mark.parametrize('responseToRequest')
+#@pytest.mark.parametrize('responseToRequest')
 def test_acceptFriendRequest():
 	clearUsers()
 	clearFriendships()

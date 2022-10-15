@@ -1,6 +1,6 @@
 import pytest
 import sqlite3
-from inCollege.main import *
+from commons import *
 from inCollege.testFunc import *
 
 
