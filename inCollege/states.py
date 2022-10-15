@@ -268,7 +268,9 @@ def pendingRequest(asId):
       return mainInterface, (asId,)
 
     else: 
-      clear()
+      deleteFromPendingList(asId, requesterId)
+      print("\nYou have rejected the network request from <", requesterUsername, ">.")
+      enterToContinue()
       return mainInterface, (asId,)
     
 
