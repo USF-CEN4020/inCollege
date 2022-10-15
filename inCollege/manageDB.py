@@ -1,4 +1,4 @@
-from main import *
+from inCollege.main import *
 import sqlite3
 
 
@@ -71,6 +71,7 @@ def clearJobs():
 
 def clearFriendships():
   databaseCursor.execute('DELETE FROM friendships')
+  database.commit()
 
 
 def listUsers():

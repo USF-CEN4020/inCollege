@@ -1,5 +1,5 @@
-from main import *
-from manageDB import *
+from inCollege.main import *
+from inCollege.manageDB import *
 
 
 # initial state
