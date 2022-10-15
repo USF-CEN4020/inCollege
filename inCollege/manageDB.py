@@ -95,6 +95,11 @@ def usernameLookup(uId):
   return user[1]
 
 
+def deleteFromPendingList(userId, friendId):
+  databaseCursor.execute("DELETE FROM friendships WHERE (acceptRequest = 0 AND senderId = ? AND receiverId = ?)", (friendId, userId))
+  database.commit()
+
+
 def deleteFromFriendList(userId, friendId):
   databaseCursor.execute("DELETE FROM friendships WHERE (acceptRequest = 1 AND senderId = ? AND receiverId = ?) OR (acceptRequest = 1 AND receiverId = ? AND senderId = ?)", (userId, friendId, userId, friendId))
   database.commit()

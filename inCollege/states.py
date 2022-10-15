@@ -245,47 +245,33 @@ def pendingRequest(asId):
     return mainInterface, (asId,)
 
   else: 
-    usernameList = []
     for row in pendingRequest:
       requesterId = row[1]
       requesterUsername = usernameLookup(requesterId)
-      usernameList.append(requesterUsername)
       print("\nYou have a pending request from <", requesterUsername, ">.\n")
 
-    print("\n\nWould you like to be connected with them?\n")
-    acceptedUsername = gatherInput("Please enter the username to accept the request (if not, enter 0): ", "", vacuouslyTrue)
+    accept = gatherInput("Would you like to accept more requests? (yes / no) ",
+    "Please enter either \"yes\" or \"no\".",
+    binaryOptionValidatorBuilder("yes", "no"))
 
-    if acceptedUsername == '0':
+    if accept == 'yes':
+      databaseCursor.execute('''UPDATE friendships 
+                                  SET
+                                    acceptRequest= 1
+                                  WHERE
+                                    receiverId= ?''', (asId,)) 
+      database.commit()
+
+      print("\nYou have accepted the request from <", requesterUsername, "> successfully.")
+
+      enterToContinue()
       return mainInterface, (asId,)
 
-    for username in usernameList:
-      if acceptedUsername == username:
-        databaseCursor.execute('''UPDATE friendships 
-                                    SET
-                                      acceptRequest= 1
-                                    WHERE
-                                      receiverId= ?''', (asId,)) 
-        database.commit()
-        break
-
-    usernameList.remove(acceptedUsername)
-
-    return acceptRequestDone, (asId, acceptedUsername, usernameList)
-
-
-def acceptRequestDone(asId, acceptedUsername, usernameList):
-  print("\nYou have accepted the request from <", acceptedUsername, "> successfully.")
-
-  if usernameList:
-    addMore = gatherInput("Would you like to accept more requests? (yes / no) ",
-                      "Please enter either \"yes\" or \"no\".",
-                      binaryOptionValidatorBuilder("yes", "no"))
-    if addMore == 'yes':
-      clear()
-      return pendingRequest, (asId,)
-  else:
-    enterToContinue()
-    return mainInterface, (asId,)
+    else: 
+      deleteFromPendingList(asId, requesterId)
+      print("\nYou have rejected the network request from <", requesterUsername, ">.")
+      enterToContinue()
+      return mainInterface, (asId,)
     
 
 def findFriendsbyType(asId):
