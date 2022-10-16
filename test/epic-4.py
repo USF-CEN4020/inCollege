@@ -1,8 +1,8 @@
 import pytest
 import builtins
 from unittest import mock
-from inCollege.manageDB import clearFriendships, clearUsers
-from inCollege.states import findFriends, findFriendsbyType, newAcct, requestFriends
+from inCollege.manageDB import clearFriendships, clearUsers, friendshipsCount
+from inCollege.states import findFriends, findFriendsbyType, friendsList, mainInterface, newAcct, pendingRequest, requestFriends 
 from inCollege.commons import *
 
 # ==================================================================================
@@ -56,12 +56,41 @@ def test_sendFriendRequestByLookup(senderId, recieverUsername, lookupSelection, 
 
 
 @pytest.mark.friends
-#@pytest.mark.parametrize('responseToRequest')
-def test_acceptFriendRequest():
+@pytest.mark.parametrize('response, numFriendsInSystem', [
+	('yes', 1),
+	('no', 0)
+])
+def test_friendRequest(response, numFriendsInSystem):
 	clearUsers()
 	clearFriendships()
 	initTestAccounts()
 
-	with mock.patch.object(builtins, 'input', lambda _: ' '):
-		requestFriends(1, 'test2', 2)
-		requestFriends()
+	inputs = iter([' ', response, ' '])
+
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		requestFriends(1, 'test2', 2) # hard-coded friend request from test1 to test2
+		pendingRequest(2)
+		assert friendshipsCount() == numFriendsInSystem
+
+	
+@pytest.mark.friends
+@pytest.mark.parametrize('disconnectChoice, numFriendsInSystem', [
+	('test2', 0),
+	('0', 1)
+])
+def test_disconnectFriend(disconnectChoice, numFriendsInSystem):
+	clearUsers()
+	clearFriendships()
+	initTestAccounts()
+
+	inputs = iter([' ', 'yes', ' ', disconnectChoice, ' '])
+
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		requestFriends(1, 'test2', 2) # hard-coded friend request from test1 to test2
+		pendingRequest(2)
+
+		state, data = friendsList(1)
+		if state != mainInterface:
+			state, data = state(*data)
+		
+		assert friendshipsCount() == numFriendsInSystem

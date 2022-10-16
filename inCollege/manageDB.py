@@ -79,6 +79,11 @@ def listUsers():
 		print(row)
 
 
+def listFriendships():
+  for row in databaseCursor.execute("SELECT * FROM friendships ORDER BY senderId"):
+    print(row)
+
+
 def clearUserSetting(uId):
   databaseCursor.execute("DELETE FROM userSettings WHERE userId = ?", (uId,))
   database.commit()
@@ -138,6 +143,7 @@ def tableEntriesCount(table):
 
 userCount = tableEntriesCount("users") # returns the number of total users in the system
 jobsCount = tableEntriesCount("jobs") # returns the number of total jobs in the system
+friendshipsCount = tableEntriesCount("friendships")
 
 
 def dbEmpty():
