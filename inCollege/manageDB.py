@@ -28,7 +28,6 @@ databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
                                                         posterId INTEGER,
                                                         FOREIGN KEY(posterId)
                                                             REFERENCES users(id))''')
-
 database.commit()
 
 
@@ -40,7 +39,6 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS userSettings(
                             language TEXT,
                             FOREIGN KEY(userId)
                                 REFERENCES users(id))''')
-
 database.commit()
 
 
@@ -51,6 +49,28 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS friendships(
                             FOREIGN KEY(senderId) REFERENCES users(id),
                             FOREIGN KEY(receiverId) REFERENCES users(id))''')
 database.commit()
+
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
+														userId INTEGER,
+														title TEXT, 
+														major TEXT,
+                            university TEXT,
+                            about TEXT,
+                            experience TEXT,
+                            school TEXT,
+                            degree TEXT,
+                            years TEXT)''')
+database.commit()
+
+# databaseCursor.execute('''CREATE TABLE IF NOT EXISTS experience(
+# 														userId INTEGER,
+# 														title TEXT, 
+# 														major TEXT,
+#                             university TEXT,
+#                             about TEXT,
+#                             experience TEXT,
+#                             education TEXT)''')
+# database.commit()
 
 
 
@@ -265,3 +285,25 @@ def checkExistingPendingRequest(userId):
     return found
   else:
     return -1
+  
+  
+def checkProfileExists(userId):
+  '''
+  Looks up an account from a username and password
+
+  param username: the username of the target user
+  param password: the password of the target user
+  return: the id of the specified user or -1 if the user does not exist
+  '''
+
+  databaseCursor.execute("SELECT * FROM profiles WHERE userId= ?",
+    (userId,))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+  else:
+    return -1
+  
+def updateDB(table, field, userId, value):
+    databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
+    database.commit()

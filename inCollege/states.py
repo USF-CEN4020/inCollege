@@ -55,11 +55,12 @@ def mainInterface(asId):
           "\t3. Show my network\n"\
           "\t4. Learn a new skill\n"\
           "\t5. InCollege navigation links\n"\
-          "\t6. log Out\n"\
+          "\t6. My profile\n"\
+          "\t7. Log out\n"\
           "Selection: "
   sel = int(
           gatherInput(prompt, "Invalid input. Please try again.\n",
-                      menuValidatorBuilder('123456')))
+                      menuValidatorBuilder('1234567')))
 
   if sel == 1:
       clear()
@@ -80,8 +81,12 @@ def mainInterface(asId):
   elif sel == 5:
       clear()
       return inCollegeGroups, (asId,)
-
+    
   elif sel == 6:
+      clear()
+      return myProfile, (asId,)
+
+  elif sel == 7:
       clear()
       return applicationEntry, None
 
@@ -785,6 +790,118 @@ def generalLinks(asId):
     clear()
 
     return usefulLinks, (asId,)
+  
+  
+  
+#====================================================================================================
+#====================================================================================================
+  
+  
+  
+  
+  
+  
+  
+#====================================================================================================
+#====================================================================================================
+  
+  
+  
+def myProfile(asId):
+  found = checkProfileExists(asId)
+  if found == -1:
+    databaseCursor.execute("""
+                INSERT INTO profiles (userId, title, major, university, about, experience, school, degree, years) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (asId, "", "", "", "", "", "", "", ""))
+    database.commit()
+  prompt = ("Please select one of the following to update:\n"\
+        "\t1. Title\n"\
+        "\t2. Major\n"\
+        "\t3. University\n"\
+        "\t4. About me\n"\
+        "\t5. Work experience\n"\
+        "\t6. Education\n"\
+        "\t7. Return to Main Menu\n"\
+        "Selection: ")
+  sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123456')))
+  
+  if sel == 1:
+    clear()
+    return myTitle, (asId, )
+  
+  elif sel == 2:
+    clear()
+    return myMajor, (asId, )
+  
+  elif sel == 3:
+    clear()
+    return myUniversity, (asId, )
+  
+  elif sel == 4:
+    clear()
+    return aboutMe, (asId, )
+  
+  elif sel == 5:
+    clear()
+    return myWorkExperience, (asId, )
+  
+  elif sel == 6:
+    clear()
+    return myEducation, (asId, )
+  
+  else:
+    clear()
+    return mainInterface, (asId, )
+  
+def myTitle(asId):
+  title = input("Title: ")
+  updateDB("profiles", "title", asId, title)
+  clear()
+  return myProfile, (asId, )
+
+def myMajor(asId):
+  major = input("Major: ")
+  capMajor = major.title()
+  updateDB("profiles", "major", asId, capMajor)
+  clear()
+  return myProfile, (asId, )
+
+def myUniversity(asId):
+  university = input("University: ")
+  capUniversity = university.title()
+  updateDB("profiles", "university", asId, capUniversity)
+  clear()
+  return myProfile, (asId, )
+
+def aboutMe(asId):
+  aboutMe = input("About Me: ")
+  updateDB("profiles", "about", asId, aboutMe)
+  clear()
+  return myProfile, (asId, )
+
+def myWorkExperience(asId):
+  title = input("Your title: ")
+  updateDB("profiles", "title", asId, title)
+  clear()
+  return myProfile, (asId, )
+
+def myEducation(asId):
+  school = input("School: ")
+  degree = input("Degree: ")
+  years = input("Years attended (i.e. 2019 - 2022): ")
+  updateDB("profiles", "school", asId, school)
+  updateDB("profiles", "degree", asId, degree)
+  updateDB("profiles", "years", asId, years)
+  clear()
+  return myProfile, (asId, )
+  
+#====================================================================================================
+#====================================================================================================
+  
+  
+  
+  
 
 
 
