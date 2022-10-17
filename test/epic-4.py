@@ -4,6 +4,7 @@ from unittest import mock
 from inCollege.manageDB import clearFriendships, clearUsers, friendshipsCount
 from inCollege.states import findFriends, findFriendsbyType, friendsList, mainInterface, newAcct, pendingRequest, requestFriends 
 from inCollege.commons import *
+from inCollege.testFunc import *
 
 # ==================================================================================
 # ==================================================================================
