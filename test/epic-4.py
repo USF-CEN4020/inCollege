@@ -115,18 +115,14 @@ def test_accountCount():
 # 		 User will have a “show my network” option that will present 
 #  		 the user with the list of people they’ve connected with (including none).
 
-#@pytest.mark.friends
-#@pytest.mark.parametrize('numFriendsInSystem',[
-#	(0),(1)
-#])
-#def test_friendsList(numFriendsInSystem):
-#	clearUsers()
-#	clearFriendships()
-#	initTestAccounts()
-#
-#	inputs = iter([' ', 'yes', ' '])
-#
-#	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-#		requestFriends(1, 'test2', 2) # hard-coded friend request from test1 to test2
-#		pendingRequest(2)
-#		assert friendshipsCount() == numFriendsInSystem
+
+@pytest.mark.friends
+@pytest.mark.parametrize('userId, friendId, result',
+                        [
+                          (1, 2, 1), #friend in the list
+                          (1, 1, -1),
+			  (1, 0, -1),
+                        ]
+                        )
+def test_friendList(userId, friendId, result):
+    assert checkExistingFriend(userId, friendId) == result
