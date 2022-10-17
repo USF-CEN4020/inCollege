@@ -94,3 +94,38 @@ def test_disconnectFriend(disconnectChoice, numFriendsInSystem):
 			state, data = state(*data)
 		
 		assert friendshipsCount() == numFriendsInSystem
+		
+		
+		
+# Story: Total Accounts
+#        As a developer, I want to increase the account limit so  
+#        that InCollege can support 10 unique student accounts.   
+
+@pytest.mark.accountNumber
+def test_accountCount():
+  assert accountCount(0) == True # counting the number of users in actual DB 
+
+
+
+# Story: Friends
+#		 As a developer, I want to add a friends list feature so that 
+# 		 user’s can connect with people they know.
+# Acceptance Criteria:
+# 		 User will have a “show my network” option that will present 
+#  		 the user with the list of people they’ve connected with (including none).
+
+#@pytest.mark.friends
+#@pytest.mark.parametrize('numFriendsInSystem',[
+#	(0),(1)
+#])
+#def test_friendsList(numFriendsInSystem):
+#	clearUsers()
+#	clearFriendships()
+#	initTestAccounts()
+#
+#	inputs = iter([' ', 'yes', ' '])
+#
+#	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+#		requestFriends(1, 'test2', 2) # hard-coded friend request from test1 to test2
+#		pendingRequest(2)
+#		assert friendshipsCount() == numFriendsInSystem
