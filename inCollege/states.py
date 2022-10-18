@@ -811,9 +811,9 @@ def myProfile(asId):
   found = checkProfileExists(asId)
   if found == -1:
     databaseCursor.execute("""
-                INSERT INTO profiles (userId, title, major, university, about, experience, school, degree, years) VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (asId, "", "", "", "", "", "", "", ""))
+                INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (asId, "", "", "", "", "", "", ""))
     database.commit()
   prompt = ("Please select one of the following to update:\n"\
         "\t1. Title\n"\
@@ -824,23 +824,11 @@ def myProfile(asId):
         "\t6. Education\n"\
         "\t7. Return to Main Menu\n"\
         "Selection: ")
-  sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123456')))
+  sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('1234567')))
   
-  if sel == 1:
+  if sel == 1 or sel == 2 or sel == 3 or sel == 4:
     clear()
-    return myTitle, (asId, )
-  
-  elif sel == 2:
-    clear()
-    return myMajor, (asId, )
-  
-  elif sel == 3:
-    clear()
-    return myUniversity, (asId, )
-  
-  elif sel == 4:
-    clear()
-    return aboutMe, (asId, )
+    return updateProfileSimple, (asId, sel)
   
   elif sel == 5:
     clear()
@@ -854,35 +842,48 @@ def myProfile(asId):
     clear()
     return mainInterface, (asId, )
   
-def myTitle(asId):
-  title = input("Title: ")
-  updateDB("profiles", "title", asId, title)
-  clear()
-  return myProfile, (asId, )
-
-def myMajor(asId):
-  major = input("Major: ")
-  capMajor = major.title()
-  updateDB("profiles", "major", asId, capMajor)
-  clear()
-  return myProfile, (asId, )
-
-def myUniversity(asId):
-  university = input("University: ")
-  capUniversity = university.title()
-  updateDB("profiles", "university", asId, capUniversity)
-  clear()
-  return myProfile, (asId, )
-
-def aboutMe(asId):
-  aboutMe = input("About Me: ")
-  updateDB("profiles", "about", asId, aboutMe)
+def updateProfileSimple(asId, sel):
+  table = "profiles"
+  if sel == 1:
+    field = "title"
+    value = input("Title: ")
+  elif sel == 2:
+    field = "major"
+    inValue = input("Major: ")
+    value = inValue.title()
+  elif sel == 3:
+    field = "university"
+    inValue = input("University: ")
+    value = inValue.title()
+  elif sel == 4:
+    field = "about"
+    value = input("About Me: ")
+  updateDB(table, field, asId, value)
+  
   clear()
   return myProfile, (asId, )
 
 def myWorkExperience(asId):
-  title = input("Your title: ")
-  updateDB("profiles", "title", asId, title)
+  count = getExperienceCount(asId)
+  if count == 3:
+    print("You have entered the three allowed work experiences.\n\n")
+    return myProfile, (asId, )
+  
+  print("Up to three previous jobs may be listed in your profile.\n"\
+        "You currently have " + str(count) + " jobs listed.\n")
+  title = input("Title: ")
+  employer = input("Employer: ")
+  dateStarted = input("Date started (i.e. Jan 2022): ")
+  dateEnded = input("Date ended (i.e. May 2022): ")
+  location = input("Location (i.e. Tampa, FL): ")
+  description = input("Description: ")
+  
+  databaseCursor.execute("""
+                INSERT INTO workExperience (userId, title, employer, dateStarted, dateEnded, location, description) VALUES
+                    (?, ?, ?, ?, ?, ?, ?)
+                """, (asId, title.title(), employer.title(), dateStarted, dateEnded, location.title(), description))
+  database.commit()
+  
   clear()
   return myProfile, (asId, )
 
@@ -890,12 +891,14 @@ def myEducation(asId):
   school = input("School: ")
   degree = input("Degree: ")
   years = input("Years attended (i.e. 2019 - 2022): ")
-  updateDB("profiles", "school", asId, school)
-  updateDB("profiles", "degree", asId, degree)
+  updateDB("profiles", "school", asId, school.title())
+  updateDB("profiles", "degree", asId, degree.title())
   updateDB("profiles", "years", asId, years)
   clear()
   return myProfile, (asId, )
   
+  
+  
 #====================================================================================================
 #====================================================================================================
   
@@ -905,8 +908,8 @@ def myEducation(asId):
 
 
 
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
+#====================================================================================================
+#====================================================================================================
 
 
 
@@ -935,8 +938,12 @@ def stateLoop(state):
 
 
 
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
+#====================================================================================================
+#====================================================================================================
+
+
+
+
 
 
 
