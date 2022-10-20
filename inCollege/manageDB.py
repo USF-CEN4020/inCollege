@@ -57,7 +57,6 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
 														major TEXT,
                             university TEXT,
                             about TEXT,
-                            experience TEXT,
                             school TEXT,
                             degree TEXT,
                             years TEXT)''')
@@ -73,6 +72,18 @@ database.commit()
 #                             experience TEXT,
 #                             education TEXT)''')
 # database.commit()
+
+
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience(
+														id INTEGER PRIMARY KEY ASC, 
+                            userId INTEGER,
+														title TEXT, 
+														employer TEXT,
+                            dateStarted TEXT,
+                            dateEnded TEXT,
+                            location TEXT,
+                            description TEXT)''')
+database.commit()
 
 
 
@@ -317,5 +328,11 @@ def checkProfileExists(userId):
   
 
 def updateDB(table, field, userId, value):
-    databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
-    database.commit()
+  databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
+  database.commit()
+    
+def getExperienceCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM workExperience WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
