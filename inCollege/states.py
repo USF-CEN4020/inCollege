@@ -246,6 +246,9 @@ def findPpl(asId):
 # friends network
 def pendingRequest(asId):
   pendingRequest = checkExistingPendingRequest(asId)
+
+  requesterId = 0
+  requesterUsername = ''
   
   if pendingRequest == -1:
     return mainInterface, (asId,)
@@ -255,17 +258,14 @@ def pendingRequest(asId):
       requesterId = row[1]
       requesterUsername = usernameLookup(requesterId)
       print("\nYou have a pending request from <", requesterUsername, ">.\n")
+      break
 
     accept = gatherInput("Would you like to accept more requests? (yes / no) ",
     "Please enter either \"yes\" or \"no\".",
     binaryOptionValidatorBuilder("yes", "no"))
 
     if accept == 'yes':
-      databaseCursor.execute('''UPDATE friendships 
-                                  SET
-                                    acceptRequest= 1
-                                  WHERE
-                                    receiverId= ?''', (asId,)) 
+      databaseCursor.execute("UPDATE friendships SET acceptRequest= 1 WHERE senderId= ? AND receiverId= ?", (requesterId, asId)) 
       database.commit()
 
       print("\nYou have accepted the request from <", requesterUsername, "> successfully.")
@@ -345,10 +345,9 @@ def findFriends(asId, sel):
 
   for row in rows:
     if row[0] == asId:
-      currentUsername = row[1]
+      currentUsername = row[1] # filter out the current user from the list
 
     else:
-      selectedFriendId = row[0]
       count += 1
       print(count)
       print("Username  : ", row[1])
@@ -359,6 +358,7 @@ def findFriends(asId, sel):
       print("\n")
 
   selectedUsername = gatherInput("Enter the username of friend you would like to connect with (or enter 0 to go back): ", "", vacuouslyTrue)
+  selectedFriendId = checkUserId(selectedUsername)
 
   if selectedUsername == '0':
     clear()
@@ -375,7 +375,7 @@ def findFriends(asId, sel):
     
 
 def requestFriends(asId, selectedUsername, selectedFriendId):
-  # check the entered username exists
+  # check the entered username exists under USERS
   exist = checkExistingUsername(selectedUsername)
 
   if exist == -1:
@@ -385,8 +385,6 @@ def requestFriends(asId, selectedUsername, selectedFriendId):
 
   # check the selected friend is already under a network list
   isAccepted = checkExistingFriend(asId, selectedFriendId)
-  if isAccepted == -1:
-    isAccepted = checkExistingFriend(selectedFriendId, asId) 
 
   if isAccepted == 0: # pending
     print("You have a pending request to <", selectedUsername, ">.\n")
@@ -419,9 +417,9 @@ def friendsList(asId):
   friendsKeyList = []
 
   for row in friendshipsRows:
-    if row[0] == 1 and row[1] == asId:
+    if row[1] == asId: # when the user is a sender
       friendsKeyList.append(row[2])
-    if row[0] == 1 and row[2] == asId:
+    elif row[2] == asId: # when the user is a receiver
       friendsKeyList.append(row[1])
 
   if not friendsKeyList:
@@ -431,38 +429,36 @@ def friendsList(asId):
   
   else:
     count = 0
+    friendsList = []
 
     for friendKey in friendsKeyList:
       friendsCursor = databaseCursor.execute("SELECT * FROM users WHERE id = ?", (friendKey,))
       friendsRows = friendsCursor.fetchall()
 
-      friendsList = []
-
       for friend in friendsRows:
-        if friend[0] == friendKey:
-          friendsList.append([friend[0], friend[1]]) # contain key and username 
-          count += 1
-          print(count)
-          print("Username  : ", friend[1])
-          print("Firstname : ", friend[3])
-          print("Lastname  : ", friend[4])
-          print("University: ", friend[5])
-          print("Major     : ", friend[6])
-          print("\n")
+        friendsList.append([friend[0], friend[1]]) # contain key and username 
+        count += 1
+        print(count)
+        print("Username  : ", friend[1])
+        print("Firstname : ", friend[3])
+        print("Lastname  : ", friend[4])
+        print("University: ", friend[5])
+        print("Major     : ", friend[6])
+        print("\n")
 
-        print("\n\n")
+    print("\n\n")
 
-        # continue to disconnecting
-        print("Would you like to disconnect with someone on your network?\n")
-        disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
+    # continue to disconnecting
+    print("Would you like to disconnect with someone on your network?\n")
+    disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
 
-        if disconnectSel == '0':
-          clear()
-          return mainInterface, (asId,)
+    if disconnectSel == '0':
+      clear()
+      return mainInterface, (asId,)
 
-        else:
-          clear()
-          return disconnectFriends, (asId, disconnectSel, friendsList)
+    else:
+      clear()
+      return disconnectFriends, (asId, disconnectSel, friendsList)
         
 
 def disconnectFriends(asId, disconnectUsername, friendList):
@@ -711,7 +707,7 @@ def languages(asId):
   if (asId == -1):
     return importantLinks, (asId,)
 
-  currLanguage = checkUserLanguage(asId).upper()
+  currLanguage = checkUserLanguage(asId)[0].upper()
 
   print("Your current language is: " + currLanguage)
 

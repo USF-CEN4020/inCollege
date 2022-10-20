@@ -50,6 +50,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS friendships(
                             FOREIGN KEY(receiverId) REFERENCES users(id))''')
 database.commit()
 
+
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
 														userId INTEGER,
 														title TEXT, 
@@ -61,6 +62,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
                             degree TEXT,
                             years TEXT)''')
 database.commit()
+
 
 # databaseCursor.execute('''CREATE TABLE IF NOT EXISTS experience(
 # 														userId INTEGER,
@@ -270,9 +272,18 @@ def checkExistingNames(firstname, lastname):
 
 
 def checkExistingFriend(userId, friendId):
-  databaseCursor.execute("SELECT * FROM friendships WHERE senderId= ? AND receiverId= ?", (userId, friendId))
+  databaseCursor.execute("SELECT * FROM friendships WHERE (senderId= ? AND receiverId= ?) OR (senderId= ? AND receiverId= ?)", (userId, friendId, friendId, userId))
   found = databaseCursor.fetchone()
   if found: # return 0 if the request is not accepted or 1 if the request is accepted
+    return found[0]
+  else:
+    return -1
+
+
+def checkUserId(username):
+  databaseCursor.execute("SELECT * FROM users WHERE username= ?", (username,))
+  found = databaseCursor.fetchone()
+  if found: # return user id
     return found[0]
   else:
     return -1
@@ -304,6 +315,7 @@ def checkProfileExists(userId):
   else:
     return -1
   
+
 def updateDB(table, field, userId, value):
     databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
     database.commit()
