@@ -805,7 +805,33 @@ def generalLinks(asId):
   
 def myProfile(asId):
   found = checkProfileExists(asId)
-  if found == -1:
+
+  if found != -1:
+    fullname = getFullname(asId)
+    profileInfo = getProfile(asId)
+    works = getExperience(asId)
+    count = 0
+    print("Name: ", fullname)
+    print("Title: ", profileInfo[1])
+    print("Major: ", profileInfo[2])
+    print("University: ", profileInfo[3])
+    print("About me: ", profileInfo[4])
+    for work in works:
+      count = count + 1
+      print("Work Experience (", count, "): ")
+      print("\tTitle: ", work[2])
+      print("\tCompany: ", work[3])
+      print("\tDate Started: ", work[4])
+      print("\tDate Ended: ", work[5])
+      print("\tLocation: ", work[6])
+      print("\tDescription: ", work[7])
+    print("Education: ", profileInfo[6])
+    print("Degree: ", profileInfo[7])
+    print("Years: ", profileInfo[8])
+    
+
+
+  else:
     databaseCursor.execute("""
                 INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?)
@@ -838,8 +864,11 @@ def myProfile(asId):
     clear()
     return mainInterface, (asId, )
   
+
 def updateProfileSimple(asId, sel):
   table = "profiles"
+  field = ''
+  value = ''
   if sel == 1:
     field = "title"
     value = input("Title: ")
@@ -882,6 +911,7 @@ def myWorkExperience(asId):
   
   clear()
   return myProfile, (asId, )
+
 
 def myEducation(asId):
   school = input("School: ")

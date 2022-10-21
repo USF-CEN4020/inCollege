@@ -63,18 +63,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
 database.commit()
 
 
-# databaseCursor.execute('''CREATE TABLE IF NOT EXISTS experience(
-# 														userId INTEGER,
-# 														title TEXT, 
-# 														major TEXT,
-#                             university TEXT,
-#                             about TEXT,
-#                             experience TEXT,
-#                             education TEXT)''')
-# database.commit()
-
-
-databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience(
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience (
 														id INTEGER PRIMARY KEY ASC, 
                             userId INTEGER,
 														title TEXT, 
@@ -310,19 +299,10 @@ def checkExistingPendingRequest(userId):
   
   
 def checkProfileExists(userId):
-  '''
-  Looks up an account from a username and password
-
-  param username: the username of the target user
-  param password: the password of the target user
-  return: the id of the specified user or -1 if the user does not exist
-  '''
-
-  databaseCursor.execute("SELECT * FROM profiles WHERE userId= ?",
-    (userId,))
-  found = databaseCursor.fetchone()
+  databaseCursor.execute("SELECT * FROM profiles WHERE userId= ?", (userId,))
+  found = databaseCursor.fetchall()
   if found:
-    return found[0]
+    return found
   else:
     return -1
   
@@ -331,8 +311,35 @@ def updateDB(table, field, userId, value):
   databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
   database.commit()
     
+
 def getExperienceCount(userId):
   databaseCursor.execute("SELECT Count(*) FROM workExperience WHERE userId= ?", (userId, ))
   found = databaseCursor.fetchone()
   if found:
     return found[0]
+
+
+def getExperience(userId):
+  databaseCursor.execute("SELECT * FROM workExperience WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchall()
+  if found:
+    return found
+
+
+def getFullname(userId):
+  databaseCursor.execute("SELECT * FROM users WHERE id= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  firstname = found[3].capitalize()
+  lastname = found[4].capitalize()
+  fullname = firstname + " " + lastname
+  if found: 
+    return fullname
+
+
+def getProfile(userId):
+  databaseCursor.execute("SELECT * FROM profiles WHERE userId= ?", (userId,))
+  found = databaseCursor.fetchone()
+  if found:
+    return found
+  else:
+    return -1
