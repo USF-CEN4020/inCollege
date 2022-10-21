@@ -324,6 +324,8 @@ def getExperience(userId):
   found = databaseCursor.fetchall()
   if found:
     return found
+  else:
+    return -1
 
 
 def getFullname(userId):

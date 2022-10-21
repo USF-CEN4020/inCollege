@@ -446,30 +446,80 @@ def friendsList(asId):
         print("Major     : ", friend[6])
         print("\n")
 
-    print("\n\n")
+    print("\n")
 
-    # continue to disconnecting
-    print("Would you like to disconnect with someone on your network?\n")
-    disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
 
-    if disconnectSel == '0':
-      clear()
-      return mainInterface, (asId,)
+    prompt = "Please select an option:\n"\
+            "\t1. View Friend's Profile\n"\
+            "\t2. Disconnecting\n"\
+            "\t3. Go Back\n"\
+          "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
 
-    else:
-      clear()
-      return disconnectFriends, (asId, disconnectSel, friendsList)
+    if sel == 1:
+      print("\nWould you like to view your friend's profile in detail?\n")
+      usernameSel = gatherInput("Please enter the username you would like to view (if not, enter 0): ", "", vacuouslyTrue)
+
+      if usernameSel == '0':
+        clear()
+        return mainInterface, (asId,)
+
+      else:
+        friendKey = -1
+        friendUsername = ''
+
+        wrongInputCheck = 1
+        for friend in friendsList:
+          if friend[1] == usernameSel:
+            wrongInputCheck = 0
+            friendKey = friend[0]
+            friendUsername = friend[1]
+            break
+        if wrongInputCheck == 1:
+          print("\nYou entered the wrong username.")
+          enterToContinue()
+          return mainInterface, (asId,)
+
+        clear()
+        return friendsProfileView, (asId, friendUsername, friendKey)
+
+    elif sel == 2:
+      print("\nWould you like to disconnect with someone on your network?\n")
+      disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
+
+      if disconnectSel == '0':
+        clear()
+        return mainInterface, (asId,)
+
+      else:
+        friendKey = -1
+        friendUsername = ''
+
+        wrongInputCheck = 1
+        for friend in friendsList:
+          if friend[1] == disconnectSel:
+            wrongInputCheck = 0
+            friendKey = friend[0]
+            friendUsername = friend[1]
+            break
+        if wrongInputCheck == 1:
+          print("\nYou entered the wrong username.")
+          enterToContinue()
+          return mainInterface, (asId,)
+
+        clear()
+        return disconnectFriends, (asId, friendUsername, friendKey)
         
-
-def disconnectFriends(asId, disconnectUsername, friendList):
-  for friend in friendList:
-    if disconnectUsername == friend[1]:
-      deleteFromFriendList(asId, friend[0])
-      print("You have successfully removed <", friend[1], "> from your network.\n\n\n")
-
-      enterToContinue()
+    else:
       return mainInterface, (asId,)
 
+
+def disconnectFriends(asId, disconnectUsername, friendKey):
+    deleteFromFriendList(asId, friendKey)
+    print("You have successfully removed <", disconnectUsername, "> from your network.\n\n\n")
+
+    enterToContinue()
+    return mainInterface, (asId,)
 
 # InCollege navigation links
 def inCollegeGroups(asId):
@@ -811,25 +861,27 @@ def myProfile(asId):
     profileInfo = getProfile(asId)
     works = getExperience(asId)
     count = 0
-    print("Name: ", fullname)
-    print("Title: ", profileInfo[1])
-    print("Major: ", profileInfo[2])
-    print("University: ", profileInfo[3])
-    print("About me: ", profileInfo[4])
-    for work in works:
-      count = count + 1
-      print("Work Experience (", count, "): ")
-      print("\tTitle: ", work[2])
-      print("\tCompany: ", work[3])
-      print("\tDate Started: ", work[4])
-      print("\tDate Ended: ", work[5])
-      print("\tLocation: ", work[6])
-      print("\tDescription: ", work[7])
-    print("Education: ", profileInfo[6])
-    print("Degree: ", profileInfo[7])
-    print("Years: ", profileInfo[8])
-    
 
+    print("Name: ", fullname)
+    if profileInfo[1]: print("Title: ", profileInfo[1])
+    if profileInfo[2]: print("Major: ", profileInfo[2])
+    if profileInfo[3]: print("University: ", profileInfo[3])
+    if profileInfo[4]: print("About me: ", profileInfo[4])
+    if works != -1: 
+      for work in works:
+        count = count + 1
+        print("Work Experience (", count, "): ")
+        print("\tTitle: ", work[2])
+        print("\tCompany: ", work[3])
+        print("\tDate Started: ", work[4])
+        print("\tDate Ended: ", work[5])
+        print("\tLocation: ", work[6])
+        print("\tDescription: ", work[7])
+    if profileInfo[6]: print("Education: ", profileInfo[6])
+    if profileInfo[7]: print("Degree: ", profileInfo[7])
+    if profileInfo[8]: print("Years: ", profileInfo[8])
+    
+    print("\n")
 
   else:
     databaseCursor.execute("""
@@ -922,7 +974,47 @@ def myEducation(asId):
   updateDB("profiles", "years", asId, years)
   clear()
   return myProfile, (asId, )
+
+
+def friendsProfileView(asId, friendUsername, friendKey):
+  found = checkProfileExists(friendKey)
+
+  if found == -1:
+    print("Your friend <", friendUsername, "> has not created their profile yet.")
+    enterToContinue()
+    return mainInterface, (asId,)
   
+  else:
+    fullname = getFullname(friendKey)
+    profileInfo = getProfile(friendKey)
+    works = getExperience(friendKey)
+
+    print("Selected User: ", friendUsername, "\n")
+    print("Name: ", fullname)
+    if profileInfo[1]: print("Title: ", profileInfo[1])
+    if profileInfo[2]: print("Major: ", profileInfo[2])
+    if profileInfo[3]: print("University: ", profileInfo[3])
+    if profileInfo[4]: print("About me: ", profileInfo[4])
+    if works != -1: 
+      count = 0
+      for work in works:
+        count = count + 1
+        print("Work Experience (", count, "): ")
+        print("\tTitle: ", work[2])
+        print("\tCompany: ", work[3])
+        print("\tDate Started: ", work[4])
+        print("\tDate Ended: ", work[5])
+        print("\tLocation: ", work[6])
+        print("\tDescription: ", work[7])
+    if profileInfo[6]: print("Education: ", profileInfo[6])
+    if profileInfo[7]: print("Degree: ", profileInfo[7])
+    if profileInfo[8]: print("Years: ", profileInfo[8])
+    
+    print("\n")
+
+    enterToContinue()
+    return mainInterface, (asId,)
+
   
   
 #====================================================================================================
