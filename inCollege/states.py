@@ -1,3 +1,4 @@
+from tkinter import W
 from .commons import *
 from .manageDB import *
 
@@ -55,11 +56,12 @@ def mainInterface(asId):
           "\t3. Show my network\n"\
           "\t4. Learn a new skill\n"\
           "\t5. InCollege navigation links\n"\
-          "\t6. log Out\n"\
+          "\t6. My profile\n"\
+          "\t7. Log out\n"\
           "Selection: "
   sel = int(
           gatherInput(prompt, "Invalid input. Please try again.\n",
-                      menuValidatorBuilder('123456')))
+                      menuValidatorBuilder('1234567')))
 
   if sel == 1:
       clear()
@@ -80,8 +82,12 @@ def mainInterface(asId):
   elif sel == 5:
       clear()
       return inCollegeGroups, (asId,)
-
+    
   elif sel == 6:
+      clear()
+      return myProfile, (asId,)
+
+  elif sel == 7:
       clear()
       return applicationEntry, None
 
@@ -241,6 +247,9 @@ def findPpl(asId):
 # friends network
 def pendingRequest(asId):
   pendingRequest = checkExistingPendingRequest(asId)
+
+  requesterId = 0
+  requesterUsername = ''
   
   if pendingRequest == -1:
     return mainInterface, (asId,)
@@ -250,17 +259,14 @@ def pendingRequest(asId):
       requesterId = row[1]
       requesterUsername = usernameLookup(requesterId)
       print("\nYou have a pending request from <", requesterUsername, ">.\n")
+      break
 
     accept = gatherInput("Would you like to accept more requests? (yes / no) ",
     "Please enter either \"yes\" or \"no\".",
     binaryOptionValidatorBuilder("yes", "no"))
 
     if accept == 'yes':
-      databaseCursor.execute('''UPDATE friendships 
-                                  SET
-                                    acceptRequest= 1
-                                  WHERE
-                                    receiverId= ?''', (asId,)) 
+      databaseCursor.execute("UPDATE friendships SET acceptRequest= 1 WHERE senderId= ? AND receiverId= ?", (requesterId, asId)) 
       database.commit()
 
       print("\nYou have accepted the request from <", requesterUsername, "> successfully.")
@@ -340,10 +346,9 @@ def findFriends(asId, sel):
 
   for row in rows:
     if row[0] == asId:
-      currentUsername = row[1]
+      currentUsername = row[1] # filter out the current user from the list
 
     else:
-      selectedFriendId = row[0]
       count += 1
       print(count)
       print("Username  : ", row[1])
@@ -354,6 +359,7 @@ def findFriends(asId, sel):
       print("\n")
 
   selectedUsername = gatherInput("Enter the username of friend you would like to connect with (or enter 0 to go back): ", "", vacuouslyTrue)
+  selectedFriendId = checkUserId(selectedUsername)
 
   if selectedUsername == '0':
     clear()
@@ -370,7 +376,7 @@ def findFriends(asId, sel):
     
 
 def requestFriends(asId, selectedUsername, selectedFriendId):
-  # check the entered username exists
+  # check the entered username exists under USERS
   exist = checkExistingUsername(selectedUsername)
 
   if exist == -1:
@@ -380,8 +386,6 @@ def requestFriends(asId, selectedUsername, selectedFriendId):
 
   # check the selected friend is already under a network list
   isAccepted = checkExistingFriend(asId, selectedFriendId)
-  if isAccepted == -1:
-    isAccepted = checkExistingFriend(selectedFriendId, asId) 
 
   if isAccepted == 0: # pending
     print("You have a pending request to <", selectedUsername, ">.\n")
@@ -414,9 +418,9 @@ def friendsList(asId):
   friendsKeyList = []
 
   for row in friendshipsRows:
-    if row[0] == 1 and row[1] == asId:
+    if row[1] == asId: # when the user is a sender
       friendsKeyList.append(row[2])
-    if row[0] == 1 and row[2] == asId:
+    elif row[2] == asId: # when the user is a receiver
       friendsKeyList.append(row[1])
 
   if not friendsKeyList:
@@ -426,49 +430,104 @@ def friendsList(asId):
   
   else:
     count = 0
+    friendsList = []
 
     for friendKey in friendsKeyList:
       friendsCursor = databaseCursor.execute("SELECT * FROM users WHERE id = ?", (friendKey,))
       friendsRows = friendsCursor.fetchall()
 
-      friendsList = []
-
       for friend in friendsRows:
-        if friend[0] == friendKey:
-          friendsList.append([friend[0], friend[1]]) # contain key and username 
-          count += 1
-          print(count)
-          print("Username  : ", friend[1])
-          print("Firstname : ", friend[3])
-          print("Lastname  : ", friend[4])
-          print("University: ", friend[5])
-          print("Major     : ", friend[6])
-          print("\n")
+        friendsList.append([friend[0], friend[1]]) # contain key and username 
+        count += 1
+        print(count)
+        print("Username  : ", friend[1])
+        print("Firstname : ", friend[3])
+        print("Lastname  : ", friend[4])
+        print("University: ", friend[5])
+        print("Major     : ", friend[6])
+        print("\n")
 
-        print("\n\n")
+    print("\n")
 
-        # continue to disconnecting
-        print("Would you like to disconnect with someone on your network?\n")
-        disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
 
-        if disconnectSel == '0':
-          clear()
+    prompt = "Please select an option:\n"\
+            "\t1. View Friend's Profile\n"\
+            "\t2. Disconnecting\n"\
+            "\t3. Go Back\n"\
+          "Selection: "
+    sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('123')))
+
+    if sel == 1:
+      print("\nWould you like to view your friend's profile in detail?\n")
+      usernameSel = gatherInput("Please enter the username you would like to view (if not, enter 0): ", "", vacuouslyTrue)
+
+      if usernameSel == '0':
+        clear()
+        return mainInterface, (asId,)
+
+      else:
+        friendKey = -1
+        friendUsername = ''
+
+        wrongInputCheck = 1
+        for friend in friendsList:
+          if friend[1] == usernameSel:
+            wrongInputCheck = 0
+            friendKey = friend[0]
+            friendUsername = friend[1]
+            break
+        if wrongInputCheck == 1:
+          print("\nYou entered the wrong username.")
+          enterToContinue()
           return mainInterface, (asId,)
 
-        else:
-          clear()
-          return disconnectFriends, (asId, disconnectSel, friendsList)
+        clear()
+        found = checkProfileExists(friendKey)
+
+        if found == -1:
+          print("Your friend <", friendUsername, "> has not created their profile yet.")
+          enterToContinue()
+          return mainInterface, (asId,)
+
+        return friendsProfileView, (asId, friendUsername, friendKey)
+
+    elif sel == 2:
+      print("\nWould you like to disconnect with someone on your network?\n")
+      disconnectSel = gatherInput("Please enter the username you would like to disonnect (if not, enter 0): ", "", vacuouslyTrue)
+
+      if disconnectSel == '0':
+        clear()
+        return mainInterface, (asId,)
+
+      else:
+        friendKey = -1
+        friendUsername = ''
+
+        wrongInputCheck = 1
+        for friend in friendsList:
+          if friend[1] == disconnectSel:
+            wrongInputCheck = 0
+            friendKey = friend[0]
+            friendUsername = friend[1]
+            break
+        if wrongInputCheck == 1:
+          print("\nYou entered the wrong username.")
+          enterToContinue()
+          return mainInterface, (asId,)
+
+        clear()
+        return disconnectFriends, (asId, friendUsername, friendKey)
         
-
-def disconnectFriends(asId, disconnectUsername, friendList):
-  for friend in friendList:
-    if disconnectUsername == friend[1]:
-      deleteFromFriendList(asId, friend[0])
-      print("You have successfully removed <", friend[1], "> from your network.\n\n\n")
-
-      enterToContinue()
+    else:
       return mainInterface, (asId,)
 
+
+def disconnectFriends(asId, disconnectUsername, friendKey):
+    deleteFromFriendList(asId, friendKey)
+    print("You have successfully removed <", disconnectUsername, "> from your network.\n\n\n")
+
+    enterToContinue()
+    return mainInterface, (asId,)
 
 # InCollege navigation links
 def inCollegeGroups(asId):
@@ -706,7 +765,7 @@ def languages(asId):
   if (asId == -1):
     return importantLinks, (asId,)
 
-  currLanguage = checkUserLanguage(asId).upper()
+  currLanguage = checkUserLanguage(asId)[0].upper()
 
   print("Your current language is: " + currLanguage)
 
@@ -785,11 +844,198 @@ def generalLinks(asId):
     clear()
 
     return usefulLinks, (asId,)
+  
+  
+  
+#====================================================================================================
+#====================================================================================================
+  
+  
+  
+  
+  
+  
+  
+#====================================================================================================
+#====================================================================================================
+  
+  
+  
+def myProfile(asId):
+  found = checkProfileExists(asId)
+
+  if found != -1:
+    fullname = getFullname(asId)
+    profileInfo = getProfile(asId)
+    works = getExperience(asId)
+    count = 0
+
+    print("Name: ", fullname)
+    if profileInfo[1]: print("Title: ", profileInfo[1])
+    if profileInfo[2]: print("Major: ", profileInfo[2])
+    if profileInfo[3]: print("University: ", profileInfo[3])
+    if profileInfo[4]: print("About me: ", profileInfo[4])
+    if works != -1: 
+      for work in works:
+        count = count + 1
+        print("Work Experience (", count, "): ")
+        print("\tTitle: ", work[2])
+        print("\tCompany: ", work[3])
+        print("\tDate Started: ", work[4])
+        print("\tDate Ended: ", work[5])
+        print("\tLocation: ", work[6])
+        print("\tDescription: ", work[7])
+    if profileInfo[5]: print("Education: ", profileInfo[5])
+    if profileInfo[6]: print("Degree: ", profileInfo[6])
+    if profileInfo[7]: print("Years: ", profileInfo[7])
+    
+    print("\n")
+
+  else:
+    databaseCursor.execute("""
+                INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (asId, " ", " ", " ", " ", " ", " ", " "))
+    database.commit()
+  prompt = ("Please select one of the following to update:\n"\
+        "\t1. Title\n"\
+        "\t2. Major\n"\
+        "\t3. University\n"\
+        "\t4. About me\n"\
+        "\t5. Work experience\n"\
+        "\t6. Education\n"\
+        "\t7. Return to Main Menu\n"\
+        "Selection: ")
+  sel = int(gatherInput(prompt, "Invalid Input. Please try again.\n", menuValidatorBuilder('1234567')))
+  
+  if sel == 1 or sel == 2 or sel == 3 or sel == 4:
+    clear()
+    return updateProfileSimple, (asId, sel)
+  
+  elif sel == 5:
+    clear()
+    return myWorkExperience, (asId, )
+  
+  elif sel == 6:
+    clear()
+    return myEducation, (asId, )
+  
+  else:
+    clear()
+    return mainInterface, (asId, )
+  
+
+def updateProfileSimple(asId, sel):
+  table = "profiles"
+  field = ''
+  value = ''
+  if sel == 1:
+    field = "title"
+    value = input("Title: ")
+  elif sel == 2:
+    field = "major"
+    inValue = input("Major: ")
+    value = inValue.title()
+  elif sel == 3:
+    field = "university"
+    inValue = input("University: ")
+    value = inValue.title()
+  elif sel == 4:
+    field = "about"
+    value = input("About Me: ")
+  updateDB(table, field, asId, value)
+  
+  clear()
+  return myProfile, (asId, )
+
+def myWorkExperience(asId):
+  count = getExperienceCount(asId)
+  if count == 3:
+    print("You have entered the three allowed work experiences.\n\n")
+    return myProfile, (asId, )
+  
+  print("Up to three previous jobs may be listed in your profile.\n"\
+        "You currently have " + str(count) + " jobs listed.\n")
+  title = input("Title: ")
+  employer = input("Employer: ")
+  dateStarted = input("Date started (i.e. Jan 2022): ")
+  dateEnded = input("Date ended (i.e. May 2022): ")
+  location = input("Location (i.e. Tampa, FL): ")
+  description = input("Description: ")
+  
+  databaseCursor.execute("""
+                INSERT INTO workExperience (userId, title, employer, dateStarted, dateEnded, location, description) VALUES
+                    (?, ?, ?, ?, ?, ?, ?)
+                """, (asId, title.title(), employer.title(), dateStarted, dateEnded, location.title(), description))
+  database.commit()
+  
+  clear()
+  return myProfile, (asId, )
+
+
+def myEducation(asId):
+  school = input("School: ")
+  degree = input("Degree: ")
+  years = input("Years attended (i.e. 2019 - 2022): ")
+  updateDB("profiles", "school", asId, school.title())
+  updateDB("profiles", "degree", asId, degree.title())
+  updateDB("profiles", "years", asId, years)
+  clear()
+  return myProfile, (asId, )
+
+
+def friendsProfileView(asId, friendUsername, friendKey):
+  found = checkProfileExists(friendKey)
+
+  if found == -1:
+    print("Your friend <", friendUsername, "> has not created their profile yet.")
+    enterToContinue()
+    return mainInterface, (asId,)
+  
+  else:
+    fullname = getFullname(friendKey)
+    profileInfo = getProfile(friendKey)
+    works = getExperience(friendKey)
+
+    print("Selected User: ", friendUsername, "\n")
+    print("Name: ", fullname)
+    if profileInfo[1]: print("Title: ", profileInfo[1])
+    if profileInfo[2]: print("Major: ", profileInfo[2])
+    if profileInfo[3]: print("University: ", profileInfo[3])
+    if profileInfo[4]: print("About me: ", profileInfo[4])
+    if works != -1: 
+      count = 0
+      for work in works:
+        count = count + 1
+        print("Work Experience (", count, "): ")
+        print("\tTitle: ", work[2])
+        print("\tCompany: ", work[3])
+        print("\tDate Started: ", work[4])
+        print("\tDate Ended: ", work[5])
+        print("\tLocation: ", work[6])
+        print("\tDescription: ", work[7])
+    if profileInfo[6]: print("Education: ", profileInfo[6])
+    if profileInfo[7]: print("Degree: ", profileInfo[7])
+    if profileInfo[8]: print("Years: ", profileInfo[8])
+    
+    print("\n")
+
+    enterToContinue()
+    return mainInterface, (asId,)
+
+  
+  
+#====================================================================================================
+#====================================================================================================
+  
+  
+  
+  
 
 
 
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
+#====================================================================================================
+#====================================================================================================
 
 
 
@@ -818,8 +1064,12 @@ def stateLoop(state):
 
 
 
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
+#====================================================================================================
+#====================================================================================================
+
+
+
+
 
 
 

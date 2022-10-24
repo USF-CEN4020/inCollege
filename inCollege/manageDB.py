@@ -28,7 +28,6 @@ databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
                                                         posterId INTEGER,
                                                         FOREIGN KEY(posterId)
                                                             REFERENCES users(id))''')
-
 database.commit()
 
 
@@ -40,7 +39,6 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS userSettings(
                             language TEXT,
                             FOREIGN KEY(userId)
                                 REFERENCES users(id))''')
-
 database.commit()
 
 
@@ -50,6 +48,30 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS friendships(
                             receiverId INTEGER,
                             FOREIGN KEY(senderId) REFERENCES users(id),
                             FOREIGN KEY(receiverId) REFERENCES users(id))''')
+database.commit()
+
+
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
+														userId INTEGER,
+														title TEXT, 
+														major TEXT,
+                            university TEXT,
+                            about TEXT,
+                            school TEXT,
+                            degree TEXT,
+                            years TEXT)''')
+database.commit()
+
+
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience (
+														id INTEGER PRIMARY KEY ASC, 
+                            userId INTEGER,
+														title TEXT, 
+														employer TEXT,
+                            dateStarted TEXT,
+                            dateEnded TEXT,
+                            location TEXT,
+                            description TEXT)''')
 database.commit()
 
 
@@ -71,6 +93,14 @@ def clearJobs():
 
 def clearFriendships():
   databaseCursor.execute('DELETE FROM friendships')
+  database.commit()
+
+def clearProfiles():
+  databaseCursor.execute('DELETE FROM profiles')
+  database.commit()
+
+def removeWorkExperience():
+  databaseCursor.execute('DELETE FROM workExperience')
   database.commit()
 
 
@@ -144,6 +174,7 @@ def tableEntriesCount(table):
 userCount = tableEntriesCount("users") # returns the number of total users in the system
 jobsCount = tableEntriesCount("jobs") # returns the number of total jobs in the system
 friendshipsCount = tableEntriesCount("friendships")
+profilesCount = tableEntriesCount("profiles")
 
 
 def dbEmpty():
@@ -250,9 +281,18 @@ def checkExistingNames(firstname, lastname):
 
 
 def checkExistingFriend(userId, friendId):
-  databaseCursor.execute("SELECT * FROM friendships WHERE senderId= ? AND receiverId= ?", (userId, friendId))
+  databaseCursor.execute("SELECT * FROM friendships WHERE (senderId= ? AND receiverId= ?) OR (senderId= ? AND receiverId= ?)", (userId, friendId, friendId, userId))
   found = databaseCursor.fetchone()
   if found: # return 0 if the request is not accepted or 1 if the request is accepted
+    return found[0]
+  else:
+    return -1
+
+
+def checkUserId(username):
+  databaseCursor.execute("SELECT * FROM users WHERE username= ?", (username,))
+  found = databaseCursor.fetchone()
+  if found: # return user id
     return found[0]
   else:
     return -1
@@ -262,6 +302,55 @@ def checkExistingPendingRequest(userId):
   databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest= ? AND receiverId= ?", (0, userId))
   found = databaseCursor.fetchall()
   if found: 
+    return found
+  else:
+    return -1
+  
+  
+def checkProfileExists(userId):
+  databaseCursor.execute("SELECT * FROM profiles WHERE userId= ?", (userId,))
+  found = databaseCursor.fetchall()
+  if found:
+    return found
+  else:
+    return -1
+  
+
+def updateDB(table, field, userId, value):
+  databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
+  database.commit()
+    
+
+def getExperienceCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM workExperience WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+
+
+def getExperience(userId):
+  databaseCursor.execute("SELECT * FROM workExperience WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchall()
+  if found:
+    return found
+  else:
+    return -1
+
+
+def getFullname(userId):
+  databaseCursor.execute("SELECT * FROM users WHERE id= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  firstname = found[3].capitalize()
+  lastname = found[4].capitalize()
+  fullname = firstname + " " + lastname
+  if found: 
+    return fullname
+
+
+def getProfile(userId):
+  databaseCursor.execute("SELECT * FROM profiles WHERE userId= ?", (userId,))
+  found = databaseCursor.fetchone()
+  if found:
     return found
   else:
     return -1
