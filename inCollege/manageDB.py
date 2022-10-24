@@ -95,6 +95,9 @@ def clearFriendships():
   databaseCursor.execute('DELETE FROM friendships')
   database.commit()
 
+def clearProfiles():
+  databaseCursor.execute('DELETE FROM profiles')
+  database.commit()
 
 def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):
@@ -166,6 +169,7 @@ def tableEntriesCount(table):
 userCount = tableEntriesCount("users") # returns the number of total users in the system
 jobsCount = tableEntriesCount("jobs") # returns the number of total jobs in the system
 friendshipsCount = tableEntriesCount("friendships")
+profilesCount = tableEntriesCount("profiles")
 
 
 def dbEmpty():
