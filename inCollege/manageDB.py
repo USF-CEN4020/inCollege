@@ -174,6 +174,7 @@ def tableEntriesCount(table):
 userCount = tableEntriesCount("users") # returns the number of total users in the system
 jobsCount = tableEntriesCount("jobs") # returns the number of total jobs in the system
 friendshipsCount = tableEntriesCount("friendships")
+profilesCount = tableEntriesCount("profiles")
 
 
 def dbEmpty():

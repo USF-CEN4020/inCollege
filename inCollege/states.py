@@ -493,7 +493,7 @@ def friendsList(asId):
 
     elif sel == 2:
       print("\nWould you like to disconnect with someone on your network?\n")
-      cdisconnectSel = gatherInput("Please enter the username you would like to disonnect (if not, enter 0): ", "", vacuouslyTrue)
+      disconnectSel = gatherInput("Please enter the username you would like to disonnect (if not, enter 0): ", "", vacuouslyTrue)
 
       if disconnectSel == '0':
         clear()
