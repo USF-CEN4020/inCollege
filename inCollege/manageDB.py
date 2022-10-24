@@ -31,6 +31,22 @@ databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
 database.commit()
 
 
+# Table for the relationship between a user and a job (many-to-many relationship)
+# Contains data for a job application and also if the job is saved or not.
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS jobApplications(
+                            userId INTEGER,
+                            jobId INTEGER,
+                            gradDate TEXT,
+                            workAvailablityData TEXT,
+                            qualifications TEXT,
+                            saved INTEGER,
+                            FOREIGN KEY(userId)
+                              REFERENCES users(id),
+                            FOREIGN KEY(jobId)
+                              REFERENCES jobs(jobId))''')
+database.commit()
+
+
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS userSettings(
                             userId INTEGER,
                             receiveEmail INTEGER,
