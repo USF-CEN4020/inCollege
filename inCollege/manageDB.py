@@ -95,6 +95,14 @@ def clearFriendships():
   databaseCursor.execute('DELETE FROM friendships')
   database.commit()
 
+def clearProfiles():
+  databaseCursor.execute('DELETE FROM profiles')
+  database.commit()
+
+def removeWorkExperience():
+  databaseCursor.execute('DELETE FROM workExperience')
+  database.commit()
+
 
 def listUsers():
 	for row in databaseCursor.execute("SELECT * FROM users ORDER BY id"):

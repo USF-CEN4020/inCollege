@@ -1,3 +1,4 @@
+from tkinter import W
 from .commons import *
 from .manageDB import *
 
@@ -481,11 +482,18 @@ def friendsList(asId):
           return mainInterface, (asId,)
 
         clear()
+        found = checkProfileExists(friendKey)
+
+        if found == -1:
+          print("Your friend <", friendUsername, "> has not created their profile yet.")
+          enterToContinue()
+          return mainInterface, (asId,)
+
         return friendsProfileView, (asId, friendUsername, friendKey)
 
     elif sel == 2:
       print("\nWould you like to disconnect with someone on your network?\n")
-      disconnectSel = gatherInput("Please enter the username you would like to disconnect (if not, enter 0): ", "", vacuouslyTrue)
+      cdisconnectSel = gatherInput("Please enter the username you would like to disonnect (if not, enter 0): ", "", vacuouslyTrue)
 
       if disconnectSel == '0':
         clear()
@@ -877,9 +885,9 @@ def myProfile(asId):
         print("\tDate Ended: ", work[5])
         print("\tLocation: ", work[6])
         print("\tDescription: ", work[7])
-    if profileInfo[6]: print("Education: ", profileInfo[6])
-    if profileInfo[7]: print("Degree: ", profileInfo[7])
-    if profileInfo[8]: print("Years: ", profileInfo[8])
+    if profileInfo[5]: print("Education: ", profileInfo[5])
+    if profileInfo[6]: print("Degree: ", profileInfo[6])
+    if profileInfo[7]: print("Years: ", profileInfo[7])
     
     print("\n")
 
@@ -887,7 +895,7 @@ def myProfile(asId):
     databaseCursor.execute("""
                 INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (asId, "", "", "", "", "", "", ""))
+                """, (asId, " ", " ", " ", " ", " ", " ", " "))
     database.commit()
   prompt = ("Please select one of the following to update:\n"\
         "\t1. Title\n"\
