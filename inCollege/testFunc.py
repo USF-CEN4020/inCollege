@@ -1,6 +1,7 @@
+from operator import truediv
 from inCollege.commons import *
 from inCollege.manageDB import *
-
+import pytest
 
 
 def loginStatus(username, password):
@@ -48,3 +49,14 @@ def stateUnderConstruction(sel):
   else: 
     return False
 
+
+@pytest.fixture
+def testTitleCase():
+  text = 'test'
+  text1 = 'Computer science'
+  upper = text.title()
+  upper1 = text1.title()
+  if upper == 'Test' or upper1 == 'Computer Science':
+        return True
+  else:
+        return False
