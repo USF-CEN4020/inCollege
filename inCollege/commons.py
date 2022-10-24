@@ -6,7 +6,7 @@ import random
 
 
 MAX_USERS = 10
-MAX_JOBS = 5
+MAX_JOBS = 10
 DEFAULT_GUEST_CONTROLS = (1, 1, 1)
 DEFAULT_LANGUAGE_SETTINGS = ('english',)
 
