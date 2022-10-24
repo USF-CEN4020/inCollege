@@ -1,5 +1,5 @@
-from .commons import *
-from .manageDB import *
+from inCollege.commons import *
+from inCollege.manageDB import *
 
 
 
