@@ -40,6 +40,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS jobApplications(
                             workAvailabilityDate TEXT,   
                             qualifications TEXT,
                             saved INTEGER,
+                            deleted INTEGER,
                             FOREIGN KEY(userId)
                               REFERENCES users(id),
                             FOREIGN KEY(jobId)
@@ -378,8 +379,8 @@ def getProfile(userId):
     return -1
 
 
-def queryAllJobs():
-  databaseCursor.execute("SELECT * FROM jobs")
+def queryAllJobs(userId):
+  databaseCursor.execute("SELECT * FROM jobs WHERE posterId != ?", (userId,))
   return databaseCursor.fetchall()
 
 def queryAppliedJobs(userId):
@@ -395,7 +396,7 @@ def queryNotAppliedJobs(userId):
                             FROM jobs
                             INNER JOIN jobApplications
                               ON jobs.jobId = jobApplications.jobId
-                            WHERE NOT (jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "") ''', (userId,))
+                            WHERE NOT (jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "")''', (userId,))
   return databaseCursor.fetchall()
 
 def querySavedJobs(userId):
@@ -407,15 +408,14 @@ def querySavedJobs(userId):
   return databaseCursor.fetchall()
 
 def getApplicationByIds(userId, jobId):
-  databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId))
-  return databaseCursor.fetchone()
+  return databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId)).fetchone()
 
 
 def toggleSavedJob(userId, jobId):
 
   if (not jobAppInitilized(userId, jobId)):
     
-    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved) VALUES (?, ?, '', '', '', 1)''', (userId, jobId))
+    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, '', '', '', 1, 0)''', (userId, jobId))
     database.commit()
 
   else:
@@ -430,6 +430,35 @@ def toggleSavedJob(userId, jobId):
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
 
-  databaseCursor.execute("UPDATE jobApplications SET gradDate = ?, workAvailabilityDate = ?, qualifications = ? WHERE userId = ? AND jobId = ?", (gradDate, jobAvailabilityDate, qualifications, userId, jobId))
+  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, ?, ?, ?, 0, 0)""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
 
+  database.commit()
+  
+def removeOldApplication(userId, jobId):
+  databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId))
+  database.commit()
+  
+def queryMyPostings(userId):
+  
+  query = databaseCursor.execute("SELECT * FROM jobs WHERE posterId = ?", (userId,)).fetchall()
+  return query if query else -1
+
+
+def queryDeletions(userId):
+  
+  query = databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,)).fetchall()
+  return query if query else -1
+
+
+def deleteJob(jobId):
+  
+  databaseCursor.execute("UPDATE jobApplications SET deleted = 1 WHERE jobId = ?", (jobId,))
+  database.commit()
+  databaseCursor.execute("DELETE FROM jobs WHERE jobId = ?", (jobId,))
+  database.commit()
+
+
+def removeDeletions(userId):
+  
+  databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,))
   database.commit()
