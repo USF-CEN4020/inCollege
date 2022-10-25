@@ -252,9 +252,9 @@ def jobDetails(asId, job):
 
   print()
 
-  if userApplication != None and (userApplication[2] != '' or job[6] == asId):
+  if job[6] == asId or (userApplication != None and userApplication[2] != ''):
     
-    if (userApplication[5] == 0):
+    if (userApplication == None or userApplication[5] == 0):
       prompt = 'Please select an option below: \n'\
               '\t1. Save job for later\n'\
               '\t2. Go back\n'\

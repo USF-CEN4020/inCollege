@@ -380,7 +380,7 @@ def getProfile(userId):
 
 
 def queryAllJobs(userId):
-  databaseCursor.execute("SELECT * FROM jobs WHERE posterId != ?", (userId,))
+  databaseCursor.execute("SELECT * FROM jobs")
   return databaseCursor.fetchall()
 
 def queryAppliedJobs(userId):
