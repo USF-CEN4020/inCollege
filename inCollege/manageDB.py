@@ -19,15 +19,15 @@ database.commit()
 
 
 databaseCursor.execute('''Create TABLE IF NOT EXISTS jobs(
-                                                        jobId INTEGER PRIMARY KEY ASC,
-                                                        title TEXT,
-                                                        description TEXT,
-                                                        employer TEXT,
-                                                        location TEXT,
-                                                        salary REAL,
-                                                        posterId INTEGER,
-                                                        FOREIGN KEY(posterId)
-                                                            REFERENCES users(id))''')
+                            jobId INTEGER PRIMARY KEY ASC,
+                            title TEXT,
+                            description TEXT,
+                            employer TEXT,
+                            location TEXT,
+                            salary REAL,
+                            posterId INTEGER,
+                            FOREIGN KEY(posterId)
+                              REFERENCES users(id))''')
 database.commit()
 
 
@@ -37,7 +37,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS jobApplications(
                             userId INTEGER,
                             jobId INTEGER,
                             gradDate TEXT,
-                            workAvailablityData TEXT,
+                            workAvailabilityDate TEXT,   
                             qualifications TEXT,
                             saved INTEGER,
                             FOREIGN KEY(userId)
@@ -117,6 +117,10 @@ def clearProfiles():
 
 def removeWorkExperience():
   databaseCursor.execute('DELETE FROM workExperience')
+  database.commit()
+
+def clearApplications():
+  databaseCursor.execute('DELETE FROM jobApplications')
   database.commit()
 
 
@@ -224,7 +228,9 @@ def acctSettingsInitilized(userId):
   lookup = databaseCursor.execute("SELECT COUNT(*) FROM userSettings WHERE userId IS ?", (userId,))
   return lookup.fetchone()[0] == 1
 
-
+def jobAppInitilized(userId, jobId):
+  lookup = databaseCursor.execute("SELECT COUNT(*) FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId))
+  return lookup.fetchone()[0] == 1
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -370,3 +376,60 @@ def getProfile(userId):
     return found
   else:
     return -1
+
+
+def queryAllJobs():
+  databaseCursor.execute("SELECT * FROM jobs")
+  return databaseCursor.fetchall()
+
+def queryAppliedJobs(userId):
+  databaseCursor.execute('''SELECT jobs.jobId, title, description, employer, location, salary, posterId
+                            FROM jobs
+                            INNER JOIN jobApplications
+                              ON jobs.jobId = jobApplications.jobId
+                            WHERE jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "" ''', (userId,))
+  return databaseCursor.fetchall()
+
+def queryNotAppliedJobs(userId):
+  databaseCursor.execute('''SELECT jobs.jobId, title, description, employer, location, salary, posterId
+                            FROM jobs
+                            INNER JOIN jobApplications
+                              ON jobs.jobId = jobApplications.jobId
+                            WHERE NOT (jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "") ''', (userId,))
+  return databaseCursor.fetchall()
+
+def querySavedJobs(userId):
+  databaseCursor.execute('''SELECT jobs.jobId, title, description, employer, location, salary, posterId
+                            FROM jobs
+                            INNER JOIN jobApplications
+                              ON jobs.jobId = jobApplications.jobId
+                            WHERE jobApplications.userId = ? AND jobApplications.saved = 1''', (userId,))
+  return databaseCursor.fetchall()
+
+def getApplicationByIds(userId, jobId):
+  databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId))
+  return databaseCursor.fetchone()
+
+
+def toggleSavedJob(userId, jobId):
+
+  if (not jobAppInitilized(userId, jobId)):
+    
+    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved) VALUES (?, ?, '', '', '', 1)''', (userId, jobId))
+    database.commit()
+
+  else:
+    
+    savedState = databaseCursor.execute("SELECT saved FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId)).fetchone()[0]
+
+    savedState = 0 if savedState == 1 else 1
+
+    databaseCursor.execute("UPDATE jobApplications SET saved = ? WHERE userId = ? AND jobId = ?", (savedState, userId, jobId))
+    database.commit()
+
+
+def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
+
+  databaseCursor.execute("UPDATE jobApplications SET gradDate = ?, workAvailabilityDate = ?, qualifications = ? WHERE userId = ? AND jobId = ?", (gradDate, jobAvailabilityDate, qualifications, userId, jobId))
+
+  database.commit()

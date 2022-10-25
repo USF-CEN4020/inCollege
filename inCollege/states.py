@@ -51,7 +51,7 @@ def applicationEntry():
 # main state
 def mainInterface(asId):
   prompt = "Please select an option below:\n"\
-          "\t1. Search for a job\n"\
+          "\t1. Jobs and Internships\n"\
           "\t2. Find your network\n"\
           "\t3. Show my network\n"\
           "\t4. Learn a new skill\n"\
@@ -172,11 +172,140 @@ def jobInterface(asId):
 
   elif sel == 2:
     clear()
-    return underConstruction, (asId, jobInterface)
+    return jobViewQuery, (asId,)
 
   else:
     clear()
     return mainInterface, (asId,)
+
+
+def jobViewQuery(asId):
+  prompt = "Please select what jobs you wish to view:\n"\
+    "\t1. View my saved jobs\n"\
+    "\t2. View jobs I have applied for\n"\
+    "\t3. View jobs I have NOT applied for\n"\
+    "\t4. View ALL jobs\n"\
+    "\t5. Go back\n"\
+    "Selection: "
+
+  sel = int(gatherInput(prompt, "", menuValidatorBuilder('123456')))
+
+  if sel == 5:
+    clear()
+    return jobInterface, (asId,)
+
+  queriedJobs = None
+  
+  if sel == 1:
+    queriedJobs = querySavedJobs(asId)
+  elif sel == 2:
+    queriedJobs = queryAppliedJobs(asId)
+  elif sel == 3:
+    queriedJobs = queryNotAppliedJobs(asId)
+  elif sel == 4:
+    queriedJobs = queryAllJobs()
+
+  if queriedJobs == None or len(queriedJobs) == 0:
+    print("There are no jobs available under this query.")
+    enterToContinue()
+    return jobViewQuery, (asId,)
+
+  for queryIndex, job in enumerate(queriedJobs):
+    print("Job ", queryIndex + 1, ": ", job[1]) # job[1] is title field
+
+  print()
+
+  querySel = int(gatherInput('''Select a job from the above query or enter '0' to go back: ''', 'Not a valid option.', rangedMenuValidatorBuilder(0, len(queriedJobs))))
+
+  clear()
+
+  if querySel == 0:
+    return jobInterface, (asId,)
+  
+  return jobDetails, (asId, queriedJobs[querySel - 1])
+
+
+  
+def jobDetails(asId, job):
+
+
+
+  print("Title:", job[1])
+  print("Description:", job[2])
+  print("Employer:", job[3])
+  print("Location:", job[4])
+  print("Salary: $", job[5], sep='')
+
+  userApplication = getApplicationByIds(asId, job[0])
+
+  if (userApplication == None):
+    print("Applied: NO")
+    print("Saved: NO")
+  else:
+    print("Applied: ", 'YES' if (userApplication[2] != '') else 'NO')
+    print("Saved: ", 'YES' if userApplication[5] == 1 else 'NO')
+
+  print()
+
+  if userApplication != None and (userApplication[2] != '' or job[6] == asId):
+    
+    if (userApplication[5] == 0):
+      prompt = 'Please select an option below: \n'\
+              '\t1. Save job for later\n'\
+              '\t2. Go back\n'\
+              'Selection: '
+    else:
+      prompt = 'Please select an option below: \n'\
+              '\t1. Unsave job\n'\
+              '\t2. Go back\n'\
+              'Selection: '
+    
+    sel = int(gatherInput(prompt, 'Not a valid option', menuValidatorBuilder('12')))
+
+    if sel == 1:
+      toggleSavedJob(asId, job[0])
+
+  else:
+
+
+    if (userApplication == None or userApplication[5] == 0):
+      prompt = 'Please select an option below: \n'\
+              '\t1. Save job for later\n'\
+              '\t2. Apply for this job\n'\
+              '\t3. Go back\n'\
+              'Selection: '
+    else:
+      prompt = 'Please select an option below: \n'\
+              '\t1. Unsave job\n'\
+              '\t2. Apply for this job\n'\
+              '\t3. Go back\n'\
+              'Selection: '
+    
+    sel = int(gatherInput(prompt, 'Not a valid option', menuValidatorBuilder('123')))
+
+    if sel == 1:
+      toggleSavedJob(asId, job[0])
+      print("Job saved state updated.\n")
+      enterToContinue()
+    elif sel == 2:
+      return applyForJob ,(asId, job[0])
+
+  return jobInterface, (asId,)
+
+
+def applyForJob(asId, jobId):
+
+  gradDate = gatherInput("Enter your planned graduation date: ", "That is not a valid date", dateValidator)
+  jobAvailabilityDate = gatherInput("Enter when you will be available to being working: ", "That is not a valid date", dateValidator)
+  qualifications = gatherInput("Explain why you are a good fit for this opertunity: ", "", vacuouslyTrue)
+
+  addJobApplication(asId, jobId, gradDate, jobAvailabilityDate, qualifications)
+
+  print("Job application processed.\n")
+  enterToContinue()
+
+  return jobInterface, (asId,)
+
 
 
 def jobPost(asId):
