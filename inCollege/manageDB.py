@@ -396,7 +396,11 @@ def queryNotAppliedJobs(userId):
                             FROM jobs
                             INNER JOIN jobApplications
                               ON jobs.jobId = jobApplications.jobId
-                            WHERE NOT (jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "")''', (userId,))
+                            WHERE NOT (jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "")
+                            UNION
+                            SELECT jobs.jobId, title, description, employer, location, salary, posterId
+                            FROM jobs
+                            WHERE jobId NOT IN (SELECT jobId FROM jobApplications)''', (userId,))
   return databaseCursor.fetchall()
 
 def querySavedJobs(userId):

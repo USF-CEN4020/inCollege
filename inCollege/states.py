@@ -195,6 +195,8 @@ def jobViewQuery(asId):
 
   sel = int(gatherInput(prompt, "", menuValidatorBuilder('123456')))
 
+  print()
+
   if sel == 5:
     clear()
     return jobInterface, (asId,)
