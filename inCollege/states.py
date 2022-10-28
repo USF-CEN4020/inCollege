@@ -227,9 +227,6 @@ def jobViewQuery(asId):
 
   
 def jobDetails(asId, job):
-
-
-
   print("Title:", job[1])
   print("Description:", job[2])
   print("Employer:", job[3])
@@ -248,7 +245,6 @@ def jobDetails(asId, job):
   print()
 
   if userApplication != None and (userApplication[2] != '' or job[6] == asId):
-    
     if (userApplication[5] == 0):
       prompt = 'Please select an option below: \n'\
               '\t1. Save job for later\n'\
@@ -266,8 +262,6 @@ def jobDetails(asId, job):
       toggleSavedJob(asId, job[0])
 
   else:
-
-
     if (userApplication == None or userApplication[5] == 0):
       prompt = 'Please select an option below: \n'\
               '\t1. Save job for later\n'\
@@ -294,10 +288,9 @@ def jobDetails(asId, job):
 
 
 def applyForJob(asId, jobId):
-
-  gradDate = gatherInput("Enter your planned graduation date: ", "That is not a valid date", dateValidator)
-  jobAvailabilityDate = gatherInput("Enter when you will be available to being working: ", "That is not a valid date", dateValidator)
-  qualifications = gatherInput("Explain why you are a good fit for this opertunity: ", "", vacuouslyTrue)
+  gradDate = gatherInput("Enter your planned graduation date (mm/dd/yyyy): ", "That is not a valid date", dateValidator)
+  jobAvailabilityDate = gatherInput("Enter when you will be available to being working (mm/dd/yyyy): ", "That is not a valid date", dateValidator)
+  qualifications = gatherInput("Explain why you are a good fit for this opportunity: ", "", vacuouslyTrue)
 
   addJobApplication(asId, jobId, gradDate, jobAvailabilityDate, qualifications)
 
@@ -976,20 +969,7 @@ def generalLinks(asId):
   
   
   
-#====================================================================================================
-#====================================================================================================
-  
-  
-  
-  
-  
-  
-  
-#====================================================================================================
-#====================================================================================================
-  
-  
-  
+# Profiles
 def myProfile(asId):
   found = checkProfileExists(asId)
 
