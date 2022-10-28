@@ -18,7 +18,7 @@ DEFAULT_LANGUAGE_SETTINGS = ('english',)
 
 
 
-clear = lambda: os.system('clear') # A function f() that clears all text from the terminal
+clear = lambda: os.system('cls') # A function f() that clears all text from the terminal
 isEqual = lambda x, y: (x == y)
 isZero = lambda x : (isEqual(x,0)) # A function f(x) = x == 0
 isYes = lambda x: (1 if x.lower() == "yes" else 0)

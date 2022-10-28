@@ -107,7 +107,7 @@ def login():
     if (id != -1):
       clear()
       print("\n\nYou have successfully logged in\n")
-      return pendingRequest, (id,)
+      return loginNotifications, (id,)
 
     else:
       clear()
@@ -162,9 +162,10 @@ def jobInterface(asId):
   prompt = "Please select an option below:\n"\
       "\t1. Post a job\n"\
       "\t2. Search for a job\n"\
-      "\t3. Go back\n"\
+      "\t3. Delete my job posting\n"\
+      "\t4. Go back\n"\
       "Selection: "
-  sel = int(gatherInput(prompt, "Invalid input. Please try again\n", menuValidatorBuilder('123')))
+  sel = int(gatherInput(prompt, "Invalid input. Please try again\n", menuValidatorBuilder('1234')))
 
   if sel == 1:
     clear()
@@ -173,6 +174,10 @@ def jobInterface(asId):
   elif sel == 2:
     clear()
     return jobViewQuery, (asId,)
+  
+  elif sel == 3:
+    clear()
+    return deleteJobPosting, (asId,)
 
   else:
     clear()
@@ -190,6 +195,8 @@ def jobViewQuery(asId):
 
   sel = int(gatherInput(prompt, "", menuValidatorBuilder('123456')))
 
+  print()
+
   if sel == 5:
     clear()
     return jobInterface, (asId,)
@@ -203,7 +210,7 @@ def jobViewQuery(asId):
   elif sel == 3:
     queriedJobs = queryNotAppliedJobs(asId)
   elif sel == 4:
-    queriedJobs = queryAllJobs()
+    queriedJobs = queryAllJobs(asId)
 
   if queriedJobs == None or len(queriedJobs) == 0:
     print("There are no jobs available under this query.")
@@ -244,8 +251,9 @@ def jobDetails(asId, job):
 
   print()
 
-  if userApplication != None and (userApplication[2] != '' or job[6] == asId):
-    if (userApplication[5] == 0):
+  if job[6] == asId or (userApplication != None and userApplication[2] != ''):
+    
+    if (userApplication == None or userApplication[5] == 0):
       prompt = 'Please select an option below: \n'\
               '\t1. Save job for later\n'\
               '\t2. Go back\n'\
@@ -288,10 +296,10 @@ def jobDetails(asId, job):
 
 
 def applyForJob(asId, jobId):
-  gradDate = gatherInput("Enter your planned graduation date (mm/dd/yyyy): ", "That is not a valid date", dateValidator)
-  jobAvailabilityDate = gatherInput("Enter when you will be available to being working (mm/dd/yyyy): ", "That is not a valid date", dateValidator)
+  gradDate = gatherInput("Enter your planned graduation date (i.e. 01/01/2022): ", "That is not a valid date", dateValidator)
+  jobAvailabilityDate = gatherInput("Enter when you will be available to being working (i.e. 01/01/2022): ", "That is not a valid date", dateValidator)
   qualifications = gatherInput("Explain why you are a good fit for this opportunity: ", "", vacuouslyTrue)
-
+  removeOldApplication(asId, jobId)
   addJobApplication(asId, jobId, gradDate, jobAvailabilityDate, qualifications)
 
   print("Job application processed.\n")
@@ -315,6 +323,36 @@ def jobPost(asId):
 
   return jobInterface, (asId,)
 
+
+def deleteJobPosting(asId):
+  query = queryMyPostings(asId)
+  if query == -1:
+    print("You have not posted any jobs.\n")
+  else:
+    count = 0
+    validSelections = "0"
+    for job in query:
+      count = count + 1
+      validSelections = validSelections + str(count)
+      print("Job #", count, ": ")
+      print("\tTitle: ", job[1])
+      print("\tEmployer: ", job[3])
+    
+    prompt = "Please select which job you would like to delete by Job# or to return to previous menu, input 0: "
+    sel = int(gatherInput(prompt, "Invalid input, please try again.\n", menuValidatorBuilder(validSelections)))
+    if sel == 0:
+      return jobInterface, (asId,)
+    
+    deleteJob(query[sel-1][0])
+    print("Job posting successfully deleted!\n\n")
+    
+    more = gatherInput("Would you like to delete another job posting? (yes / no) ", "Please enter either \"yes\" or \"no\".", binaryOptionValidatorBuilder("yes", "no"))
+    if more == "yes":
+      return deleteJobPosting, (asId,)
+  
+  return jobInterface, (asId,)
+    
+    
 
 # learn skills
 def listSkills(asId):
@@ -366,17 +404,18 @@ def findPpl(asId):
     return mainInterface, (asId,)
 
 
-# friends network
-def pendingRequest(asId):
+# Notifications upon login
+def loginNotifications(asId):
   pendingRequest = checkExistingPendingRequest(asId)
+  deletions = queryDeletions(asId)
 
   requesterId = 0
   requesterUsername = ''
   
-  if pendingRequest == -1:
+  if pendingRequest == -1 and deletions == -1:
     return mainInterface, (asId,)
 
-  else: 
+  if pendingRequest != -1: 
     for row in pendingRequest:
       requesterId = row[1]
       requesterUsername = usernameLookup(requesterId)
@@ -393,14 +432,25 @@ def pendingRequest(asId):
 
       print("\nYou have accepted the request from <", requesterUsername, "> successfully.")
 
-      enterToContinue()
-      return mainInterface, (asId,)
-
     else: 
       deleteFromPendingList(asId, requesterId)
       print("\nYou have rejected the network request from <", requesterUsername, ">.")
-      enterToContinue()
-      return mainInterface, (asId,)
+      
+    enterToContinue()
+  
+  if deletions != -1:
+    count = 0
+    print("The following jobs have been removed for the job listings:\n")
+    for job in deletions:
+      count = count + 1
+      print("Job #", count, "): ")
+      print("\tTitle: ", job[1])
+      print("\tEmployer: ", job[3])
+    removeDeletions(asId)
+    
+    enterToContinue()
+    
+  return mainInterface, (asId,)
     
 
 def findFriendsbyType(asId):
