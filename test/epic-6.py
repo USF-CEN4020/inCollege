@@ -73,6 +73,58 @@ def test_viewNotAppliedJobs(select):
         output, dataOut = jobViewQuery(-1)
         assert output == state
 
+#view all saved jobs
+@pytest.mark.jobStates
+@pytest.mark.parametrize('select', 
+                            [
+                                ('1')
+                            ])
+def test_viewSavedJobs(select):
+    state = querySavedJobs
+    with mock.patch.object(builtins, 'input', lambda _: select):
+        output, dataOut = jobViewQuery(-1)
+        assert output == state
+
+
+#Check if the given string is in the valid date format
+
+@pytest.mark.validateString
+@pytest.mark.parametrize('inputString, valid',
+                        [
+                            ("01/01/2000", True),
+                            ("05/12/2022", True),
+                            ("1999/12/06", False),
+                            ("////////", False),
+                            ("06/15/2022", True),
+                            ("05/12/22", False),
+                            ("abced32", False)
+
+
+                        ]
+
+)
+
+def checkValidString(inputString, valid):
+    assert dateValidator(inputString)==True;
+
+
+@pytest.mark.jobDetails
+@pytest.mark.parameterize('jobId, title, description, employer, location, salary, result'
+                            [
+                                (1, "CS", "Description", "Company1", "Tampa, FL", "100000", True),
+                                (2, "BE", "Description", "Company2", "Tampa, FL", "10000", True),
+                                (3, "Tester", "Description", "Company3", "Tampa, FL", "100000", True),
+                                (4, "CE", "Description", "Company4","Tampa, FL", "1000000", True)
+                            ]
+
+
+
+
+)
+
+def test_jobDetails(jobId, title, description, employer, location, salary, result):
+     inputs = iter(title, description, employer, location, salary)
+    with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
 
 # entered information be stored and associates with job has been applied for 
 # so that when List of jobs displayed, applied job will be indicated
