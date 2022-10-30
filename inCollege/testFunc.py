@@ -66,3 +66,21 @@ def testTitleCase():
         return True
   else:
         return False
+
+def getAppliedJobsCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+
+def getSavedJobsCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+
+def getAllJobsCount():
+  databaseCursor.execute("SELECT Count(*) FROM jobs")
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]

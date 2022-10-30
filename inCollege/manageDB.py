@@ -402,7 +402,6 @@ def queryNotAppliedJobs(userId):
                               ON jobs.jobId = jobApplications.jobId
                             WHERE jobApplications.userId = ? AND jobApplications.gradDate IS NOT NULL AND jobApplications.gradDate != "" ''', (userId,))
   return databaseCursor.fetchall()
-  return databaseCursor.fetchall()
 
 def querySavedJobs(userId):
   databaseCursor.execute('''SELECT jobs.jobId, title, description, employer, location, salary, posterId
@@ -417,16 +416,12 @@ def getApplicationByIds(userId, jobId):
 
 
 def toggleSavedJob(userId, jobId):
-
   if (not jobAppInitilized(userId, jobId)):
-    
     databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, '', '', '', 1, 0)''', (userId, jobId))
     database.commit()
 
   else:
-    
     savedState = databaseCursor.execute("SELECT saved FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId)).fetchone()[0]
-
     savedState = 0 if savedState == 1 else 1
 
     databaseCursor.execute("UPDATE jobApplications SET saved = ? WHERE userId = ? AND jobId = ?", (savedState, userId, jobId))
@@ -434,9 +429,7 @@ def toggleSavedJob(userId, jobId):
 
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
-
   databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, ?, ?, ?, 0, 0)""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
-
   database.commit()
   
 def removeOldApplication(userId, jobId):
@@ -444,19 +437,16 @@ def removeOldApplication(userId, jobId):
   database.commit()
   
 def queryMyPostings(userId):
-  
   query = databaseCursor.execute("SELECT * FROM jobs WHERE posterId = ?", (userId,)).fetchall()
   return query if query else -1
 
 
 def queryDeletions(userId):
-  
   query = databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,)).fetchall()
   return query if query else -1
 
 
 def deleteJob(jobId):
-  
   databaseCursor.execute("UPDATE jobApplications SET deleted = 1 WHERE jobId = ?", (jobId,))
   database.commit()
   databaseCursor.execute("DELETE FROM jobs WHERE jobId = ?", (jobId,))
@@ -464,6 +454,5 @@ def deleteJob(jobId):
 
 
 def removeDeletions(userId):
-  
   databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,))
   database.commit()

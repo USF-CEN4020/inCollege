@@ -7,18 +7,18 @@ import sqlite3
 from inCollege.manageDB import *
 from inCollege.testFunc import *
 from inCollege.manageDB import *
-from inCollege.states import mainInterface, jobInterface, jobViewQuery, jobDetails, applyForJob, jobPost
+from inCollege.states import newAcct, mainInterface, jobInterface, jobViewQuery, jobDetails, applyForJob, jobPost
 
 
 # ==================================================================================
 # ==================================================================================
-      
-      
-      
-      
-      
+
+
+
+
+
 # EPIC #6 Test Cases
-      
+
 
 
 
@@ -26,6 +26,22 @@ from inCollege.states import mainInterface, jobInterface, jobViewQuery, jobDetai
 # ==================================================================================
 # ==================================================================================
 
+def initTestAccounts():
+    accounts = [
+        ('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs'),
+        ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce'),
+        ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs'),
+        ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE'),
+        ('test5', 'aaaaaaa!A1', 'firstname', 'lastname', 'usf', 'cse')
+	]
+    for account in accounts:
+        inputs = iter(account)
+        with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+            newAcct()
+
+
+# entered information be stored and associates with job has been applied for 
+# so that when list of jobs displayed, applied job will be indicated
 def initTestJobs():
 	jobs = [
 		('SWE', 'Software Engineer', 'Google', 'Tampa, FL', '100000.0', 1),
@@ -35,7 +51,33 @@ def initTestJobs():
 	for job in jobs:
 		inputs = iter(job)
 		with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-			jobPost()
+			jobPost(-1)
+
+def initAppliedJobs():
+    appliedJobs = [
+        (1, 1, '01/21/2022', '02/21/2022', 'h'),
+        (1, 2, '01/22/2022', '02/22/2022', 'hi'),
+        (2, 1, '01/23/2022', '02/23/2022', 'hihi'),
+        (2, 2, '01/24/2022', '02/24/2022', 'hihihi'),
+        (2, 3, '01/25/2022', '02/25/2022', 'hihihi'),
+    ]
+    for appliedJob in appliedJobs:
+        addJobApplication(appliedJob[0], appliedJob[1], appliedJob[2], appliedJob[3], appliedJob[4])
+
+def initSavedJobs():
+    savedJobs = [
+        (1, 1), # userId, jobId
+        (1, 2),
+        (2, 1),
+        (2, 2),
+        (2, 3)
+    ]
+    for savedJob in savedJobs:
+        toggleSavedJob(savedJob[0], savedJob[1])
+
+
+# ==================================================================================
+# ==================================================================================
 
 
 # the maximum number of jobs is 10
@@ -57,32 +99,61 @@ def test_viewJobInteface(select):
 
 # view a list of job that student have applied 
 # and have not yet applied for
-@pytest.mark.jobStates
-@pytest.mark.parametrize('select', [('2')])
-def test_viewAppliedJobs(select):
-    state = queryAppliedJobs
-    with mock.patch.object(builtins, 'input', lambda _: select):
-        output, dataOut = jobViewQuery(-1)
-        assert output == state
+@pytest.mark.jobApplication
+@pytest.mark.parametrize('userId, result', [(1, 2), (2, 3), (3, 0)])
+def test_viewAppliedJobs(userId, result):
+    clearJobs()
+    initTestJobs()
+    clearApplications()
+    initAppliedJobs()
+    output = getAppliedJobsCount(userId)
+    assert output == result
 
-@pytest.mark.jobStates
-@pytest.mark.parametrize('select', [('3')])
-def test_viewNotAppliedJobs(select):
-    state = queryNotAppliedJobs
-    with mock.patch.object(builtins, 'input', lambda _: select):
-        output, dataOut = jobViewQuery(-1)
-        assert output == state
+@pytest.mark.jobApplication
+@pytest.mark.parametrize('userId, result', [(1, 1), (2, 0), (3, 3)])
+def test_viewNotAppliedJobs(userId, result):
+    clearJobs()
+    initTestJobs()
+    clearApplications()
+    initAppliedJobs()
+    appliedJobs = getAppliedJobsCount(userId)
+    totalJobs = getAllJobsCount()
+    output = totalJobs - appliedJobs
+    assert output == result
 
 
-# entered information be stored and associates with job has been applied for 
-# so that when List of jobs displayed, applied job will be indicated
+# once applied for a job, they cannot apply it again.
+@pytest.mark.jobApplication
+@pytest.mark.parametrize('userId, jobId, result', 
+                        [
+                            (1, 1, 2), 
+                            (2, 1, 3), 
+                            (3, 3, 1)
+                        ]
+)
+def test_checkAppliedJobs(userId, jobId, result):
+    clearApplications()
+    initAppliedJobs()
+    applyJobsAgain = [
+        (1, 1, '12/21/2022', '12/21/2022', 'h'),
+        (2, 1, '12/23/2022', '12/23/2022', 'hihi'),
+        (3, 3, '12/25/2022', '12/25/2022', 'hihihi'),
+    ]
+    for job in applyJobsAgain:
+        removeOldApplication(job[0], job[1])
+        addJobApplication(job[0], job[1], job[2], job[3], job[4])
+
+    assert getAppliedJobsCount(userId) == result
 
 
 
 # mark a job as "saved" when I am interested in a job 
 # so that I can see a list of jobs I marked 
 # and I also can unmark a job when I want.
-
-
-
-# once applied for a job, they cannot apply it again.
+@pytest.mark.jobSaved
+@pytest.mark.parametrize('userId, result', [(1, 2), (2, 3), (3, 0)])
+def test_viewSavedJobs(userId, result):
+    clearApplications()
+    initSavedJobs()
+    output = getSavedJobsCount(userId)
+    assert output == result
