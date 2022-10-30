@@ -6,7 +6,7 @@ import sqlite3
 
 from inCollege.manageDB import *
 from inCollege.testFunc import *
-from inCollege.manageDB import *
+from inCollege.commons import *
 from inCollege.states import newAcct, mainInterface, jobInterface, jobViewQuery, jobDetails, applyForJob, jobPost
 
 
@@ -146,7 +146,7 @@ def test_checkAppliedJobs(userId, jobId, result):
     assert getAppliedJobsCount(userId) == result
 
 
-
+# view all saved jobs &
 # mark a job as "saved" when I am interested in a job 
 # so that I can see a list of jobs I marked 
 # and I also can unmark a job when I want.
@@ -157,3 +157,35 @@ def test_viewSavedJobs(userId, result):
     initSavedJobs()
     output = getSavedJobsCount(userId)
     assert output == result
+
+
+# Check if the given string is in the valid date format
+@pytest.mark.validString
+@pytest.mark.parametrize('inputString, result',
+                        [
+                            ('01/01/2000', True),
+                            ('05/12/2022', True),
+                            ('1999/12/0', False),
+                            ('////////', False),
+                            ('06/15/2022', True),
+                            ('05/12/22', False),
+                            ('abced32', False)
+                        ]
+)
+def test_validString(inputString, result):
+    assert dateValidator(inputString) == result
+
+
+# @pytest.mark.jobDetails
+# @pytest.mark.parameterize('jobId, title, description, employer, location, salary, result'
+#                             [
+#                                 (1, "CS", "Description", "Company1", "Tampa, FL", "100000", True),
+#                                 (2, "BE", "Description", "Company2", "Tampa, FL", "10000", True),
+#                                 (3, "Tester", "Description", "Company3", "Tampa, FL", "100000", True),
+#                                 (4, "CE", "Description", "Company4","Tampa, FL", "1000000", True)
+#                             ]
+# )
+# def test_jobDetails(jobId, title, description, employer, location, salary, result):
+#      inputs = iter(title, description, employer, location, salary)
+#     with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+
