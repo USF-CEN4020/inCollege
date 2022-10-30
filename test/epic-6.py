@@ -7,7 +7,7 @@ import sqlite3
 from inCollege.manageDB import *
 from inCollege.testFunc import *
 from inCollege.commons import *
-from inCollege.states import newAcct, mainInterface, jobInterface, jobViewQuery, jobDetails, applyForJob, jobPost
+from inCollege.states import deleteJobPosting, newAcct, mainInterface, jobInterface, jobViewQuery, jobDetails, applyForJob, jobPost
 
 
 # ==================================================================================
@@ -51,7 +51,7 @@ def initTestJobs():
 	for job in jobs:
 		inputs = iter(job)
 		with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-			jobPost(-1)
+			jobPost(1)
 
 def initAppliedJobs():
     appliedJobs = [
@@ -176,16 +176,29 @@ def test_validString(inputString, result):
     assert dateValidator(inputString) == result
 
 
-# @pytest.mark.jobDetails
-# @pytest.mark.parameterize('jobId, title, description, employer, location, salary, result'
-#                             [
-#                                 (1, "CS", "Description", "Company1", "Tampa, FL", "100000", True),
-#                                 (2, "BE", "Description", "Company2", "Tampa, FL", "10000", True),
-#                                 (3, "Tester", "Description", "Company3", "Tampa, FL", "100000", True),
-#                                 (4, "CE", "Description", "Company4","Tampa, FL", "1000000", True)
-#                             ]
-# )
-# def test_jobDetails(jobId, title, description, employer, location, salary, result):
-#      inputs = iter(title, description, employer, location, salary)
-#     with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+# select a job so that all of available information for that job displayed
+@pytest.mark.jobStates
+@pytest.mark.parametrize('select, querySel', [(1, 1), (1, 2), (1, 3)])
+def test_viewJob(select, querySel):
+    state = jobDetails
+    queriedJobs = queryAllJobs(-1)
+    inputs = iter(select, queriedJobs[querySel - 1])
+    with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+        output, dataOut = jobViewQuery(-1)
+        assert output == state
+
+# student able to apply for a job cannot apply for a job that they posted
+
+
+# show the list of saved jobs and applied jobs so that they will be retained and can be displayed next time student logs in
+
+
+# delete a job I posted so that who applied for that job will have notification for that job removed
+@pytest.mark.jobDelete
+@pytest.mark.parametrize('jobId, result', [(2, 2), (3, 1)])
+def test_deleteJobs(jobId, result):
+    deleteJob(jobId)
+    assert getAllJobsCount() == result
+
+
 
