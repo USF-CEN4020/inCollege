@@ -187,8 +187,6 @@ def test_viewJob(select, querySel):
         output, dataOut = jobViewQuery(-1)
         assert output == state
 
-# student able to apply for a job cannot apply for a job that they posted
-
 
 # show the list of saved jobs and applied jobs so that they will be retained and can be displayed next time student logs in
 
