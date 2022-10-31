@@ -177,15 +177,15 @@ def test_validString(inputString, result):
 
 
 # select a job so that all of available information for that job displayed
-@pytest.mark.jobStates
-@pytest.mark.parametrize('select, querySel', [(1, 1), (1, 2), (1, 3)])
-def test_viewJob(select, querySel):
-    state = jobDetails
-    queriedJobs = queryAllJobs(-1)
-    inputs = iter(select, queriedJobs[querySel - 1])
-    with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-        output, dataOut = jobViewQuery(-1)
-        assert output == state
+# @pytest.mark.jobStates
+# @pytest.mark.parametrize('select, querySel', [(1, 1), (1, 2), (1, 3)])
+# def test_viewJob(select, querySel):
+#     state = jobDetails
+#     queriedJobs = queryAllJobs(-1)
+#     inputs = iter(select, queriedJobs[querySel - 1])
+#     with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+#         output, dataOut = jobViewQuery(-1)
+#         assert output == state
 
 
 # show the list of saved jobs and applied jobs so that they will be retained and can be displayed next time student logs in
