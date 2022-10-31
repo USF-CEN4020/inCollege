@@ -2,11 +2,12 @@ from pickle import NONE
 import os
 from functools import lru_cache
 import random
+from tkinter import W
 
 
 
 MAX_USERS = 10
-MAX_JOBS = 5
+MAX_JOBS = 10
 DEFAULT_GUEST_CONTROLS = (1, 1, 1)
 DEFAULT_LANGUAGE_SETTINGS = ('english',)
 
@@ -17,7 +18,7 @@ DEFAULT_LANGUAGE_SETTINGS = ('english',)
 
 
 
-clear = lambda: os.system('clear') # A function f() that clears all text from the terminal
+clear = lambda: os.system('cls') # A function f() that clears all text from the terminal
 isEqual = lambda x, y: (x == y)
 isZero = lambda x : (isEqual(x,0)) # A function f(x) = x == 0
 isYes = lambda x: (1 if x.lower() == "yes" else 0)
@@ -78,6 +79,19 @@ def menuValidatorBuilder(validOptions):
     optionsList = list(validOptions)
     return lambda menuInput: (menuInput in optionsList and menuInput != '')
 
+@lru_cache
+def rangedMenuValidatorBuilder(start, end):
+  '''
+  Generates a validator from a range of acceptable integer options
+  
+  :param start: Begining of acceptable range (inclusive)
+  :param end: End of acceptable range (inclusive)
+  :returns a function f(x) that returns if x is in the range of start to end (inclusive)
+  '''
+
+  optionsRange = range(start, end + 1)
+  return lambda menuInput: (int(menuInput) in optionsRange and menuInput != '')
+
 
 @lru_cache
 def binaryOptionValidatorBuilder(firstOption, secondOption):
@@ -92,6 +106,26 @@ def binaryOptionValidatorBuilder(firstOption, secondOption):
   firstOption = firstOption.lower()
   secondOption = secondOption.lower()
   return lambda textInput: (textInput == firstOption or textInput == secondOption)
+
+
+
+
+def dateValidator(potentialDate):
+  '''
+  Checks if a given string is a valid date string of the form mm/dd/yyyy.
+  Does not care if the date actually exists, so the strings "99/01/1982" and "02/30/2000" will evaluate to True
+  '''
+
+  if not potentialDate[0:2].isnumeric():
+    return False
+
+  if not potentialDate[3:-5].isnumeric():
+    return False
+
+  if not potentialDate[-4:].isnumeric():
+    return False
+
+  return True
 
 
 def gatherInput(prompt, failResponse, validator):

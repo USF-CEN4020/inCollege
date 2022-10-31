@@ -35,6 +35,12 @@ def accountCount(count):
   else:
     return True
 
+def jobCount(count):
+  count = jobsCount()
+  if count > 10 or count < 0:
+    return False
+  else:
+    return True
 
 def listSkillsOptions(sel):
   if sel == '1' or sel == '2' or sel == '3' or sel == '4' or sel == '5' or sel == '6':
@@ -60,3 +66,21 @@ def testTitleCase():
         return True
   else:
         return False
+
+def getAppliedJobsCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+
+def getSavedJobsCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+
+def getAllJobsCount():
+  databaseCursor.execute("SELECT Count(*) FROM jobs")
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
