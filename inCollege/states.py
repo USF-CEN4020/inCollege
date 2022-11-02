@@ -1,4 +1,3 @@
-from tkinter import W
 from .commons import *
 from .manageDB import *
 

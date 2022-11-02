@@ -1,6 +1,6 @@
 from .commons import *
 import sqlite3
-
+import time
 
 
 database = sqlite3.connect("inCollege.db")
@@ -91,6 +91,18 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience (
                             description TEXT)''')
 database.commit()
 
+
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS messages (
+                            messageId INTEGER PRIMARY KEY ASC,
+                            senderId INTEGER,
+                            receiverId INTEGER,
+                            content TEXT,
+                            timestamp INTEGER,
+                            read INTEGER,
+                            FOREIGN KEY(senderId) REFERENCES users(id),
+                            FOREIGN KEY(receiverId) REFERENCES users(id))''')
+
+database.commit()
 
 
 #----------------------------------------------------------------------------------------
@@ -456,3 +468,19 @@ def deleteJob(jobId):
 def removeDeletions(userId):
   databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,))
   database.commit()
+
+
+
+
+def pushMessage(senderId, receiverId, message):
+
+    now = time.time()
+
+    databaseCursor.execute("INSERT INTO messages(senderId, receiverId, content, timestamp, read) VALUES (?, ?, ?, ?, 0)",
+                           (senderId, receiverId, message, now))
+
+    database.commit()
+
+
+
+
