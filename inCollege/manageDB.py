@@ -478,9 +478,14 @@ def pushMessage(senderId, receiverId, message):
 
     databaseCursor.execute("INSERT INTO messages(senderId, receiverId, content, timestamp, read) VALUES (?, ?, ?, ?, 0)",
                            (senderId, receiverId, message, now))
-
     database.commit()
 
 
+def getInbox(receiverId):
+    return databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY timestamp ASC", receiverId).fetchall()
 
+def deleteMessage(messageId):
+    databaseCursor.execute("DELETE FROM messages WHERE messageId = ?", (messageId,))
 
+def markMessageRead(messageId):
+    databaseCursor.execute("UPDATE messages SET read = 1 WHERE messageId = ?", (messageId,))

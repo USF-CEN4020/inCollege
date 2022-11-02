@@ -1181,6 +1181,12 @@ def friendsProfileView(asId, friendUsername, friendKey):
     enterToContinue()
     return mainInterface, (asId,)
 
+def readInbox(asId, inbox):
+
+    
+    
+
+    pass 
   
   
 #====================================================================================================

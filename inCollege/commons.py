@@ -1,8 +1,5 @@
-from pickle import NONE
 import os
 from functools import lru_cache
-import random
-from tkinter import W
 
 
 
