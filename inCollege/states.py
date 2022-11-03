@@ -57,11 +57,12 @@ def mainInterface(asId):
           "\t4. Learn a new skill\n"\
           "\t5. InCollege navigation links\n"\
           "\t6. My profile\n"\
-          "\t7. Log out\n"\
+          "\t7. Messages\n"\
+          "\t8. Log out\n"\
           "Selection: "
   sel = int(
           gatherInput(prompt, "Invalid input. Please try again.\n",
-                      menuValidatorBuilder('1234567')))
+                      menuValidatorBuilder('12345678')))
 
   if sel == 1:
       clear()
@@ -88,6 +89,10 @@ def mainInterface(asId):
       return myProfile, (asId,)
 
   elif sel == 7:
+      clear()
+      return messagesInterface, (asId,)
+
+  elif sel == 8:
       clear()
       return applicationEntry, None
 
@@ -406,38 +411,11 @@ def findPpl(asId):
 
 # Notifications upon login
 def loginNotifications(asId):
-  pendingRequest = checkExistingPendingRequest(asId)
+
+  pendingRequests = checkExistingPendingRequest(asId)
+  
   deletions = queryDeletions(asId)
 
-  requesterId = 0
-  requesterUsername = ''
-  
-  if pendingRequest == -1 and deletions == -1:
-    return mainInterface, (asId,)
-
-  if pendingRequest != -1: 
-    for row in pendingRequest:
-      requesterId = row[1]
-      requesterUsername = usernameLookup(requesterId)
-      print("\nYou have a pending request from <", requesterUsername, ">.\n")
-      break
-
-    accept = gatherInput("Would you like to accept more requests? (yes / no) ",
-    "Please enter either \"yes\" or \"no\".",
-    binaryOptionValidatorBuilder("yes", "no"))
-
-    if accept == 'yes':
-      databaseCursor.execute("UPDATE friendships SET acceptRequest= 1 WHERE senderId= ? AND receiverId= ?", (requesterId, asId)) 
-      database.commit()
-
-      print("\nYou have accepted the request from <", requesterUsername, "> successfully.")
-
-    else: 
-      deleteFromPendingList(asId, requesterId)
-      print("\nYou have rejected the network request from <", requesterUsername, ">.")
-      
-    enterToContinue()
-  
   if deletions != -1:
     count = 0
     print("The following jobs have been removed for the job listings:\n")
@@ -450,8 +428,48 @@ def loginNotifications(asId):
     
     enterToContinue()
     
+  if pendingRequests:
+    
+    numRequests = len(pendingRequests)
+
+    if numRequests == 1:
+      print("You have 1 pending friend request.\n")
+    else:  
+      print("You have", numRequests, "pending friend requests.\n")
+
+    accept = gatherInput("Would you like to manage your incoming friend requests? (yes / no) ",
+    "Please enter either \"yes\" or \"no\".",
+    binaryOptionValidatorBuilder("yes", "no"))
+
+    if accept == 'yes':
+      return handleFriendRequests, (asId, pendingRequests)
+
+  clear()
+
   return mainInterface, (asId,)
     
+
+def handleFriendRequests(asId, requests):
+
+  for request in requests:
+    
+    senderId = request[1]
+    senderUsername = usernameLookup(senderId)
+
+    print("<", senderUsername, "> would like to add you as a friend.")
+
+    decide = gatherInput("Would you like to (accept) or (reject) this friend request? ",
+      "Please enter either \"accept\" or \"reject\".",
+      binaryOptionValidatorBuilder("accept", "reject"))
+
+    if decide == "accept":
+      confirmFriendship(senderId, asId)
+    else:
+      deleteFromPendingList(asId, senderId)
+
+    clear()
+
+  return mainInterface, (asId,)
 
 def findFriendsbyType(asId):
   prompt = "Search by below options:\n"\
@@ -1182,12 +1200,21 @@ def friendsProfileView(asId, friendUsername, friendKey):
     enterToContinue()
     return mainInterface, (asId,)
 
+
+def messagesInterface(asId):
+
+  userInbox = getInbox(asId)
+
+
+
+  pass
+
+
+def sendMessageInterface(asId, allowedRecipients):
+  pass
+
 def readInbox(asId, inbox):
-
-    
-    
-
-    pass 
+  pass 
   
   
 #====================================================================================================

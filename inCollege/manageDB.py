@@ -334,12 +334,13 @@ def checkUserId(username):
 
 
 def checkExistingPendingRequest(userId):
-  databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest= ? AND receiverId= ?", (0, userId))
-  found = databaseCursor.fetchall()
-  if found: 
-    return found
-  else:
-    return -1
+  '''
+  Gets a list of all rows of friendships where the receiver is the given user and they have not accpeted
+  
+  param userId: id of the receiver the function queries for
+  returns: a list of tuples corosponding to rows of the friendships table. Trivially returns an empty list if the user has no incoming friend requests.
+  '''
+  return databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest = 0 AND receiverId= ?", (userId,)).fetchall()
   
   
 def checkProfileExists(userId):
@@ -470,6 +471,18 @@ def removeDeletions(userId):
   database.commit()
 
 
+def getFriendsOf(userId):
+  return databaseCursor.execute('''SELECT * FROM users WHERE id = (
+    SELECT senderId FROM friendships WHERE receiverId = ? AND acceptRequest = 1
+    UNION
+    SELECT receiverId FROM friendships WHERE receiverId = ? AND acceptRequest = 1
+  )''', (userId,) ).fetchall()
+
+
+def confirmFriendship(senderId, receiverId):
+  
+  databaseCursor.execute("UPDATE friendships SET acceptRequest = 1 WHERE senderId = ? AND receiverId = ?", (senderId, receiverId))
+  database.commit()
 
 
 def pushMessage(senderId, receiverId, message):
