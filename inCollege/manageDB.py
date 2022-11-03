@@ -479,6 +479,7 @@ def getFriendsOf(userId):
   )''', (userId, userId) ).fetchall()
 
 
+
 def confirmFriendship(senderId, receiverId):
   
   databaseCursor.execute("UPDATE friendships SET acceptRequest = 1 WHERE senderId = ? AND receiverId = ?", (senderId, receiverId))
@@ -495,7 +496,7 @@ def pushMessage(senderId, receiverId, message):
 
 
 def getInbox(receiverId):
-    return databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY timestamp ASC", receiverId).fetchall()
+    return databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY timestamp ASC", (receiverId,)).fetchall()
 
 def deleteMessage(messageId):
     databaseCursor.execute("DELETE FROM messages WHERE messageId = ?", (messageId,))

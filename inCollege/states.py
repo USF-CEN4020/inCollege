@@ -1205,13 +1205,57 @@ def messagesInterface(asId):
 
   userInbox = getInbox(asId)
 
+  
+  prompt = "Please select what jobs you wish to view:\n"\
+    "\t1. Send a message\n"\
+    "\t2. View your inbox\n"\
+    "\t3. Go back\n"\
+    "Selection: "
 
+  sel = int(gatherInput(prompt, "Invalid input, please try again.\n", menuValidatorBuilder('123')))
+
+  if sel == 1:
+    return sendMessageInterface, (asId, getFriendsOf(asId)) # getFriendsOf should be replaced with a func that checks if the user is a plus account and returns a set of allowedRecipients accordingly
 
   pass
 
 
 def sendMessageInterface(asId, allowedRecipients):
-  pass
+
+  if allowedRecipients:
+
+    print("You may message the following users:\n")
+
+    allRecipInfos = ""
+    for recip in allowedRecipients:
+      allRecipInfos += prettyUserInfo(recip)
+
+    allRecipUsernames = usernamesFromRows(allowedRecipients)
+
+    selectedRecip = gatherInput("Enter the username of the user you would like to message from the above list or press ENTER to go back.",
+    allRecipInfos + "\nInvalid username. Please enter the username of the user you would like to message from the above list or press ENTER to go back.\n",
+    optionsOrEnterBuilder(allRecipUsernames))
+
+    if selectedRecip == '':
+      clear()
+      return messagesInterface, (asId,)
+
+    messageContent = gatherInput("What would you like to send to " + selectedRecip + "? ","", vacuouslyTrue)
+
+    recipId = checkUserId(selectedRecip)
+
+    pushMessage(asId, recipId, messageContent)
+
+    clear()
+    print("Message successfully sent.")
+    return messagesInterface, (asId,)
+
+  else:
+    clear()
+    print("You do not have anyone to message at this time.")
+    return messagesInterface, (asId,)
+    
+
 
 def readInbox(asId, inbox):
   pass 
