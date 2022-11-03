@@ -472,11 +472,11 @@ def removeDeletions(userId):
 
 
 def getFriendsOf(userId):
-  return databaseCursor.execute('''SELECT * FROM users WHERE id = (
+  return databaseCursor.execute('''SELECT * FROM users WHERE id IN (
     SELECT senderId FROM friendships WHERE receiverId = ? AND acceptRequest = 1
     UNION
     SELECT receiverId FROM friendships WHERE receiverId = ? AND acceptRequest = 1
-  )''', (userId,) ).fetchall()
+  )''', (userId, userId) ).fetchall()
 
 
 def confirmFriendship(senderId, receiverId):

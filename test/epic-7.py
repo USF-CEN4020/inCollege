@@ -4,8 +4,8 @@ import builtins
 from unittest import mock
 import sqlite3
 
-from manageDB import clearFriendships, clearUsers
-from states import newAcct
+from inCollege.manageDB import clearApplications, clearFriendships, clearJobs, clearUsers, getFriendsOf
+from inCollege.states import loginNotifications, newAcct, requestFriends
 
 
 
@@ -41,10 +41,35 @@ def initTestAccounts():
 
 
 def initTestFriendships():
-	inputs = [' ',' ',' ',' ',' ','yes',' ']
+	inputs = iter([' ',' ',' ',' ',' ','yes','accept', 'accept', 'yes', 'accept', 'yes', 'accept', 'yes', 'accept'])
+	
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
 
-def test_getFriendsOf():
+		requestFriends(1,'test2', 2)
+		requestFriends(2, 'test3', 3)
+		requestFriends(3, 'test4', 4)
+		requestFriends(3, 'test1', 1)
+		requestFriends(4, 'test1', 1)
+
+		state, data = loginNotifications(1)
+		state(*data)
+		state, data = loginNotifications(2)
+		state(*data)
+		state, data = loginNotifications(3)
+		state(*data)
+		state, data = loginNotifications(4)
+		state(*data)
+
+
+@pytest.mark.friends
+@pytest.mark.parametrize('userId, numFriends', [(1, 3), (2,2), (3,2), (4,2)])
+def test_getFriendsOfCorrectNum(userId, numFriends):
 	clearUsers()
 	clearFriendships()
-	initTestAccounts()
+	clearJobs()
+	clearApplications()
 
+	initTestAccounts()
+	initTestFriendships()
+	
+	assert len(getFriendsOf(userId)) == numFriends
