@@ -416,6 +416,12 @@ def loginNotifications(asId):
   
   deletions = queryDeletions(asId)
 
+  newMessageCount = getNumUnreadMessages(asId)
+
+  if newMessageCount != 0:
+    print("You have", newMessageCount, "unread messages in your inbox.\n")
+    enterToContinue()
+
   if deletions != -1:
     count = 0
     print("The following jobs have been removed for the job listings:\n")
@@ -1216,6 +1222,12 @@ def messagesInterface(asId):
 
   if sel == 1:
     return sendMessageInterface, (asId, getFriendsOf(asId)) # getFriendsOf should be replaced with a func that checks if the user is a plus account and returns a set of allowedRecipients accordingly
+
+  if sel == 2:
+    return underConstruction, (asId, messagesInterface)
+
+  if sel == 3:
+    return mainInterface, (asId,)
 
   pass
 

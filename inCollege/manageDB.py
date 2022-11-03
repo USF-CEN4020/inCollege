@@ -496,7 +496,10 @@ def pushMessage(senderId, receiverId, message):
 
 
 def getInbox(receiverId):
-    return databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY timestamp ASC", (receiverId,)).fetchall()
+    return databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY read ASC, timestamp DESC", (receiverId,)).fetchall()
+
+def getNumUnreadMessages(receiverId):
+    return databaseCursor.execute("SELECT COUNT(*) FROM messages WHERE receiverId = ? AND read = 0", (receiverId,)).fetchone()[0]
 
 def deleteMessage(messageId):
     databaseCursor.execute("DELETE FROM messages WHERE messageId = ?", (messageId,))
