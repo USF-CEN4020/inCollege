@@ -62,7 +62,7 @@ def initTestFriendships():
 
 
 @pytest.mark.friends
-@pytest.mark.parametrize('userId, numFriends', [(1, 3), (2,2), (3,2), (4,2)])
+@pytest.mark.parametrize('userId, numFriends', [(1, 3), (2,2), (3,3), (4,2)])
 def test_getFriendsOfCorrectNum(userId, numFriends):
 	clearUsers()
 	clearFriendships()

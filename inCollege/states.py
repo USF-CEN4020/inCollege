@@ -14,6 +14,7 @@ testimonials = ["""InCollege helped me develop the skills I needed to land a job
 
 
 def applicationEntry():
+
   print(random.choice(testimonials))
   print()
 
@@ -1209,9 +1210,6 @@ def friendsProfileView(asId, friendUsername, friendKey):
 
 def messagesInterface(asId):
 
-  userInbox = getInbox(asId)
-
-  
   prompt = "Please select what jobs you wish to view:\n"\
     "\t1. Send a message\n"\
     "\t2. View your inbox\n"\
@@ -1221,10 +1219,10 @@ def messagesInterface(asId):
   sel = int(gatherInput(prompt, "Invalid input, please try again.\n", menuValidatorBuilder('123')))
 
   if sel == 1:
-    return sendMessageInterface, (asId, getFriendsOf(asId)) # getFriendsOf should be replaced with a func that checks if the user is a plus account and returns a set of allowedRecipients accordingly
+    return selectContactForMessage, (asId, getFriendsOf(asId)) # getFriendsOf should be replaced with a func that checks if the user is a plus account and returns a set of allowedRecipients accordingly
 
   if sel == 2:
-    return underConstruction, (asId, messagesInterface)
+    return readInbox, (asId,)
 
   if sel == 3:
     return mainInterface, (asId,)
@@ -1232,7 +1230,7 @@ def messagesInterface(asId):
   pass
 
 
-def sendMessageInterface(asId, allowedRecipients):
+def selectContactForMessage(asId, allowedRecipients):
 
   if allowedRecipients:
 
@@ -1245,33 +1243,77 @@ def sendMessageInterface(asId, allowedRecipients):
     allRecipUsernames = usernamesFromRows(allowedRecipients)
 
     selectedRecip = gatherInput("Enter the username of the user you would like to message from the above list or press ENTER to go back.",
-    allRecipInfos + "\nInvalid username. Please enter the username of the user you would like to message from the above list or press ENTER to go back.\n",
+    allRecipInfos + "\nI'm sorry, you are not friends with that person or they are not an InCollege user. Please enter the username of the user you would like to message from the above list or press ENTER to go back.\n",
     optionsOrEnterBuilder(allRecipUsernames))
 
     if selectedRecip == '':
       clear()
       return messagesInterface, (asId,)
 
-    messageContent = gatherInput("What would you like to send to " + selectedRecip + "? ","", vacuouslyTrue)
+    return sendMessageInterface, (asId, selectedRecip)
 
-    recipId = checkUserId(selectedRecip)
-
-    pushMessage(asId, recipId, messageContent)
-
-    clear()
-    print("Message successfully sent.")
-    return messagesInterface, (asId,)
 
   else:
     clear()
     print("You do not have anyone to message at this time.")
     return messagesInterface, (asId,)
     
+def sendMessageInterface(asId, recipientUsername):
 
+  messageContent = gatherInput("What would you like to send to " + recipientUsername+ "? ","", vacuouslyTrue)
 
-def readInbox(asId, inbox):
-  pass 
+  recipId = checkUserId(recipientUsername)
+
+  pushMessage(asId, recipId, messageContent)
+
+  clear()
+  print("Message successfully sent.")
+  return messagesInterface, (asId,)
+
+def readInbox(asId):
   
+  nextMessage = readTopMessage(asId)
+
+  if nextMessage is None:
+    print("You do not have any messages in your inbox at this time.")
+    enterToGoBack()
+    return messagesInterface, (asId,)
+  
+  senderUsername = checkUsername(nextMessage[1])
+
+  print(senderUsername, "has sent you the following message:\n\n")
+
+  print(nextMessage[3], "\n\n")
+
+
+  prompt = "Please select an option below: \n"\
+    "\t1. Delete this message from your inbox (you may still reply).\n"\
+    "\t2. Leave this message in your inbox.\n"\
+    "Selection: "
+
+  sel = gatherInput(prompt, "Not a valid option.", menuValidatorBuilder('12'))
+
+  if sel == '1':
+    deleteMessage(nextMessage[0])
+
+
+  prompt = "Please select an option below: \n"\
+    "\t1. Reply to this message.\n"\
+    "\t2. Read your next message.\n"\
+    "\t3. Go back.\n"\
+    "Selection: "
+
+  sel = gatherInput(prompt, "Not a valid option.", menuValidatorBuilder('123'))
+
+  if sel == '1':
+    return sendMessageInterface, (asId, senderUsername)
+
+  if sel == '2':
+    return readInbox, (asId,)
+
+  return messagesInterface, (asId,)
+
+
   
 #====================================================================================================
 #====================================================================================================
