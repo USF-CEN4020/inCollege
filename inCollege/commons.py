@@ -2,7 +2,6 @@ import os
 from functools import lru_cache
 
 
-
 MAX_USERS = 10
 MAX_JOBS = 10
 DEFAULT_GUEST_CONTROLS = (1, 1, 1)
@@ -183,4 +182,11 @@ def prettyUserInfo(userRow):
   :param userRow: a complete row from the users table
   :return a string of the format "username - firstname lastname" followed by a new line character
   '''
-  return ''
+  #userInfo = []
+  #userInfo = [userRow[1], userRow[3], userRow[4]]
+  #for row in userRow:
+  #userInfo.append(userRow[1] + userRow[3] +userRow[4] )
+  #userInfo = userRow[1] + " - " + userRow[3] + " " + userRow[4]
+  
+
+  return userRow[1] + ' - ' + userRow[3] + ' ' + userRow[4] + '\n'

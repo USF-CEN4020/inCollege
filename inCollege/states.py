@@ -1,5 +1,5 @@
-from .commons import *
-from .manageDB import *
+from inCollege.commons import *
+from inCollege.manageDB import *
 import random
 
 
@@ -152,11 +152,17 @@ def newAcct():
   lastname = gatherInput("\nEnter your last name: \n", "", vacuouslyTrue)
   university = gatherInput("\nEnter your university (if no, enter NONE): \n", "", vacuouslyTrue)
   major = gatherInput("\nEnter your major (if no, enter NONE): \n", "", vacuouslyTrue)
+  membership =  gatherInput("\nChoose your membership (Standard or Plus): \n"\
+                            "\n\tStandard Can't send message to stranger."\
+                            "\n\tPlus can send message to everyone."\
+                            "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
+
+  
 
   databaseCursor.execute("""
-                INSERT INTO users (username, password, firstname, lastname, university, major) VALUES
-                    (?, ?, ?, ?, ?, ?)
-                """, (username, password, firstname, lastname, university, major))
+                INSERT INTO users (username, password, firstname, lastname, university, major, membership) VALUES
+                    (?, ?, ?, ?, ?, ?, ?)
+                """, (username, password, firstname, lastname, university, major, membership))
   database.commit()
 
   clear()
@@ -418,6 +424,12 @@ def loginNotifications(asId):
   deletions = queryDeletions(asId)
 
   newMessageCount = getNumUnreadMessages(asId)
+
+  currMembership = getUserMembership(asId)
+  if currMembership == "plus":
+    print("Your current membership is Plus. You need to pay $10 per Month.")
+  elif currMembership == "standard":
+    print("Your current membership is Standard. No charge for free members.")
 
   if newMessageCount != 0:
     print("You have", newMessageCount, "unread messages in your inbox.\n")
@@ -1209,6 +1221,8 @@ def friendsProfileView(asId, friendUsername, friendKey):
 
 
 def messagesInterface(asId):
+      
+  found = checkUserMembership(asId)
 
   prompt = "Please select what jobs you wish to view:\n"\
     "\t1. Send a message\n"\
@@ -1219,7 +1233,10 @@ def messagesInterface(asId):
   sel = int(gatherInput(prompt, "Invalid input, please try again.\n", menuValidatorBuilder('123')))
 
   if sel == 1:
-    return selectContactForMessage, (asId, getFriendsOf(asId)) # getFriendsOf should be replaced with a func that checks if the user is a plus account and returns a set of allowedRecipients accordingly
+    if found == "standard":
+      return selectContactForMessage, (asId, getFriendsOf(asId)) # show standard list
+    elif found == "plus":
+      return selectContactForMessage, (asId, getAllUsersExcept(asId)) # show plus list
 
   if sel == 2:
     return readInbox, (asId,)
@@ -1239,6 +1256,7 @@ def selectContactForMessage(asId, allowedRecipients):
     allRecipInfos = ""
     for recip in allowedRecipients:
       allRecipInfos += prettyUserInfo(recip)
+    print(allRecipInfos)
 
     allRecipUsernames = usernamesFromRows(allowedRecipients)
 

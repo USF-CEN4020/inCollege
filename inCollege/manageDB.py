@@ -14,7 +14,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
                             firstname TEXT,
                             lastname TEXT,
                             university TEXT,
-                            major TEXT)''')
+                            major TEXT,
+                            membership TEXT)''')
 database.commit()
 
 
@@ -336,11 +337,28 @@ def checkProfileExists(userId):
   else:
     return -1
   
+def checkUserMembership(userId):
+  databaseCursor.execute("SELECT * FROM users WHERE id= ?", (userId,))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[7]
+  else:
+        return -1
 
 def updateDB(table, field, userId, value):
   databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
   database.commit()
     
+
+def getUserMembership(userId):
+  databaseCursor.execute("SELECT * FROM users WHERE id= ?", (userId,))
+  found = databaseCursor.fetchone()
+  if found: 
+    return found[7]
+  else:
+    return -1
+
+
 
 def getExperienceCount(userId):
   databaseCursor.execute("SELECT Count(*) FROM workExperience WHERE userId= ?", (userId, ))
@@ -457,13 +475,19 @@ def removeDeletions(userId):
 
 
 def getFriendsOf(userId):
-
-  return databaseCursor.execute('''SELECT * FROM users WHERE id IN (
+  standard =  databaseCursor.execute('''SELECT * FROM users WHERE id IN (
     SELECT senderId FROM friendships WHERE receiverId = ? AND acceptRequest = 1
     UNION
     SELECT receiverId FROM friendships WHERE senderId = ? AND acceptRequest = 1
-  )''', (userId, userId) ).fetchall()
+  )''', (userId, userId) ).fetchall() #return friend ID
 
+  return standard
+
+
+
+def getAllUsersExcept(userId):
+    plus = databaseCursor.execute("SELECT * FROM users WHERE id !=?", (userId,)).fetchall() #return userID
+    return plus
 
 
 def confirmFriendship(senderId, receiverId):
