@@ -4,10 +4,12 @@ import builtins
 from unittest import mock
 import sqlite3
 
-from inCollege.manageDB import clearApplications, clearFriendships, clearJobs, clearUsers, getFriendsOf
-from inCollege.states import loginNotifications, newAcct, requestFriends
+from inCollege.manageDB import clearApplications, clearFriendships, clearJobs, clearUsers, getFriendsOf, checkUserId, clearMessages, getAllUsersExcept
+from inCollege.states import loginNotifications, newAcct, requestFriends, sendMessageInterface, selectContactForMessage, readInbox
 
 
+database = sqlite3.connect("inCollege.db")
+databaseCursor = database.cursor()
 
 
 # ==================================================================================
@@ -29,10 +31,11 @@ from inCollege.states import loginNotifications, newAcct, requestFriends
 
 def initTestAccounts():
 	accounts = [
-		('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs'),
-        ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce'),
-        ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs'),
-        ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE')
+		('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
+        ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce', 'standard'),
+        ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs', 'plus'),
+        ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE', 'standard'),
+        ('test5', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
 	]
 	for account in accounts:
 		inputs = iter(account)
@@ -68,8 +71,95 @@ def test_getFriendsOfCorrectNum(userId, numFriends):
 	clearFriendships()
 	clearJobs()
 	clearApplications()
+	clearMessages()
 
 	initTestAccounts()
 	initTestFriendships()
 	
 	assert len(getFriendsOf(userId)) == numFriends
+ 
+ 
+def messageSent(senderId, receiverId):
+    message = databaseCursor.execute('SELECT content FROM messages WHERE senderId = ? and receiverId = ?', (senderId, receiverId)).fetchone()
+    return True if message[0] == 'test message' else False
+
+
+@pytest.mark.messagingFriend
+@pytest.mark.parametrize('userId, recipient, message',
+                         [(1, 'test2', 'test message'),
+                          (2, 'test3', 'test message'),
+                          (3, 'test4', 'test message'),
+                          (4, 'test1', 'test message')])
+def test_sendMessageToFriend(userId, recipient, message):
+     
+	inputs = iter([message])
+	rId = checkUserId(recipient)
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		sendMessageInterface(userId, recipient)
+		assert True == messageSent(userId, rId)
+
+ 
+@pytest.mark.messageNotification
+@pytest.mark.parametrize('userId', [1, 2, 3, 4])
+def test_messageNotification(capfd, userId):
+	inputs = iter([''])
+	message = "You have 1 unread messages in your inbox.\n"
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		output, dataOut = loginNotifications(userId)
+		out, err = capfd.readouterr()
+		assert True if message in out else False == True
+  
+  
+
+@pytest.mark.differentAccountMessaging
+@pytest.mark.parametrize('select, userId, username, result', [(1, 2, 'test1', sendMessageInterface), 
+                                    (2, 2, 'test4', "\nI'm sorry, you are not friends with that person or they are not an InCollege user. Please enter the username of the user you would like to message from the above list or press ENTER to go back.\n")])
+def test_standardMessaging(capfd, select, userId, username, result):
+	state = result
+	allowed = getFriendsOf(userId)
+	if select % 2 == 1:
+		with mock.patch.object(builtins, 'input', lambda _: username):
+			output, dataOut = selectContactForMessage(userId, allowed)
+			assert output == state
+	else:
+		inputs = iter([username, 'test1'])
+		with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+			output, dataOut = selectContactForMessage(userId, allowed)
+			out, err = capfd.readouterr()
+			assert True if result in out else False == True
+    
+    
+@pytest.mark.differentAccountMessaging
+@pytest.mark.parametrize('userId, username', [(1, 'test2'), 
+                                              (1, 'test3'), 
+                                              (1, 'test4')])
+def test_plusMessaging(userId, username):
+    allowed = getAllUsersExcept(userId)
+    state = sendMessageInterface
+    with mock.patch.object(builtins, 'input', lambda _: username):
+        output, dataOut = selectContactForMessage(userId, allowed)
+        assert output == state
+        
+
+@pytest.mark.messageResponse
+@pytest.mark.parametrize('userId, option, reply', [(1, '2', '1'), 
+												   (2, '2', '1'), 
+												   (3, '2', '1'),
+												   (4, '2', '1')])
+def test_respondingToMessage(userId, option, reply):
+    state = sendMessageInterface
+    inputs = iter([option, reply])
+    with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+        output, dataOut = readInbox(userId)
+        assert output == state
+        
+        
+@pytest.mark.showFriends
+@pytest.mark.parametrize('userId, username, friends', [(1, 'test2', '''test2 - fname lname\ntest3 - f l\ntest4 - fff lll'''), 
+                                            		  (4, 'test1', '''test1 - first last\ntest3 - f l''')])
+def test_showFriends(capfd, userId, username, friends):
+	allowed = getAllUsersExcept(userId) if userId == 1 else getFriendsOf(userId)
+	with mock.patch.object(builtins, 'input', lambda _: username):
+		output, dataOut = selectContactForMessage(userId, allowed)
+		out, err = capfd.readouterr()
+		assert True if friends in out else False == True

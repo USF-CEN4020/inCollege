@@ -136,6 +136,10 @@ def removeWorkExperience():
 def clearApplications():
   databaseCursor.execute('DELETE FROM jobApplications')
   database.commit()
+  
+def clearMessages():
+  databaseCursor.execute('DELETE FROM messages')
+  database.commit()
 
 
 def listUsers():
