@@ -1,9 +1,5 @@
-from pickle import NONE
 import os
 from functools import lru_cache
-import random
-from tkinter import W
-
 
 
 MAX_USERS = 10
@@ -108,6 +104,17 @@ def binaryOptionValidatorBuilder(firstOption, secondOption):
   return lambda textInput: (textInput == firstOption or textInput == secondOption)
 
 
+def optionsOrEnterBuilder(options):
+  '''
+  Gemerates a validator that excepts any option in the provided area or an empty string (i.e. hitting enter immediately)
+
+  :param options: a list of strings that are valid inputs
+  :return a function f(x) that returns if x is in option or is nothing
+  '''
+
+  options.append('') # Add the empty string to the list of options
+
+  return lambda textInput: (textInput.strip() in options)
 
 
 def dateValidator(potentialDate):
@@ -150,3 +157,36 @@ def gatherInput(prompt, failResponse, validator):
         else:
             return userInput
 
+
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+
+
+def usernamesFromRows(userRows):
+
+  usernames = []
+
+  for row in userRows:
+    usernames.append(row[1])
+
+  return usernames
+
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+
+def prettyUserInfo(userRow):
+  '''
+  Gets a string that is used to 'view' a user for reference when deciding who to message
+  :param userRow: a complete row from the users table
+  :return a string of the format "username - firstname lastname" followed by a new line character
+  '''
+  #userInfo = []
+  #userInfo = [userRow[1], userRow[3], userRow[4]]
+  #for row in userRow:
+  #userInfo.append(userRow[1] + userRow[3] +userRow[4] )
+  #userInfo = userRow[1] + " - " + userRow[3] + " " + userRow[4]
+  
+
+  return userRow[1] + ' - ' + userRow[3] + ' ' + userRow[4] + '\n'

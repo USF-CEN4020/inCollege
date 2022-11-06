@@ -1,6 +1,6 @@
-from tkinter import W
-from .commons import *
-from .manageDB import *
+from inCollege.commons import *
+from inCollege.manageDB import *
+import random
 
 
 
@@ -14,6 +14,7 @@ testimonials = ["""InCollege helped me develop the skills I needed to land a job
 
 
 def applicationEntry():
+
   print(random.choice(testimonials))
   print()
 
@@ -57,11 +58,12 @@ def mainInterface(asId):
           "\t4. Learn a new skill\n"\
           "\t5. InCollege navigation links\n"\
           "\t6. My profile\n"\
-          "\t7. Log out\n"\
+          "\t7. Messages\n"\
+          "\t8. Log out\n"\
           "Selection: "
   sel = int(
           gatherInput(prompt, "Invalid input. Please try again.\n",
-                      menuValidatorBuilder('1234567')))
+                      menuValidatorBuilder('12345678')))
 
   if sel == 1:
       clear()
@@ -88,6 +90,10 @@ def mainInterface(asId):
       return myProfile, (asId,)
 
   elif sel == 7:
+      clear()
+      return messagesInterface, (asId,)
+
+  elif sel == 8:
       clear()
       return applicationEntry, None
 
@@ -146,11 +152,17 @@ def newAcct():
   lastname = gatherInput("\nEnter your last name: \n", "", vacuouslyTrue)
   university = gatherInput("\nEnter your university (if no, enter NONE): \n", "", vacuouslyTrue)
   major = gatherInput("\nEnter your major (if no, enter NONE): \n", "", vacuouslyTrue)
+  membership =  gatherInput("\nChoose your membership (Standard or Plus): \n"\
+                            "\n\tStandard Can't send message to stranger."\
+                            "\n\tPlus can send message to everyone."\
+                            "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
+
+  
 
   databaseCursor.execute("""
-                INSERT INTO users (username, password, firstname, lastname, university, major) VALUES
-                    (?, ?, ?, ?, ?, ?)
-                """, (username, password, firstname, lastname, university, major))
+                INSERT INTO users (username, password, firstname, lastname, university, major, membership) VALUES
+                    (?, ?, ?, ?, ?, ?, ?)
+                """, (username, password, firstname, lastname, university, major, membership))
   database.commit()
 
   clear()
@@ -406,38 +418,23 @@ def findPpl(asId):
 
 # Notifications upon login
 def loginNotifications(asId):
-  pendingRequest = checkExistingPendingRequest(asId)
+
+  pendingRequests = checkExistingPendingRequest(asId)
+  
   deletions = queryDeletions(asId)
 
-  requesterId = 0
-  requesterUsername = ''
-  
-  if pendingRequest == -1 and deletions == -1:
-    return mainInterface, (asId,)
+  newMessageCount = getNumUnreadMessages(asId)
 
-  if pendingRequest != -1: 
-    for row in pendingRequest:
-      requesterId = row[1]
-      requesterUsername = usernameLookup(requesterId)
-      print("\nYou have a pending request from <", requesterUsername, ">.\n")
-      break
+  currMembership = getUserMembership(asId)
+  if currMembership == "plus":
+    print("Your current membership is Plus. You need to pay $10 per Month.")
+  elif currMembership == "standard":
+    print("Your current membership is Standard. No charge for free members.")
 
-    accept = gatherInput("Would you like to accept more requests? (yes / no) ",
-    "Please enter either \"yes\" or \"no\".",
-    binaryOptionValidatorBuilder("yes", "no"))
-
-    if accept == 'yes':
-      databaseCursor.execute("UPDATE friendships SET acceptRequest= 1 WHERE senderId= ? AND receiverId= ?", (requesterId, asId)) 
-      database.commit()
-
-      print("\nYou have accepted the request from <", requesterUsername, "> successfully.")
-
-    else: 
-      deleteFromPendingList(asId, requesterId)
-      print("\nYou have rejected the network request from <", requesterUsername, ">.")
-      
+  if newMessageCount != 0:
+    print("You have", newMessageCount, "unread messages in your inbox.\n")
     enterToContinue()
-  
+
   if deletions != -1:
     count = 0
     print("The following jobs have been removed for the job listings:\n")
@@ -450,8 +447,48 @@ def loginNotifications(asId):
     
     enterToContinue()
     
+  if pendingRequests:
+    
+    numRequests = len(pendingRequests)
+
+    if numRequests == 1:
+      print("You have 1 pending friend request.\n")
+    else:  
+      print("You have", numRequests, "pending friend requests.\n")
+
+    accept = gatherInput("Would you like to manage your incoming friend requests? (yes / no) ",
+    "Please enter either \"yes\" or \"no\".",
+    binaryOptionValidatorBuilder("yes", "no"))
+
+    if accept == 'yes':
+      return handleFriendRequests, (asId, pendingRequests)
+
+  clear()
+
   return mainInterface, (asId,)
     
+
+def handleFriendRequests(asId, requests):
+
+  for request in requests:
+    
+    senderId = request[1]
+    senderUsername = usernameLookup(senderId)
+
+    print("<", senderUsername, "> would like to add you as a friend.")
+
+    decide = gatherInput("Would you like to (accept) or (reject) this friend request? ",
+      "Please enter either \"accept\" or \"reject\".",
+      binaryOptionValidatorBuilder("accept", "reject"))
+
+    if decide == "accept":
+      confirmFriendship(senderId, asId)
+    else:
+      deleteFromPendingList(asId, senderId)
+
+    clear()
+
+  return mainInterface, (asId,)
 
 def findFriendsbyType(asId):
   prompt = "Search by below options:\n"\
@@ -1182,7 +1219,119 @@ def friendsProfileView(asId, friendUsername, friendKey):
     enterToContinue()
     return mainInterface, (asId,)
 
+
+def messagesInterface(asId):
+      
+  found = checkUserMembership(asId)
+
+  prompt = "Please select what jobs you wish to view:\n"\
+    "\t1. Send a message\n"\
+    "\t2. View your inbox\n"\
+    "\t3. Go back\n"\
+    "Selection: "
+
+  sel = int(gatherInput(prompt, "Invalid input, please try again.\n", menuValidatorBuilder('123')))
+
+  if sel == 1:
+    if found == "standard":
+      return selectContactForMessage, (asId, getFriendsOf(asId)) # show standard list
+    elif found == "plus":
+      return selectContactForMessage, (asId, getAllUsersExcept(asId)) # show plus list
+
+  if sel == 2:
+    return readInbox, (asId,)
+
+  if sel == 3:
+    return mainInterface, (asId,)
+
+  pass
+
+
+def selectContactForMessage(asId, allowedRecipients):
+
+  if allowedRecipients:
+
+    print("You may message the following users:\n")
+
+    allRecipInfos = ""
+    for recip in allowedRecipients:
+      allRecipInfos += prettyUserInfo(recip)
+    print(allRecipInfos)
+
+    allRecipUsernames = usernamesFromRows(allowedRecipients)
+
+    selectedRecip = gatherInput("Enter the username of the user you would like to message from the above list or press ENTER to go back.",
+    allRecipInfos + "\nI'm sorry, you are not friends with that person or they are not an InCollege user. Please enter the username of the user you would like to message from the above list or press ENTER to go back.\n",
+    optionsOrEnterBuilder(allRecipUsernames))
+
+    if selectedRecip == '':
+      clear()
+      return messagesInterface, (asId,)
+
+    return sendMessageInterface, (asId, selectedRecip)
+
+
+  else:
+    clear()
+    print("You do not have anyone to message at this time.")
+    return messagesInterface, (asId,)
+    
+def sendMessageInterface(asId, recipientUsername):
+
+  messageContent = gatherInput("What would you like to send to " + recipientUsername+ "? ","", vacuouslyTrue)
+
+  recipId = checkUserId(recipientUsername)
+
+  pushMessage(asId, recipId, messageContent)
+
+  clear()
+  print("Message successfully sent.")
+  return messagesInterface, (asId,)
+
+def readInbox(asId):
   
+  nextMessage = readTopMessage(asId)
+
+  if nextMessage is None:
+    print("You do not have any messages in your inbox at this time.")
+    enterToGoBack()
+    return messagesInterface, (asId,)
+  
+  senderUsername = checkUsername(nextMessage[1])
+
+  print(senderUsername, "has sent you the following message:\n\n")
+
+  print(nextMessage[3], "\n\n")
+
+
+  prompt = "Please select an option below: \n"\
+    "\t1. Delete this message from your inbox (you may still reply).\n"\
+    "\t2. Leave this message in your inbox.\n"\
+    "Selection: "
+
+  sel = gatherInput(prompt, "Not a valid option.", menuValidatorBuilder('12'))
+
+  if sel == '1':
+    deleteMessage(nextMessage[0])
+
+
+  prompt = "Please select an option below: \n"\
+    "\t1. Reply to this message.\n"\
+    "\t2. Read your next message.\n"\
+    "\t3. Go back.\n"\
+    "Selection: "
+
+  sel = gatherInput(prompt, "Not a valid option.", menuValidatorBuilder('123'))
+
+  if sel == '1':
+    return sendMessageInterface, (asId, senderUsername)
+
+  if sel == '2':
+    return readInbox, (asId,)
+
+  return messagesInterface, (asId,)
+
+
   
 #====================================================================================================
 #====================================================================================================

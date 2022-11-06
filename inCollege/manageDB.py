@@ -1,6 +1,6 @@
 from .commons import *
 import sqlite3
-
+import time
 
 
 database = sqlite3.connect("inCollege.db")
@@ -14,7 +14,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
                             firstname TEXT,
                             lastname TEXT,
                             university TEXT,
-                            major TEXT)''')
+                            major TEXT,
+                            membership TEXT)''')
 database.commit()
 
 
@@ -92,6 +93,18 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience (
 database.commit()
 
 
+databaseCursor.execute('''CREATE TABLE IF NOT EXISTS messages (
+                            messageId INTEGER PRIMARY KEY ASC,
+                            senderId INTEGER,
+                            receiverId INTEGER,
+                            content TEXT,
+                            sentTimestamp INTEGER,
+                            lastReadTimestamp INTEGER,
+                            FOREIGN KEY(senderId) REFERENCES users(id),
+                            FOREIGN KEY(receiverId) REFERENCES users(id))''')
+
+database.commit()
+
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
@@ -122,6 +135,10 @@ def removeWorkExperience():
 
 def clearApplications():
   databaseCursor.execute('DELETE FROM jobApplications')
+  database.commit()
+  
+def clearMessages():
+  databaseCursor.execute('DELETE FROM messages')
   database.commit()
 
 
@@ -164,23 +181,6 @@ def deleteFromFriendList(userId, friendId):
 
 #----------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------
-
-
-
-def fieldById(field):
-    '''
-    Function generator for getting looking up an entries field by its id
-
-    param field: a column field of the users table
-    return: a function f(x) = (field of a user with id x)
-    '''
-    return lambda uId: (byKey(idLookup(uId), field))
-
-
-usernameById = fieldById("username") # A function f(x) = (username of a user with id x)
-#firstnameById = fieldById("firstname") # A function f(x) = (username of a user with id x)
-lastnameById = fieldById("lastname") # A function f(x) = (username of a user with id x)
-
 
 def tableEntriesCount(table):
     '''
@@ -320,14 +320,17 @@ def checkUserId(username):
   else:
     return -1
 
+def checkUsername(userId):
+  return databaseCursor.execute("SELECT username From users WHERE id = ?", (userId,)).fetchone()[0]
 
 def checkExistingPendingRequest(userId):
-  databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest= ? AND receiverId= ?", (0, userId))
-  found = databaseCursor.fetchall()
-  if found: 
-    return found
-  else:
-    return -1
+  '''
+  Gets a list of all rows of friendships where the receiver is the given user and they have not accpeted
+  
+  param userId: id of the receiver the function queries for
+  returns: a list of tuples corosponding to rows of the friendships table. Trivially returns an empty list if the user has no incoming friend requests.
+  '''
+  return databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest = 0 AND receiverId= ?", (userId,)).fetchall()
   
   
 def checkProfileExists(userId):
@@ -338,11 +341,28 @@ def checkProfileExists(userId):
   else:
     return -1
   
+def checkUserMembership(userId):
+  databaseCursor.execute("SELECT * FROM users WHERE id= ?", (userId,))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[7]
+  else:
+        return -1
 
 def updateDB(table, field, userId, value):
   databaseCursor.execute("UPDATE " + table +  " SET " + field + " = ? WHERE userId = ?", (value, userId))
   database.commit()
     
+
+def getUserMembership(userId):
+  databaseCursor.execute("SELECT * FROM users WHERE id= ?", (userId,))
+  found = databaseCursor.fetchone()
+  if found: 
+    return found[7]
+  else:
+    return -1
+
+
 
 def getExperienceCount(userId):
   databaseCursor.execute("SELECT Count(*) FROM workExperience WHERE userId= ?", (userId, ))
@@ -456,3 +476,57 @@ def deleteJob(jobId):
 def removeDeletions(userId):
   databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,))
   database.commit()
+
+
+def getFriendsOf(userId):
+  standard =  databaseCursor.execute('''SELECT * FROM users WHERE id IN (
+    SELECT senderId FROM friendships WHERE receiverId = ? AND acceptRequest = 1
+    UNION
+    SELECT receiverId FROM friendships WHERE senderId = ? AND acceptRequest = 1
+  )''', (userId, userId) ).fetchall() #return friend ID
+
+  return standard
+
+
+
+def getAllUsersExcept(userId):
+    plus = databaseCursor.execute("SELECT * FROM users WHERE id !=?", (userId,)).fetchall() #return userID
+    return plus
+
+
+def confirmFriendship(senderId, receiverId):
+  
+  databaseCursor.execute("UPDATE friendships SET acceptRequest = 1 WHERE senderId = ? AND receiverId = ?", (senderId, receiverId))
+  database.commit()
+
+
+def pushMessage(senderId, receiverId, message):
+
+
+    databaseCursor.execute("INSERT INTO messages(senderId, receiverId, content, sentTimestamp, lastReadTimestamp) VALUES (?, ?, ?, (SELECT STRFTIME('%s')), 0)",
+
+                           (senderId, receiverId, message))
+    database.commit()
+
+
+def getInbox(receiverId):
+    return databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY lastReadTimestamp ASC, sentTimestamp DESC", (receiverId,)).fetchall()
+
+def readTopMessage(receiverId):
+
+    message = databaseCursor.execute("SELECT * FROM messages WHERE receiverId = ? ORDER BY lastReadTimestamp ASC, sentTimestamp DESC", (receiverId,)).fetchone()
+
+    if message is None:
+      return None
+
+    markMessageRead(message[0])
+    return message
+
+def getNumUnreadMessages(receiverId):
+    return databaseCursor.execute("SELECT COUNT(*) FROM messages WHERE receiverId = ? AND lastReadTimeStamp = 0", (receiverId,)).fetchone()[0]
+
+def deleteMessage(messageId):
+    databaseCursor.execute("DELETE FROM messages WHERE messageId = ?", (messageId,))
+
+def markMessageRead(messageId):
+    databaseCursor.execute("UPDATE messages SET lastReadTimeStamp = (SELECT STRFTIME('%s')) WHERE messageId = ?", (messageId,))

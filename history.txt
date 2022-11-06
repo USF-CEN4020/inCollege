@@ -1,0 +1,162 @@
+* 88309d6 (HEAD -> epic-7, origin/epic-7) End of the week burndown report
+* b590126 epic-7 test completed
+* b85f986 Six test cases added
+* 7502ceb Jay's stories
+* f8ce36c add inbox functionality; fix bugs
+* 88566cc complete "notification" story fix bug in message interface crashing on inputing '2' or '3'
+* 5cd3147 add send message functionality
+* 0c454ff finish getFriendsOf function to query frens easier add initialization code for test DBs
+* 0f3cd15 Burndown Report for Wednesday
+* 77051d8 fix error preventing accepting mult friend request
+* 35e03aa fix "random" module location
+* 7ab1fa9 add additional messages db manip
+* 0f2aa52 add messages table
+* 702e7dd Create epic-7.py
+*   0d7b626 (origin/main, origin/HEAD, main) Merge pull request #6 from USF-CEN4020/epic-6
+|\  
+| * a92cae8 (origin/epic-6) Burndown report
+| * 5bd76e1 Update epic-6.py
+| * b524053 Update epic-6.py
+| * 4501cb9 deleting jobs
+| *   1706b14 pytest - siwon part
+| |\  
+| | * 1e41b7e Test cases for epic-6
+| * | bd7d113 pytest - siwon part
+| |/  
+| *   f4e9873 adding epic-6 for test
+| |\  
+| | * 552329b fix NOT applied query
+| | * 7c7c6bf fix NOT applied query
+| | * e337320 remove apply option for job makers
+| | * 06e52a5 Added delete job, notifications on login
+| * | a5847e5 add epic-6 for testing
+| |/  
+| * 9d0750e add some job stories
+| * 4a94b39 Add jobApplications table
+| * 7fc04c2 Increase job capacity to 10
+|/  
+*   00e1882 Merge pull request #5 from USF-CEN4020/epic-5
+|\  
+| *   84b8590 (tag: 10232022Wyoming, origin/epic-5) Merge branch 'epic-5' of https://github.com/USF-CEN4020/inCollege into epic-5
+| |\  
+| | *   c3c3d20 Merge pull request #4 from USF-CEN4020/epic-5-jay
+| | |\  
+| | | * eeac58b (origin/epic-5-jay) new manageDB
+| | | * 4c2e07d new import
+| | | * bd6fb0f new test
+| | | * 84d8996 new mark profile
+| | | * c080c34 epic-5 jay part
+| | |/  
+| * / f0c3d3b add Amrutha's tests
+| |/  
+| * 1908803 Create epic-5.py
+| * d7f4939 (tag: 10202022Wyoming) add viewing friend profile functionality
+| * ac235f0 preview my profile
+| *   861cb6c fix error
+| |\  
+| | * 21ad15d (tag: 10172022Wyoming) Completed user profile creation and modification
+| * | 27ee57c fix friendships error
+| |/  
+| * 8f36442 Test
+* | 397562c (origin/epic-4) added friend list check
+|/  
+* 70e177c 10162022Wyoming
+* 707f83d changes for epic 4
+* c517229 account count
+* 9443522 complete disconnecting and friend requests tests
+* 84d2bed add "main" file
+*   aed4546 Merge branch 'epic-4' of https://github.com/USF-CEN4020/inCollege into epic-4
+|\  
+| *   301b35b Merge branch 'epic-4' of https://github.com/USF-CEN4020/inCollege into epic-4
+| |\  
+| * | 5b448c3 add friend request test
+* | | 912f112 10142022Wyoming
+| |/  
+|/|   
+* | 75b3c38 fix error in pending friend
+* | 3c1c9c3 Merge branch 'epic-4' of https://github.com/USF-CEN4020/inCollege into epic-4
+|\| 
+| * f5a7aef Initial test setup
+* | ebcb0d0 add not accepting pending request
+|/  
+* 4994159 minor change
+* 44631b8 disconnecting
+* 86f78e6 fix error
+*   8b5916c Merge branch 'epic-4' of https://github.com/USF-CEN4020/inCollege into epic-4
+|\  
+| * 03d6da7 10132022Wyoming
+* | 7ee4d49 fix error
+|/  
+* 967dd77 fix update table
+* e5749fd friends list, request connection, accept connection, etc
+*   502c02a Merge branch 'epic-4' of https://github.com/USF-CEN4020/inCollege into epic-4
+|\  
+| * 57fc0f7 10132022Wyoming
+| * a4e0075 10122022Wyoming
+* | 339955d request friend connection
+|/  
+* 356313d separate files under inCollege, added major and university into the DB, and added functions for friend connection
+* a9b8ddb Story: total Accounts
+*   9890f4c Merge branch 'main' of https://github.com/USF-CEN4020/inCollege
+|\  
+| *   60b8851 Merge pull request #2 from USF-CEN4020/epic-3
+| |\  
+| | * d2c1a37 (origin/epic-3) Add test cases for user settings
+| | * 1776706 Simplified couple main functions and added epic 3 test cases
+| | * a20b491 Add the missing "save settings" story features. Fix inability to return from link groups state.
+| | * d74c143 Touched a new testing file for epic 3
+| | * 8881ab4 Epic-3 code part completed
+| | * ca1ec39 test
+* | | 71cd47d Check
+|/ /  
+* | fe1cfc8 Merge pull request #6 from Siwon-Kim/epic-2
+|\| 
+| *   6c19943 (origin/epic-2) Merge branch 'epic-2' of https://github.com/Siwon-Kim/inCollege into epic-2
+| |\  
+| | * 143d1ec Correction for userLookup test cases
+| * | 1f37b2b completed test files
+| * | c5515f3 test
+| |/  
+| * 930db59 test userLookup and extended account creation (not done)
+| * 7bcb4b0 test successStory
+| * bb4bfaf Added New account creation functions
+| * 251ec38 Issues with Epic 1 test cases resolved
+| * 38e4ece Test cases added for State Backtracking and Job Posting. clearJobs function added to main.py for testing purposes
+| * 9a85e62 readded testing functions
+| * 0b30698 Fixed issue #5 and corrected a spelling error in one of the testimonials
+| * 4a26e81 Added success story message and video player option
+| * 6dc620f State Backtracking and Job Posting stories done
+| *   ab47ca8 State Backtracking and Job Posting stories done
+| |\  
+| | *   e03832e Merge branch 'main' into epic-2-preliminaries
+| | |\  
+| |_|/  
+|/| |   
+* | |   b5fea96 Merge pull request #3 from Siwon-Kim/pytest
+|\ \ \  
+| * | | ac80a3b (origin/pytest) add comments
+* | | | 8be2c62 Merge pull request #2 from Siwon-Kim/pytest
+|\| | | 
+| * | | 6515bcb testing
+| * | | 82e6baa Add test_accountCount()
+* | | | 7bbe89b Merge pull request #1 from Siwon-Kim/pytest
+|\| | | 
+| * | | 27a3f89 fixed main function
+| * | | 92ee4e6 add test_skillsOptions, test_listOptions, and test_stateMainInterface
+| * | | d7a17cf Add underConstruction and loginStatus test functions
+| * | |   ebe4d04 Add DB in the Test File
+| |\ \ \  
+| | * | | 621250f test
+| * | | | ebca636 Add Database in the Test File
+| |/ / /  
+| * | | 2c167c7 passwordValidator
+* | | | 6cf1cba Create README.md
+|/ / /  
+| * / 8b4d5d9 State Backtracking and Job Posting stories done
+| |/  
+| * 7d67dde Added additional documentaion of functionality
+| * 0d5b2b1 replaced placeholder arguments with an if-else block
+| * 1ee24b9 Restructered state function code to return and accept data (currently just a user id or placeholder)
+|/  
+* 5d76cb3 Epic #1 Code Part
+* 07eb88e test file on VScode
