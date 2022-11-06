@@ -5,8 +5,8 @@ from unittest import mock
 import sqlite3
 
 from inCollege.manageDB import clearApplications, clearFriendships, clearJobs, clearUsers, getFriendsOf, checkUserId, clearMessages, getAllUsersExcept
-from inCollege.states import loginNotifications, newAcct, requestFriends, sendMessageInterface, selectContactForMessage, readInbox
-
+from inCollege.states import messagesInterface, loginNotifications, newAcct, requestFriends, sendMessageInterface, selectContactForMessage, readInbox
+from inCollege.testFunc import getMessageCount, getMembershipStatus
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -163,3 +163,42 @@ def test_showFriends(capfd, userId, username, friends):
 		output, dataOut = selectContactForMessage(userId, allowed)
 		out, err = capfd.readouterr()
 		assert True if friends in out else False == True
+
+
+@pytest.mark.showMembership
+@pytest.mark.parametrize('userId', [1, 3, 5])
+def test_membershipStatus(capfd, userId):
+	inputs = iter([''])
+	message = "Your current membership is Plus. You need to pay $10 per Month.\n"
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		output, dataOut = loginNotifications(userId)
+		out, err = capfd.readouterr()
+		assert True if message in out else False == True
+
+
+@pytest.mark.deleteMessage
+@pytest.mark.parametrize('userId, option, view', [(1, '1', '2'), 
+												  (2, '1', '2'), 
+												  (3, '1', '2'),
+												  (4, '1', '2')])
+def test_deleteMessage(userId, option, view):
+	inputs = iter([option, view])
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		output, dataOut = readInbox(userId)
+		msgCount = getMessageCount(userId)
+		assert msgCount == 0
+
+
+@pytest.mark.membershipOption
+@pytest.mark.parametrize('userId, membershipStatus', [(1, 'plus'), (2, 'standard'), (3, 'plus'), (4, 'standard'), (5, 'plus')])
+def test_membershipOption(userId, membershipStatus):
+	assert getMembershipStatus(userId) == membershipStatus
+
+
+@pytest.mark.showMessages
+@pytest.mark.parametrize('select', [('2')])
+def test_viewJobInteface(select):
+    state = readInbox
+    with mock.patch.object(builtins, 'input', lambda _: select):
+        output, dataOut = messagesInterface(-1)
+        assert output == state

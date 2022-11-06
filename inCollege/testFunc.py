@@ -84,3 +84,13 @@ def getAllJobsCount():
   found = databaseCursor.fetchone()
   if found:
     return found[0]
+
+def getMessageCount(userId):
+  databaseCursor.execute("SELECT Count(*) FROM messages WHERE receiverId= ?", (userId, ))
+  found = databaseCursor.fetchone()
+  if found:
+    return found[0]
+
+def getMembershipStatus(userId):
+  user = databaseCursor.execute("SELECT * FROM users WHERE id = ?", (userId,)).fetchone()
+  return user[7]
