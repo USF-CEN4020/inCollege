@@ -1,20 +1,33 @@
-* 88309d6 (HEAD -> epic-7, origin/epic-7) End of the week burndown report
-* b590126 epic-7 test completed
-* b85f986 Six test cases added
-* 7502ceb Jay's stories
-* f8ce36c add inbox functionality; fix bugs
-* 88566cc complete "notification" story fix bug in message interface crashing on inputing '2' or '3'
-* 5cd3147 add send message functionality
-* 0c454ff finish getFriendsOf function to query frens easier add initialization code for test DBs
-* 0f3cd15 Burndown Report for Wednesday
-* 77051d8 fix error preventing accepting mult friend request
-* 35e03aa fix "random" module location
-* 7ab1fa9 add additional messages db manip
-* 0f2aa52 add messages table
-* 702e7dd Create epic-7.py
-*   0d7b626 (origin/main, origin/HEAD, main) Merge pull request #6 from USF-CEN4020/epic-6
+* 296e0c7 (origin/main, origin/HEAD, main) burndown report
+| * 52be25f (HEAD -> epic-8, origin/epic-8) epic-8 test cases
+|/  
+*   95cf512 Merge pull request #9 from USF-CEN4020/epic-7
 |\  
-| * a92cae8 (origin/epic-6) Burndown report
+| * 35227c7 (origin/epic-7, epic-7) epic-6 burndown report
+* | 09b926c Merge pull request #8 from USF-CEN4020/epic-7
+|\| 
+| * 14a23fa Delete Screenshot 2022-10-30 224642.png
+* | 01e97e0 Merge pull request #7 from USF-CEN4020/epic-7
+|\| 
+| * e2a04f6 history.txt
+| * 88309d6 End of the week burndown report
+| * b590126 epic-7 test completed
+| * b85f986 Six test cases added
+| * 7502ceb Jay's stories
+| * f8ce36c add inbox functionality; fix bugs
+| * 88566cc complete "notification" story fix bug in message interface crashing on inputing '2' or '3'
+| * 5cd3147 add send message functionality
+| * 0c454ff finish getFriendsOf function to query frens easier add initialization code for test DBs
+| * 0f3cd15 Burndown Report for Wednesday
+| * 77051d8 fix error preventing accepting mult friend request
+| * 35e03aa fix "random" module location
+| * 7ab1fa9 add additional messages db manip
+| * 0f2aa52 add messages table
+| * 702e7dd Create epic-7.py
+|/  
+*   0d7b626 Merge pull request #6 from USF-CEN4020/epic-6
+|\  
+| * a92cae8 (origin/epic-6, epic-6) Burndown report
 | * 5bd76e1 Update epic-6.py
 | * b524053 Update epic-6.py
 | * 4501cb9 deleting jobs
@@ -49,7 +62,7 @@
 | | |/  
 | * / f0c3d3b add Amrutha's tests
 | |/  
-| * 1908803 Create epic-5.py
+| * 1908803 (epic-5) Create epic-5.py
 | * d7f4939 (tag: 10202022Wyoming) add viewing friend profile functionality
 | * ac235f0 preview my profile
 | *   861cb6c fix error
