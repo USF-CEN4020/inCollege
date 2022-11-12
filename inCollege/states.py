@@ -159,16 +159,10 @@ def newAcct():
                             "\n\tPlus can send message to everyone."\
                             "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
 
-  
-
-  databaseCursor.execute("""
-                INSERT INTO users (newUser, username, password, firstname, lastname, university, major, membership, accountCreatedTimestamp) VALUES
-                    (1, ?, ?, ?, ?, ?, ?, ?, (SELECT STRFTIME('%s')))
-                """, (username, password, firstname, lastname, university, major, membership))
-  database.commit()
 
   clear()
-  return mainInterface, (databaseCursor.lastrowid,)
+
+  return mainInterface, (initAcct(username, password, firstname, lastname, university, major, membership),)
 
 
 # job
@@ -439,11 +433,11 @@ def loginNotifications(asId):
 
   currMembership = getUserMembership(asId)
 
-  newUsers = queryNewUsers(asId)
+  newUsers = queryNewUsersAndUpdate(asId)
 	
   userProfile = checkProfileExists(asId)
 
-  newJobPost = lookupLastJob(asId)
+  #newJobPost = lookupLastJob(asId)
 
   jobTitle = getJobById(asId)
 
@@ -476,14 +470,13 @@ def loginNotifications(asId):
     enterToContinue()
 
 
-  if newUsers !=-1:
+  if newUsers:
     count = 0
     print("The following Users have been joined InCollege:\n")
     for newUser in newUsers:
       count = count + 1
       print("User #", count)
-      print("\tName: ", newUser[4], newUser[5])
-    notNewUsers(asId)
+      print("\tName: ", newUser[3], newUser[4])
     
     enterToContinue()
 	
@@ -1418,10 +1411,7 @@ def underConstruction(asId, prevState):
 
 def exitState(asId):
   clear()
-  if (asId == -1):
-    print("Goodbye")
-  else:
-    print("Goodbye,", usernameById(asId))
+  print("Goodbye")
   exit()
 
 

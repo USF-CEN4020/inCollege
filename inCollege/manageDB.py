@@ -10,7 +10,6 @@ databaseCursor = database.cursor()
 
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
 														id INTEGER PRIMARY KEY ASC, 
-                            newUser INTEGER,
 														username TEXT, 
 														password TEXT,
                             firstname TEXT,
@@ -18,7 +17,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
                             university TEXT,
                             major TEXT,
                             membership TEXT,
-                            accountCreatedTimestamp INTEGER)''')
+                            accountCreatedTimestamp INTEGER,
+                            lastSeenUserId INTEGER)''')
 database.commit()
 
 
@@ -257,6 +257,19 @@ def jobAppInitilized(userId, jobId):
 #----------------------------------------------------------------------------------------
 
 
+def initAcct(username, password, firstname, lastname, uni, major, membership):
+  databaseCursor.execute("""
+                INSERT INTO users (username, password, firstname, lastname, university, major, membership, accountCreatedTimestamp) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, (SELECT STRFTIME('%s')))
+                """, (username, password, firstname, lastname, uni, major, membership))
+
+  newId = databaseCursor.lastrowid
+
+  databaseCursor.execute("UPDATE users SET lastSeenUserId = ? WHERE id = ?", (newId, newId))
+
+  database.commit()
+
+  return newId
 
 def checkExistingAccts(username, password):
   '''
@@ -480,14 +493,18 @@ def queryMyPostings(userId):
   query = databaseCursor.execute("SELECT * FROM jobs WHERE posterId = ?", (userId,)).fetchall()
   return query if query else -1
 
-def queryNewUsers(userId):
-  query = databaseCursor.execute("SELECT * FROM users WHERE id != ? AND newUser = 1", (userId,)).fetchall()
-  return query if query else -1
+def queryNewUsersAndUpdate(userId):
+  query = databaseCursor.execute("SELECT * FROM users WHERE lastSeenUserId > ? ORDER BY id DESC", (userId,)).fetchall()
 
+  if query is None:
+    return query
 
-def notNewUsers(userId):
-  databaseCursor.execute("UPDATE users SET newUser = 0 WHERE id != ?", (userId,))
+  newestId = query[0][0] # gets the id of the newest user in the system
+  databaseCursor.execute("UPDATE users SET lastSeenUserId = ? WHERE id = ?", (newestId, userId))
+
   database.commit()
+
+  return query
 
 
 def queryDeletions(userId):
@@ -564,7 +581,7 @@ def markMessageRead(messageId):
 def getTimeAccountCreated(userId):
     found= databaseCursor.execute("SELECT * FROM users WHERE id = ?", (userId,)).fetchone()
     if found:
-      return found[9]
+      return found[8]
     else:
       return -1
     
