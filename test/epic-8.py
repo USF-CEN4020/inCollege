@@ -142,3 +142,21 @@ def test_messageNotification(capfd, userId):
         output, dataOut = loginNotifications(userId)
         out, err = capfd.readouterr()
         assert True if notification in out else False == True
+
+
+
+# Tests notification of new users after the user logs in
+@pytest.mark.parametrize('userId, expectedNewUsers', [(5, 0), (4, 1), (3, 2), (2, 3), (1, 4)])
+def test_newUsersNotification(capfd, userId, expectedNewUsers):
+    test_setupEnv()
+    if expectedNewUsers == 0:
+        notification = " users have joined InCollege"
+    else:
+        notification = "The following " + str(expectedNewUsers) + " users have joined InCollege"
+    with mock.patch.object(builtins, 'input', lambda _: ''):
+        output, dataOut = loginNotifications(userId)
+        out, err = capfd.readouterr()
+        if expectedNewUsers == 0:
+            assert notification not in out
+        else:
+            assert notification in out

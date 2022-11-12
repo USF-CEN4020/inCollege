@@ -496,13 +496,12 @@ def queryMyPostings(userId):
 def queryNewUsersAndUpdate(userId):
   query = databaseCursor.execute("SELECT * FROM users WHERE lastSeenUserId > ? ORDER BY id DESC", (userId,)).fetchall()
 
-  if query is None:
-    return query
+  if query:
+    newestId = query[0][0] # gets the id of the newest user in the system
+    databaseCursor.execute("UPDATE users SET lastSeenUserId = ? WHERE id = ?", (newestId, userId))
 
-  newestId = query[0][0] # gets the id of the newest user in the system
-  databaseCursor.execute("UPDATE users SET lastSeenUserId = ? WHERE id = ?", (newestId, userId))
+    database.commit()
 
-  database.commit()
 
   return query
 

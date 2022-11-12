@@ -437,7 +437,7 @@ def loginNotifications(asId):
 	
   userProfile = checkProfileExists(asId)
 
-  #newJobPost = lookupLastJob(asId)
+  newJobPost = lookupLastJob(asId)
 
   jobTitle = getJobById(asId)
 
@@ -472,7 +472,7 @@ def loginNotifications(asId):
 
   if newUsers:
     count = 0
-    print("The following Users have been joined InCollege:\n")
+    print("The following", len(newUsers), "users have joined InCollege:\n")
     for newUser in newUsers:
       count = count + 1
       print("User #", count)
