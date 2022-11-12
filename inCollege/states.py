@@ -173,6 +173,14 @@ def newAcct():
 
 # job
 def jobInterface(asId):
+	
+   #Number of Jobs the User Applied
+  appliedJobsCount = getAppliedJobCount(asId)
+
+  print("You have applied to", appliedJobsCount , "jobs")
+
+  enterToContinue()
+	
   prompt = "Please select an option below:\n"\
       "\t1. Post a job\n"\
       "\t2. Search for a job\n"\
@@ -432,6 +440,12 @@ def loginNotifications(asId):
   currMembership = getUserMembership(asId)
 
   newUsers = queryNewUsers(asId)
+	
+  userProfile = checkProfileExists(asId)
+
+  newJobPost = lookupLastJob(asId)
+
+  jobTitle = getJobById(asId)
 
   timeAccountCreated = getTimeAccountCreated(asId)
   timeAppliedJob = getTimeAppliedJob(asId)
@@ -472,18 +486,29 @@ def loginNotifications(asId):
     notNewUsers(asId)
     
     enterToContinue()
-
+	
   if deletions != -1:
-    count = 0
-    print("The following jobs have been removed for the job listings:\n")
-    for job in deletions:
-      count = count + 1
-      print("Job #", count, "): ")
-      print("\tTitle: ", job[1])
-      print("\tEmployer: ", job[3])
-    removeDeletions(asId)
+      count = 0
+      for job in deletions:
+        count = count + 1
+        print("The job you applied to", jobTitle, "has been deleted.")
+      removeDeletions(asId)
     
-    enterToContinue()
+      enterToContinue()
+
+  # Notification for new job post
+  if newJobPost != -1:
+      print("The job", newJobPost, "has been added.")
+
+      enterToContinue()
+        
+
+  #Notification for creating the user profile
+  if userProfile == -1:    
+    print("Don't forget to create a profile\n")
+
+    return mainInterface, (asId,)
+    
     
   if pendingRequests:
     
