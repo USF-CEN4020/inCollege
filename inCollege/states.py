@@ -460,7 +460,7 @@ def loginNotifications(asId):
   else:
         timeNotApply = timeNowInSec - timeAccountCreated
 
-  dayNotApply = int(timeNotApply / 86400) #convert to day: 1 day = 86400 sec
+  dayNotApply = int(abs(timeNotApply) / 86400) #convert to day: 1 day = 86400 sec
   if ((dayNotApply >= 7) and (dayNotApply != None)): # if more than 7 days not applied for a job
     print("Remember - you're going to want to have a job when you graduate. Make sure that you start to apply for jobs Today!")
   else:
