@@ -1,7 +1,8 @@
 from .commons import *
 import sqlite3
 import time
-
+import datetime
+from datetime import datetime
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -9,13 +10,15 @@ databaseCursor = database.cursor()
 
 databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
 														id INTEGER PRIMARY KEY ASC, 
+                            newUser INTEGER,
 														username TEXT, 
 														password TEXT,
                             firstname TEXT,
                             lastname TEXT,
                             university TEXT,
                             major TEXT,
-                            membership TEXT)''')
+                            membership TEXT,
+                            accountCreatedTimestamp INTEGER)''')
 database.commit()
 
 
@@ -42,6 +45,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS jobApplications(
                             qualifications TEXT,
                             saved INTEGER,
                             deleted INTEGER,
+                            appliedTimestamp INTEGER,
                             FOREIGN KEY(userId)
                               REFERENCES users(id),
                             FOREIGN KEY(jobId)
@@ -449,7 +453,7 @@ def toggleSavedJob(userId, jobId):
 
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
-  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, ?, ?, ?, 0, 0)""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
+  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted, appliedTimestamp) VALUES (?, ?, ?, ?, ?, 0, 0, (SELECT STRFTIME('%s')))""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
   database.commit()
   
 def removeOldApplication(userId, jobId):
@@ -459,6 +463,15 @@ def removeOldApplication(userId, jobId):
 def queryMyPostings(userId):
   query = databaseCursor.execute("SELECT * FROM jobs WHERE posterId = ?", (userId,)).fetchall()
   return query if query else -1
+
+def queryNewUsers(userId):
+  query = databaseCursor.execute("SELECT * FROM users WHERE id != ? AND newUser = 1", (userId,)).fetchall()
+  return query if query else -1
+
+
+def notNewUsers(userId):
+  databaseCursor.execute("UPDATE users SET newUser = 0 WHERE id != ?", (userId,))
+  database.commit()
 
 
 def queryDeletions(userId):
@@ -530,3 +543,21 @@ def deleteMessage(messageId):
 
 def markMessageRead(messageId):
     databaseCursor.execute("UPDATE messages SET lastReadTimeStamp = (SELECT STRFTIME('%s')) WHERE messageId = ?", (messageId,))
+
+
+def getTimeAccountCreated(userId):
+    found= databaseCursor.execute("SELECT * FROM users WHERE id = ?", (userId,)).fetchone()
+    if found:
+      return found[9]
+    else:
+      return -1
+    
+
+
+def getTimeAppliedJob(userId):
+    found = databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ?", (userId,)).fetchone()
+    if found:
+      return found[7]
+    else:
+      return -1
+

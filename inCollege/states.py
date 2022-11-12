@@ -1,7 +1,9 @@
 from inCollege.commons import *
 from inCollege.manageDB import *
+import datetime
 import random
-
+from datetime import datetime
+import time
 
 
 # initial state
@@ -160,8 +162,8 @@ def newAcct():
   
 
   databaseCursor.execute("""
-                INSERT INTO users (username, password, firstname, lastname, university, major, membership) VALUES
-                    (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users (newUser, username, password, firstname, lastname, university, major, membership, accountCreatedTimestamp) VALUES
+                    (1, ?, ?, ?, ?, ?, ?, ?, (SELECT STRFTIME('%s')))
                 """, (username, password, firstname, lastname, university, major, membership))
   database.commit()
 
@@ -418,6 +420,8 @@ def findPpl(asId):
 
 # Notifications upon login
 def loginNotifications(asId):
+  
+  
 
   pendingRequests = checkExistingPendingRequest(asId)
   
@@ -426,6 +430,28 @@ def loginNotifications(asId):
   newMessageCount = getNumUnreadMessages(asId)
 
   currMembership = getUserMembership(asId)
+
+  newUsers = queryNewUsers(asId)
+
+  timeAccountCreated = getTimeAccountCreated(asId)
+  timeAppliedJob = getTimeAppliedJob(asId)
+  timeNotApply = 0
+  #timeNowInSec = int(round(time.time())) # get current time in sec
+
+  now = datetime.now() #get now time
+  timeNowInSec = int(round(now.timestamp())) # convert current time to second
+
+  if ((timeAppliedJob > timeAccountCreated) and (timeAppliedJob != None)): # when time applied job is after time account created
+        timeNotApply = timeNowInSec - timeAppliedJob #get time difference 
+  else:
+        timeNotApply = timeNowInSec - timeAccountCreated
+
+  dayNotApply = int(timeNotApply / 86400) #convert to day: 1 day = 86400 sec
+  if ((dayNotApply >= 7) and (dayNotApply != None)): # if more than 7 days not applied for a job
+    print("Remember - you're going to want to have a job when you graduate. Make sure that you start to apply for jobs Today!")
+  else:
+    print("The time you did not apply for a job in Second(for quick test): ", timeNotApply)
+
   if currMembership == "plus":
     print("Your current membership is Plus. You need to pay $10 per Month.")
   elif currMembership == "standard":
@@ -433,6 +459,18 @@ def loginNotifications(asId):
 
   if newMessageCount != 0:
     print("You have", newMessageCount, "unread messages in your inbox.\n")
+    enterToContinue()
+
+
+  if newUsers !=-1:
+    count = 0
+    print("The following Users have been joined InCollege:\n")
+    for newUser in newUsers:
+      count = count + 1
+      print("User #", count)
+      print("\tName: ", newUser[4], newUser[5])
+    notNewUsers(asId)
+    
     enterToContinue()
 
   if deletions != -1:
