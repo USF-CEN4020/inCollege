@@ -171,6 +171,22 @@ def usernameLookup(uId):
   user = lookup.fetchone()
   return user[1]
 
+def lookupLastJob(userId):
+  databaseCursor.execute("SELECT title FROM jobs ORDER BY jobId DESC")
+  return databaseCursor.fetchone()[0]
+
+def getJobById(asId):
+    
+    # databaseCursor.execute('''SELECT title FROM jobs INNER JOIN jobApplications ON jobs.jobId = jobApplications.jobId WHERE jobId = ? AND deleted = 1''', (asId,))
+    databaseCursor.execute('''SELECT title FROM jobs WHERE jobId = ? ''', (asId,))
+    return databaseCursor.fetchone()
+
+def getAppliedJobCount(userId):
+   databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
+   found = databaseCursor.fetchone()
+   if found:
+    return found[0]
+  
 
 def deleteFromPendingList(userId, friendId):
   databaseCursor.execute("DELETE FROM friendships WHERE (acceptRequest = 0 AND senderId = ? AND receiverId = ?)", (friendId, userId))
