@@ -18,7 +18,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
                             major TEXT,
                             membership TEXT,
                             accountCreatedTimestamp INTEGER,
-                            lastSeenUserId INTEGER)''')
+                            lastSeenUserId INTEGER,
+                            lastSeenJobId INTEGER)''')
 database.commit()
 
 
@@ -44,7 +45,7 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS jobApplications(
                             workAvailabilityDate TEXT,   
                             qualifications TEXT,
                             saved INTEGER,
-                            deleted INTEGER,
+                            deleted TEXT,
                             appliedTimestamp INTEGER,
                             FOREIGN KEY(userId)
                               REFERENCES users(id),
@@ -171,15 +172,23 @@ def usernameLookup(uId):
   user = lookup.fetchone()
   return user[1]
 
-def lookupLastJob(userId):
-  databaseCursor.execute("SELECT title FROM jobs ORDER BY jobId DESC")
-  return databaseCursor.fetchone()[0]
+def lookupLastJobId():
+
+  query = databaseCursor.execute("SELECT jobId FROM jobs ORDER BY jobId DESC").fetchone()
+  if query:
+    return query[0]
+  
+  return -1
 
 def getJobById(asId):
     
     # databaseCursor.execute('''SELECT title FROM jobs INNER JOIN jobApplications ON jobs.jobId = jobApplications.jobId WHERE jobId = ? AND deleted = 1''', (asId,))
-    databaseCursor.execute('''SELECT title FROM jobs WHERE jobId = ? ''', (asId,))
-    return databaseCursor.fetchone()
+    query = databaseCursor.execute('''SELECT title FROM jobs WHERE jobId = ? ''', (asId,)).fetchone()
+
+    if query:
+      return query[0]
+    
+    return -1
 
 def getAppliedJobCount(userId):
    databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
@@ -258,10 +267,13 @@ def jobAppInitilized(userId, jobId):
 
 
 def initAcct(username, password, firstname, lastname, uni, major, membership):
+
+  lastJobId = lookupLastJobId()
+
   databaseCursor.execute("""
-                INSERT INTO users (username, password, firstname, lastname, university, major, membership, accountCreatedTimestamp) VALUES
-                    (?, ?, ?, ?, ?, ?, ?, (SELECT STRFTIME('%s')))
-                """, (username, password, firstname, lastname, uni, major, membership))
+                INSERT INTO users (username, password, firstname, lastname, university, major, membership, accountCreatedTimestamp, lastSeenJobId) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, (SELECT STRFTIME('%s')), ?)
+                """, (username, password, firstname, lastname, uni, major, membership, lastJobId))
 
   newId = databaseCursor.lastrowid
 
@@ -470,7 +482,7 @@ def getApplicationByIds(userId, jobId):
 
 def toggleSavedJob(userId, jobId):
   if (not jobAppInitilized(userId, jobId)):
-    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, '', '', '', 1, 0)''', (userId, jobId))
+    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, '', '', '', 1, '')''', (userId, jobId))
     database.commit()
 
   else:
@@ -482,7 +494,7 @@ def toggleSavedJob(userId, jobId):
 
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
-  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted, appliedTimestamp) VALUES (?, ?, ?, ?, ?, 0, 0, (SELECT STRFTIME('%s')))""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
+  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted, appliedTimestamp) VALUES (?, ?, ?, ?, ?, 0, '', (SELECT STRFTIME('%s')))""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
   database.commit()
   
 def removeOldApplication(userId, jobId):
@@ -494,7 +506,7 @@ def queryMyPostings(userId):
   return query if query else -1
 
 def queryNewUsersAndUpdate(userId):
-  query = databaseCursor.execute("SELECT * FROM users WHERE lastSeenUserId > ? ORDER BY id DESC", (userId,)).fetchall()
+  query = databaseCursor.execute("SELECT * FROM users WHERE id > (SELECT lastSeenUserId FROM users WHERE id = ?) ORDER BY id DESC", (userId,)).fetchall()
 
   if query:
     newestId = query[0][0] # gets the id of the newest user in the system
@@ -505,21 +517,31 @@ def queryNewUsersAndUpdate(userId):
 
   return query
 
+def queryNewJobsAndUpdate(userId):
+  query = databaseCursor.execute("SELECT title FROM jobs WHERE jobId > (SELECT lastSeenJobId FROM users WHERE id = ?) ORDER BY jobId DESC", (userId,)).fetchall()
+
+  if query:
+    databaseCursor.execute("UPDATE users SET lastSeenJobId = ? WHERE id = ?", (lookupLastJobId(), userId))
+    database.commit()
+
+  return query
+
 
 def queryDeletions(userId):
-  query = databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,)).fetchall()
-  return query if query else -1
-
+  return databaseCursor.execute("SELECT deleted FROM jobApplications WHERE userId = ? AND deleted != ''", (userId,)).fetchall()
 
 def deleteJob(jobId):
-  databaseCursor.execute("UPDATE jobApplications SET deleted = 1 WHERE jobId = ?", (jobId,))
+  
+  title = getJobById(jobId)
+
+  databaseCursor.execute("UPDATE jobApplications SET deleted = ? WHERE jobId = ?", (title, jobId))
   database.commit()
   databaseCursor.execute("DELETE FROM jobs WHERE jobId = ?", (jobId,))
   database.commit()
 
 
 def removeDeletions(userId):
-  databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,))
+  databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted != ''", (userId,))
   database.commit()
 
 
@@ -587,9 +609,9 @@ def getTimeAccountCreated(userId):
 
 
 def getTimeAppliedJob(userId):
-    found = databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ?", (userId,)).fetchone()
+    found = databaseCursor.execute("SELECT appliedTimestamp FROM jobApplications WHERE userId = ? ORDER BY appliedTimestamp DESC", (userId,)).fetchone()
     if found:
-      return found[7]
+      return found[0]
     else:
       return -1
 

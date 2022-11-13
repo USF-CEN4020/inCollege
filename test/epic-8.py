@@ -4,8 +4,8 @@ import builtins
 from unittest import mock
 import sqlite3
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages
-from inCollege.states import jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate
+from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
 # from inCollege.testFunc import 
 
 database = sqlite3.connect("inCollege.db")
@@ -96,6 +96,7 @@ def test_setupEnv():
     initApplications()
     initMessages()
         
+
         
 # Tests notification when entering job section
 @pytest.mark.parametrize('userId', [2, 3, 4, 5])
@@ -121,6 +122,18 @@ def test_lastApp7DaysAgo(capfd, userId):
         out, err = capfd.readouterr()
         assert True if notification in out else False == True
         
+
+@pytest.mark.parametrize('userId', [2, 3, 4, 5])
+def test_deletedJobNotification(capfd, userId):
+    inputs = iter(['1', 'no'])
+    with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+        deleteJobPosting(userId - 1 if userId != 2 else 5)
+
+    with mock.patch.object(builtins, 'input', lambda _: ''):
+        loginNotifications(userId)
+        out, err = capfd.readouterr()
+        assert "The job ce you applied to has been deleted." in out
+
 
 # Tests notification to user if user has not created a profile yet
 @pytest.mark.parametrize('userId', [2, 3, 4, 5])
@@ -160,3 +173,16 @@ def test_newUsersNotification(capfd, userId, expectedNewUsers):
             assert notification not in out
         else:
             assert notification in out
+
+
+def test_newJobsNotification(capfd):
+    test_setupEnv()
+    with mock.patch.object(builtins, 'input', lambda _: ''):
+        loginNotifications(2)
+        out, err = capfd.readouterr()
+        assert "has been added" in out
+
+def test_queryNewJobs(capfd):
+    test_setupEnv()
+    assert len(queryNewJobsAndUpdate(2)) == 4
+    assert len(queryNewJobsAndUpdate(2)) == 0

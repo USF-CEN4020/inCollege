@@ -437,7 +437,7 @@ def loginNotifications(asId):
 	
   userProfile = checkProfileExists(asId)
 
-  newJobPost = lookupLastJob(asId)
+  newJobs = queryNewJobsAndUpdate(asId)
 
   jobTitle = getJobById(asId)
 
@@ -480,18 +480,20 @@ def loginNotifications(asId):
     
     enterToContinue()
 	
-  if deletions != -1:
-      count = 0
+  if deletions:
+
       for job in deletions:
-        count = count + 1
-        print("The job you applied to", jobTitle, "has been deleted.")
+        print("The job", job[0], "you applied to has been deleted.")
+
       removeDeletions(asId)
     
       enterToContinue()
 
   # Notification for new job post
-  if newJobPost != -1:
-      print("The job", newJobPost, "has been added.")
+  if newJobs:
+      
+      for jobTitle in newJobs:
+        print("The job", jobTitle, "has been added.")
 
       enterToContinue()
         
