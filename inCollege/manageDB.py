@@ -1,7 +1,8 @@
 from .commons import *
 import sqlite3
 import time
-
+import datetime
+from datetime import datetime
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -15,7 +16,10 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS users(
                             lastname TEXT,
                             university TEXT,
                             major TEXT,
-                            membership TEXT)''')
+                            membership TEXT,
+                            accountCreatedTimestamp INTEGER,
+                            lastSeenUserId INTEGER,
+                            lastSeenJobId INTEGER)''')
 database.commit()
 
 
@@ -41,7 +45,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS jobApplications(
                             workAvailabilityDate TEXT,   
                             qualifications TEXT,
                             saved INTEGER,
-                            deleted INTEGER,
+                            deleted TEXT,
+                            appliedTimestamp INTEGER,
                             FOREIGN KEY(userId)
                               REFERENCES users(id),
                             FOREIGN KEY(jobId)
@@ -167,6 +172,30 @@ def usernameLookup(uId):
   user = lookup.fetchone()
   return user[1]
 
+def lookupLastJobId():
+
+  query = databaseCursor.execute("SELECT jobId FROM jobs ORDER BY jobId DESC").fetchone()
+  if query:
+    return query[0]
+  
+  return -1
+
+def getJobById(asId):
+    
+    # databaseCursor.execute('''SELECT title FROM jobs INNER JOIN jobApplications ON jobs.jobId = jobApplications.jobId WHERE jobId = ? AND deleted = 1''', (asId,))
+    query = databaseCursor.execute('''SELECT title FROM jobs WHERE jobId = ? ''', (asId,)).fetchone()
+
+    if query:
+      return query[0]
+    
+    return -1
+
+def getAppliedJobCount(userId):
+   databaseCursor.execute("SELECT Count(*) FROM jobApplications WHERE userId= ?", (userId, ))
+   found = databaseCursor.fetchone()
+   if found:
+    return found[0]
+  
 
 def deleteFromPendingList(userId, friendId):
   databaseCursor.execute("DELETE FROM friendships WHERE (acceptRequest = 0 AND senderId = ? AND receiverId = ?)", (friendId, userId))
@@ -237,6 +266,22 @@ def jobAppInitilized(userId, jobId):
 #----------------------------------------------------------------------------------------
 
 
+def initAcct(username, password, firstname, lastname, uni, major, membership):
+
+  lastJobId = lookupLastJobId()
+
+  databaseCursor.execute("""
+                INSERT INTO users (username, password, firstname, lastname, university, major, membership, accountCreatedTimestamp, lastSeenJobId) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, (SELECT STRFTIME('%s')), ?)
+                """, (username, password, firstname, lastname, uni, major, membership, lastJobId))
+
+  newId = databaseCursor.lastrowid
+
+  databaseCursor.execute("UPDATE users SET lastSeenUserId = ? WHERE id = ?", (newId, newId))
+
+  database.commit()
+
+  return newId
 
 def checkExistingAccts(username, password):
   '''
@@ -437,7 +482,7 @@ def getApplicationByIds(userId, jobId):
 
 def toggleSavedJob(userId, jobId):
   if (not jobAppInitilized(userId, jobId)):
-    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, '', '', '', 1, 0)''', (userId, jobId))
+    databaseCursor.execute('''INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, '', '', '', 1, '')''', (userId, jobId))
     database.commit()
 
   else:
@@ -449,7 +494,7 @@ def toggleSavedJob(userId, jobId):
 
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
-  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted) VALUES (?, ?, ?, ?, ?, 0, 0)""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
+  databaseCursor.execute("""INSERT INTO jobApplications(userId, jobId, gradDate, workAvailabilityDate, qualifications, saved, deleted, appliedTimestamp) VALUES (?, ?, ?, ?, ?, 0, '', (SELECT STRFTIME('%s')))""", (userId, jobId, gradDate, jobAvailabilityDate, qualifications))
   database.commit()
   
 def removeOldApplication(userId, jobId):
@@ -460,21 +505,43 @@ def queryMyPostings(userId):
   query = databaseCursor.execute("SELECT * FROM jobs WHERE posterId = ?", (userId,)).fetchall()
   return query if query else -1
 
+def queryNewUsersAndUpdate(userId):
+  query = databaseCursor.execute("SELECT * FROM users WHERE id > (SELECT lastSeenUserId FROM users WHERE id = ?) ORDER BY id DESC", (userId,)).fetchall()
+
+  if query:
+    newestId = query[0][0] # gets the id of the newest user in the system
+    databaseCursor.execute("UPDATE users SET lastSeenUserId = ? WHERE id = ?", (newestId, userId))
+
+    database.commit()
+
+
+  return query
+
+def queryNewJobsAndUpdate(userId):
+  query = databaseCursor.execute("SELECT title FROM jobs WHERE jobId > (SELECT lastSeenJobId FROM users WHERE id = ?) ORDER BY jobId DESC", (userId,)).fetchall()
+
+  if query:
+    databaseCursor.execute("UPDATE users SET lastSeenJobId = ? WHERE id = ?", (lookupLastJobId(), userId))
+    database.commit()
+
+  return query
+
 
 def queryDeletions(userId):
-  query = databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,)).fetchall()
-  return query if query else -1
-
+  return databaseCursor.execute("SELECT deleted FROM jobApplications WHERE userId = ? AND deleted != ''", (userId,)).fetchall()
 
 def deleteJob(jobId):
-  databaseCursor.execute("UPDATE jobApplications SET deleted = 1 WHERE jobId = ?", (jobId,))
+  
+  title = getJobById(jobId)
+
+  databaseCursor.execute("UPDATE jobApplications SET deleted = ? WHERE jobId = ?", (title, jobId))
   database.commit()
   databaseCursor.execute("DELETE FROM jobs WHERE jobId = ?", (jobId,))
   database.commit()
 
 
 def removeDeletions(userId):
-  databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted = 1", (userId,))
+  databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted != ''", (userId,))
   database.commit()
 
 
@@ -530,3 +597,21 @@ def deleteMessage(messageId):
 
 def markMessageRead(messageId):
     databaseCursor.execute("UPDATE messages SET lastReadTimeStamp = (SELECT STRFTIME('%s')) WHERE messageId = ?", (messageId,))
+
+
+def getTimeAccountCreated(userId):
+    found= databaseCursor.execute("SELECT * FROM users WHERE id = ?", (userId,)).fetchone()
+    if found:
+      return found[8]
+    else:
+      return -1
+    
+
+
+def getTimeAppliedJob(userId):
+    found = databaseCursor.execute("SELECT appliedTimestamp FROM jobApplications WHERE userId = ? ORDER BY appliedTimestamp DESC", (userId,)).fetchone()
+    if found:
+      return found[0]
+    else:
+      return -1
+
