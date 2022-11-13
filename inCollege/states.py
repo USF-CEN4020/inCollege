@@ -1,7 +1,9 @@
 from inCollege.commons import *
 from inCollege.manageDB import *
+import datetime
 import random
-
+from datetime import datetime
+import time
 
 
 # initial state
@@ -157,20 +159,22 @@ def newAcct():
                             "\n\tPlus can send message to everyone."\
                             "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
 
-  
-
-  databaseCursor.execute("""
-                INSERT INTO users (username, password, firstname, lastname, university, major, membership) VALUES
-                    (?, ?, ?, ?, ?, ?, ?)
-                """, (username, password, firstname, lastname, university, major, membership))
-  database.commit()
 
   clear()
-  return mainInterface, (databaseCursor.lastrowid,)
+
+  return mainInterface, (initAcct(username, password, firstname, lastname, university, major, membership),)
 
 
 # job
 def jobInterface(asId):
+	
+   #Number of Jobs the User Applied
+  appliedJobsCount = getAppliedJobCount(asId)
+
+  print("You have applied to", appliedJobsCount , "jobs")
+
+  enterToContinue()
+	
   prompt = "Please select an option below:\n"\
       "\t1. Post a job\n"\
       "\t2. Search for a job\n"\
@@ -418,6 +422,8 @@ def findPpl(asId):
 
 # Notifications upon login
 def loginNotifications(asId):
+  
+  
 
   pendingRequests = checkExistingPendingRequest(asId)
   
@@ -426,6 +432,34 @@ def loginNotifications(asId):
   newMessageCount = getNumUnreadMessages(asId)
 
   currMembership = getUserMembership(asId)
+
+  newUsers = queryNewUsersAndUpdate(asId)
+	
+  userProfile = checkProfileExists(asId)
+
+  newJobs = queryNewJobsAndUpdate(asId)
+
+  jobTitle = getJobById(asId)
+
+  timeAccountCreated = getTimeAccountCreated(asId)
+  timeAppliedJob = getTimeAppliedJob(asId)
+  timeNotApply = 0
+  #timeNowInSec = int(round(time.time())) # get current time in sec
+
+  now = datetime.now() #get now time
+  timeNowInSec = int(round(now.timestamp())) # convert current time to second
+
+  if ((timeAppliedJob > timeAccountCreated) and (timeAppliedJob != None)): # when time applied job is after time account created
+        timeNotApply = timeNowInSec - timeAppliedJob #get time difference 
+  else:
+        timeNotApply = timeNowInSec - timeAccountCreated
+
+  dayNotApply = int(abs(timeNotApply) / 86400) #convert to day: 1 day = 86400 sec
+  if ((dayNotApply >= 7) and (dayNotApply != None)): # if more than 7 days not applied for a job
+    print("Remember - you're going to want to have a job when you graduate. Make sure that you start to apply for jobs Today!")
+  else:
+    print("The time you did not apply for a job in Second(for quick test): ", timeNotApply)
+
   if currMembership == "plus":
     print("Your current membership is Plus. You need to pay $10 per Month.")
   elif currMembership == "standard":
@@ -435,17 +469,41 @@ def loginNotifications(asId):
     print("You have", newMessageCount, "unread messages in your inbox.\n")
     enterToContinue()
 
-  if deletions != -1:
+
+  if newUsers:
     count = 0
-    print("The following jobs have been removed for the job listings:\n")
-    for job in deletions:
+    print("The following", len(newUsers), "users have joined InCollege:\n")
+    for newUser in newUsers:
       count = count + 1
-      print("Job #", count, "): ")
-      print("\tTitle: ", job[1])
-      print("\tEmployer: ", job[3])
-    removeDeletions(asId)
+      print("User #", count)
+      print("\tName: ", newUser[3], newUser[4])
     
     enterToContinue()
+	
+  if deletions:
+
+      for job in deletions:
+        print("The job", job[0], "you applied to has been deleted.")
+
+      removeDeletions(asId)
+    
+      enterToContinue()
+
+  # Notification for new job post
+  if newJobs:
+      
+      for jobTitle in newJobs:
+        print("The job", jobTitle, "has been added.")
+
+      enterToContinue()
+        
+
+  #Notification for creating the user profile
+  if userProfile == -1:    
+    print("Don't forget to create a profile\n")
+
+    return mainInterface, (asId,)
+    
     
   if pendingRequests:
     
@@ -1355,10 +1413,7 @@ def underConstruction(asId, prevState):
 
 def exitState(asId):
   clear()
-  if (asId == -1):
-    print("Goodbye")
-  else:
-    print("Goodbye,", usernameById(asId))
+  print("Goodbye")
   exit()
 
 

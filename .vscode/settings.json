@@ -8,5 +8,6 @@
     "python.testing.pytestEnabled": true,
     "python.analysis.extraPaths": [
         "./inCollege"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "off"
 }
