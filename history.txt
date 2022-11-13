@@ -1,5 +1,21 @@
-* 296e0c7 (origin/main, origin/HEAD, main) burndown report
-| * 52be25f (HEAD -> epic-8, origin/epic-8) epic-8 test cases
+*   e1fa2af (HEAD -> main, origin/main, origin/HEAD) Merge branch 'epic-8'
+|\  
+| * c724140 (origin/epic-8, epic-8) pull
+| *   5a74b50 Merge branch 'epic-8' of https://github.com/USF-CEN4020/inCollege into epic-8
+| |\  
+| | * 7f3365b finish stories
+| | * 724506b add test for new user note
+| | * c71284c fix newUser implementation
+| | * 34ac17c Added test cases for Epic-8
+| | * 4ea5bf6 epic-8 stories
+| | * 901f512 epic-8 stories
+| | * 40bca63 Jay's Story
+| * | 1d01970 burndown report
+| |/  
+| * f4959df burndown report
+| * 52be25f epic-8 test cases
+* | cee28d1 commit revert
+* | 296e0c7 burndown report
 |/  
 *   95cf512 Merge pull request #9 from USF-CEN4020/epic-7
 |\  
