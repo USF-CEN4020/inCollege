@@ -1,0 +1,9 @@
+username firstname lastname university major plus
+123456!
+=====
+user fn ln uni maj standard
+123456!A
+=====
+hello first name usf cs plus
+123456!A
+=====

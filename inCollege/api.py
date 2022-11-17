@@ -1,29 +1,73 @@
 from os.path import exists
 import os.path
 
+from inCollege.manageDB import *
 
-# studentAccounts.txt api
+
+# INPUT: studentAccounts.txt api
 
 # If a file named "studentAccounts.txt" exists, then it will be opened. 
 # In this file the information needed to create new student accounts will be contained. 
 # This information will consist of a user name, first name and last name on one line, and a password on the next line. 
 # If the maximum number of student accounts, 10 is reached, then no more student accounts will be created. 
 # Each student account information will be separated by a line with "=====".
-def studentAccountsAPI(username, firstname, lastname, password):
+def studentAccountsAPI():
     absPath = os.path.abspath(os.path.dirname(__file__))
-    textPath = os.path.join(absPath, "api", "studentAccounts.txt")
-    fileExists = exists(textPath)
+    txtFilePath = os.path.join(absPath, "api", "studentAccounts.txt")
+    fileExists = exists(txtFilePath)
 
-    if fileExists:
-        with open(textPath, 'a') as f:
-            f.write("%s, %s, %s\n%s\n=====\n" % (username, firstname, lastname, password))
-    else:
-        with open(textPath, 'w') as f:
-            f.write("%s,%s,%s\n%s\n=====\n" % (username, firstname, lastname, password))
+    if fileExists: 
+        with open(txtFilePath) as f:
+            initFlag = 1
+
+            lines = f.readlines()
+            for line in lines:
+                if dbFull():
+                    print("INPUT API WARNING: All permitted accounts have been created")
+                    break   
+                
+                # initialize data to the empty string
+                if initFlag == 1:
+                    username = ''
+                    password = ''
+                    firstname = ''
+                    lastname = ''
+                    university = ''
+                    major = ''
+                    membership = ''
+
+                if line == "=====\n" or line == "=====":
+                    if username == '' or password == '' or firstname == '' or lastname == '' or university == '' or major == '' or membership == '':
+                        # all information from input txt file should have the value, if not the user is not created
+                        print("INPUT API WARNING: Something is wrong with API input text file")
+                        initFlag = 0
+                    else:
+                        initAcct(username, password, firstname, lastname, university, major, membership)
+                        initFlag = 1
+
+                elif ' ' in line:
+                    accountInfo = line.split()
+                    if unique(accountInfo[0]): # check if username is unique
+                        username = accountInfo[0]
+                        firstname = accountInfo[1]
+                        lastname = accountInfo[2]
+                        university = accountInfo[3]
+                        major = accountInfo[4]
+                        membership = accountInfo[5]
+                        initFlag = 0
+                    else:
+                        initFlag = 1
+                        continue
+                else:
+                    if passwordValidator(line):
+                        password = line
+                        initFlag = 0
+                    else: 
+                        initFlag = 1
+                        continue
 
 
-
-# MyCollege_profiles.txt api
+# OUTPUT: MyCollege_profiles.txt api
 
 # A file called MyCollege_profiles.txt" will be created. 
 # For each of the profiles in the InCollege system, the following information will be placed in the file: 
@@ -31,13 +75,27 @@ def studentAccountsAPI(username, firstname, lastname, password):
 # When a new user joins the system, their profile information will be added to this file. 
 # Each user's profile information will be separated by a line with "=====".
 def profilesAPI():
-    pass
+    absPath = os.path.abspath(os.path.dirname(__file__))
+    txtFilePath = os.path.join(absPath, "api", "MyCollege_profiles.txt")
+    fileExists = exists(txtFilePath)
 
 
-# MyCollege_users.txt api
 
-# A file called "MyCollege_users.txt" will be created that contains the username of all of the user accounts that have been created in the MyCollege system. 
-# After each user name, a "standard" or "plus" will be included depending on the type of the account. 
+    # if fileExists:
+    #     with open(txtFilePath, 'a') as f:
+    #         f.write("%s %s %s %s %s %s\n=====\n" % (title, major, university, about, experience, education))
+    # else:
+    #     with open(txtFilePath, 'w') as f:
+    #         f.write("%s %s %s %s %s %s\n=====\n" % (title, major, university, about, experience, education))
+
+
+# OUTPUT: MyCollege_users.txt api
+
+# A file called "MyCollege_users.txt" will be created 
+# that contains the username of all of the user accounts that have been created in the MyCollege system. 
+# After each username, a "standard" or "plus" will be included depending on the type of the account. 
 # If a new user account is created, then the user account will be added to the list.
 def usersAPI():
-    pass
+    absPath = os.path.abspath(os.path.dirname(__file__))
+    txtFilePath = os.path.join(absPath, "api", "MyCollege_users.txt")
+    fileExists = exists(txtFilePath)

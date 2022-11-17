@@ -156,11 +156,9 @@ def newAcct():
   university = gatherInput("\nEnter your university (if no, enter NONE): \n", "", vacuouslyTrue)
   major = gatherInput("\nEnter your major (if no, enter NONE): \n", "", vacuouslyTrue)
   membership =  gatherInput("\nChoose your membership (Standard or Plus): \n"\
-                            "\n\tStandard Can't send message to stranger."\
+                            "\n\tStandard can't send message to stranger."\
                             "\n\tPlus can send message to everyone."\
                             "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
-
-  studentAccountsAPI(username, firstname, lastname, password)
 
   clear()
 
@@ -1440,5 +1438,5 @@ def stateLoop(state):
 
 if (__name__ == "__main__"):
   print("Welcome to InCollege!\n")
-	
+
   stateLoop(applicationEntry)
