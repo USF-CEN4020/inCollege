@@ -54,6 +54,7 @@ def applicationEntry():
 
 # main state
 def mainInterface(asId):
+  usersAPI()
   prompt = "Please select an option below:\n"\
           "\t1. Jobs and Internships\n"\
           "\t2. Find your network\n"\
@@ -423,8 +424,6 @@ def findPpl(asId):
 # Notifications upon login
 def loginNotifications(asId):
   
-  
-
   pendingRequests = checkExistingPendingRequest(asId)
   
   deletions = queryDeletions(asId)
@@ -1239,7 +1238,7 @@ def myEducation(asId):
   updateDB("profiles", "years", asId, years)
 
   profilesAPI()
-  
+
   clear()
   return myProfile, (asId, )
 

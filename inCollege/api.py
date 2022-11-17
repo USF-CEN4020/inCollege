@@ -76,7 +76,6 @@ def studentAccountsAPI():
 def profilesAPI():
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "MyCollege_profiles.txt")
-    fileExists = exists(txtFilePath)
 
     f = open(txtFilePath, 'w')
 
@@ -113,4 +112,16 @@ def profilesAPI():
 def usersAPI():
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "MyCollege_users.txt")
-    fileExists = exists(txtFilePath)
+    
+    f = open(txtFilePath, 'w')
+
+    databaseCursor.execute("SELECT * FROM users")
+    users = databaseCursor.fetchall()
+
+    for user in users:
+        username = user[1]
+        membership = user[7]
+
+        f.write("%s %s\n" % (username, membership))
+
+    f.close()

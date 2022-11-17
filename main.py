@@ -6,5 +6,6 @@ if (__name__ == "__main__"):
   
   studentAccountsAPI()
   profilesAPI()
+  usersAPI()
 
   stateLoop(applicationEntry)
