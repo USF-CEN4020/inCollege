@@ -1198,7 +1198,8 @@ def updateProfileSimple(asId, sel):
     field = "about"
     value = input("About Me: ")
   updateDB(table, field, asId, value)
-  
+  profilesAPI()
+
   clear()
   return myProfile, (asId, )
 
@@ -1223,6 +1224,8 @@ def myWorkExperience(asId):
                 """, (asId, title.title(), employer.title(), dateStarted, dateEnded, location.title(), description))
   database.commit()
   
+  profilesAPI()
+
   clear()
   return myProfile, (asId, )
 
@@ -1234,6 +1237,9 @@ def myEducation(asId):
   updateDB("profiles", "school", asId, school.title())
   updateDB("profiles", "degree", asId, degree.title())
   updateDB("profiles", "years", asId, years)
+
+  profilesAPI()
+  
   clear()
   return myProfile, (asId, )
 

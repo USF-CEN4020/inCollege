@@ -39,7 +39,6 @@ def studentAccountsAPI():
                 if line == "=====\n" or line == "=====":
                     if username == '' or password == '' or firstname == '' or lastname == '' or university == '' or major == '' or membership == '':
                         # all information from input txt file should have the value, if not the user is not created
-                        print("INPUT API WARNING: Something is wrong with API input text file")
                         initFlag = 0
                     else:
                         initAcct(username, password, firstname, lastname, university, major, membership)
@@ -79,15 +78,31 @@ def profilesAPI():
     txtFilePath = os.path.join(absPath, "api", "MyCollege_profiles.txt")
     fileExists = exists(txtFilePath)
 
+    f = open(txtFilePath, 'w')
 
+    databaseCursor.execute("SELECT * FROM profiles")
+    profiles = databaseCursor.fetchall()
 
-    # if fileExists:
-    #     with open(txtFilePath, 'a') as f:
-    #         f.write("%s %s %s %s %s %s\n=====\n" % (title, major, university, about, experience, education))
-    # else:
-    #     with open(txtFilePath, 'w') as f:
-    #         f.write("%s %s %s %s %s %s\n=====\n" % (title, major, university, about, experience, education))
+    for profile in profiles:
+        userId = profile[0]
+        title = profile[1]
+        major = profile[2]
+        university = profile[3]
+        about = profile[4]
+        education = profile[5]
 
+        databaseCursor.execute("SELECT * FROM workExperience WHERE userId = ?", (userId,))
+        experiences = databaseCursor.fetchone()
+        jobTitle = experiences[2]
+        employer = experiences[3]
+        startDate = experiences[4]
+        endDate = experiences[5]
+        location = experiences[6]
+        description = experiences[7]
+
+        f.write("%s\n%s\n%s\n%s\n%s %s %s %s %s %s\n%s\n=====\n" % (title, major, university, about, jobTitle, employer, startDate, endDate, location, description, education))
+
+    f.close()
 
 # OUTPUT: MyCollege_users.txt api
 
