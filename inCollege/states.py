@@ -1,5 +1,6 @@
 from inCollege.commons import *
 from inCollege.manageDB import *
+from inCollege.api import *
 import datetime
 import random
 from datetime import datetime
@@ -159,6 +160,7 @@ def newAcct():
                             "\n\tPlus can send message to everyone."\
                             "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
 
+  studentAccountsAPI(username, firstname, lastname, password)
 
   clear()
 
