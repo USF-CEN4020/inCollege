@@ -340,6 +340,8 @@ def jobPost(asId):
 
   database.commit()
 
+  jobsAPI()
+
   return jobInterface, (asId,)
 
 

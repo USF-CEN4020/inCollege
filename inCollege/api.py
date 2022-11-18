@@ -218,3 +218,43 @@ def savedJobsAPI():
             f.write("%s %s\n=====\n" % (jobTitle, username))
 
     f.close()
+
+
+# OUTPUT: "MyCollege_jobs.txt" api
+
+# A file called "MyCollege_jobs.txt" will be created. It will contain. 
+# For each job in the InCollege system, the following information will be placed in this file: 
+# title, description, employer, location, salary
+# When a new job is created, its information will be added to this file. 
+# If a job is deleted, then the entire file will be recreated with the deleted job removed. 
+# Each job's information will be separated by a line with "=====".
+def jobsAPI():
+    absPath = os.path.abspath(os.path.dirname(__file__))
+    txtFilePath = os.path.join(absPath, "api", "MyCollege_jobs.txt")
+    
+    f = open(txtFilePath, 'w')
+
+    databaseCursor.execute("SELECT * FROM jobs")
+    jobs = databaseCursor.fetchall()
+    
+    if jobs:
+        for job in jobs:
+            title = job[1]
+            description = job[2]
+            employer = job[3]
+            location = job[4]
+            salary = job[5]
+
+            f.write("%s %s %s %s %s\n=====\n" % (title, description, employer, location, salary))
+
+    f.close()
+
+
+# OUTPUT: "MyCollege_appliedJobs.txt"
+
+# A file called "MyCollege_appliedJobs.txt" will be created. 
+# In this file the title of each job posting will be placed. 
+# After this, if a user has applied for that job, their user name will be placed. 
+# Then the paragraph that they entered explaining why they were the right candidate for the job will be placed. 
+# Each job posting will be separated by a line with "=====".
+
