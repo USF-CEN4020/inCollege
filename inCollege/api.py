@@ -39,7 +39,8 @@ def studentAccountsAPI():
                         initFlag = 1
                     else:
                         defaultMembership = "standard"
-                        initAcct(username, password, firstname, lastname, None, None, defaultMembership)
+                        defaultValue = "None"
+                        initAcct(username, password, firstname, lastname, defaultValue, defaultValue, defaultMembership)
                         initFlag = 1
 
                 elif ' ' in line:
@@ -60,7 +61,6 @@ def studentAccountsAPI():
                         initFlag = 1
                         continue
 
-
 # INPUT: newJobs.txt api
 
 # If a file named "newJobs.txt" exists, then it will be opened. 
@@ -71,83 +71,52 @@ def studentAccountsAPI():
 # If the maximum number of jobs, 10 is reached, then no more job notices will be created. 
 # Each job listing will be separated by a line with "====="
 def newJobsAPI():
+    clearJobs()
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "newJobs.txt")
     fileExists = exists(txtFilePath)
 
     if fileExists: 
         with open(txtFilePath) as f:
-            initFlag = 1
+            lines = f.read()
+            newJobs = lines.split('=====\n')
 
-            lineCount = -1
-            descriptionIdx = 1
-            nextIdx = -10
+            for newJob in newJobs:
+                title = ''
+                description = ''
+                posterId = ''
+                posterName = ''
+                employerName = ''
+                location = ''
+                salary = ''
 
-            lines = f.readlines()
-            for line in lines: 
-                line = line.replace("(", '')
-                line = line.replace(")", '')
-                line = line.replace("'", '')
-                line = line.replace(",", '')
-                line = line.strip()
+                if newJob == "":
+                    break
 
-                lineCount = lineCount + 1
                 if jobsFull():
                     print("INPUT API WARNING: All permitted jobs have been created")
                     break
-            
-                # initialize data to the empty string
-                if initFlag == 1:
-                    title = ''
-                    description = ''
-                    posterId = ''
-                    employerName = ''
-                    location = ''
-                    salary = ''
 
-                if line == "=====\n" or line == "=====":
-                    if title == '' or description == '' or posterId == '' or employerName == '' or location == '' or salary == '':
-                        # all information from input txt file should have the value, if not the user is not created
-                        initFlag = 1
+                newJob = newJob.split("&&&\n")
+                jobInfo1 = newJob[0].split("\n")
+                jobInfo2 = newJob[1].split("\n")
 
-                    if checkExistingJob(title, description, posterId, employerName, location, salary) != -1:
-                        # the same job information cannot be added into DB
-                        initFlag = 1
-                    else:
-                        # print("INSERTED: ", title, description, posterId, employerName, location, salary)
-                        databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)", (title, description, employerName, location, salary, posterId))
-                        database.commit()
+                title = jobInfo1[0]
+                description = jobInfo1[1]
+                posterName = jobInfo2[0]
+                if checkExistingUsername(posterName) != -1:  # check if username/posterName exists
+                    posterId = checkUserId(posterName) # convert posterName to according posterId
+                else: 
+                    continue
+                employerName = jobInfo2[1]
+                location = jobInfo2[2]
+                salary = jobInfo2[3]
 
-                        initFlag = 1
-
-                    lineCount = -1
-                    descriptionIdx = 1
-                    nextIdx = -10
-
-                else:  
-                    if '&&&' in line:
-                        line = line.replace('&&&', '')
-                        description = description + ' ' + line
-                        nextIdx = lineCount
-                        descriptionIdx = 0
-                    if lineCount == 0:
-                        title = line
-                        initFlag = 0
-                    elif lineCount == descriptionIdx:
-                        description = description + ' ' + line
-                        descriptionIdx = descriptionIdx + 1
-                    elif lineCount == nextIdx + 1:
-                        posterName = line
-                        if checkExistingUsername(posterName) != -1:  # check if username/posterName exists
-                            posterId = checkUserId(posterName) # convert posterName to according posterId
-                        else: 
-                            initFlag = 1
-                    elif lineCount == nextIdx + 2:
-                        employerName = line
-                    elif lineCount == nextIdx + 3:
-                        location = line
-                    elif lineCount == nextIdx + 4:
-                        salary = line
+                if checkExistingJob(title, description, posterId, employerName, location, salary) != -1:
+                        continue
+                else:
+                    databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)", (title, description, employerName, location, salary, posterId))
+                    database.commit()
 
 
 # OUTPUT: MyCollege_profiles.txt api
@@ -166,32 +135,33 @@ def profilesAPI():
     databaseCursor.execute("SELECT * FROM profiles")
     profiles = databaseCursor.fetchall()
 
-    for profile in profiles:
-        userId = profile[0]
-        title = profile[1]
-        major = profile[2]
-        university = profile[3]
-        about = profile[4]
-        education = profile[5]
+    if profiles:
+        for profile in profiles:
+            userId = profile[0]
+            title = profile[1]
+            major = profile[2]
+            university = profile[3]
+            about = profile[4]
+            education = profile[5]
 
-        databaseCursor.execute("SELECT * FROM workExperience WHERE userId = ?", (userId,))
-        experiences = databaseCursor.fetchone()
-        if experiences:
-            jobTitle = experiences[2]
-            employer = experiences[3]
-            startDate = experiences[4]
-            endDate = experiences[5]
-            location = experiences[6]
-            description = experiences[7]
-        else: 
-            jobTitle = ''
-            employer = ''
-            startDate = ''
-            endDate = ''
-            location = ''
-            description = ''
+            databaseCursor.execute("SELECT * FROM workExperience WHERE userId = ?", (userId,))
+            experiences = databaseCursor.fetchone()
+            if experiences:
+                jobTitle = experiences[2]
+                employer = experiences[3]
+                startDate = experiences[4]
+                endDate = experiences[5]
+                location = experiences[6]
+                description = experiences[7]
+            else: 
+                jobTitle = ''
+                employer = ''
+                startDate = ''
+                endDate = ''
+                location = ''
+                description = ''
 
-        f.write("%s\n%s\n%s\n%s\n%s %s %s %s %s %s\n%s\n=====\n" % (title, major, university, about, jobTitle, employer, startDate, endDate, location, description, education))
+            f.write("%s\n%s\n%s\n%s\n%s %s %s %s %s %s\n%s\n=====\n" % (title, major, university, about, jobTitle, employer, startDate, endDate, location, description, education))
 
     f.close()
 
@@ -211,11 +181,12 @@ def usersAPI():
     databaseCursor.execute("SELECT * FROM users")
     users = databaseCursor.fetchall()
 
-    for user in users:
-        username = user[1]
-        membership = user[7]
+    if users:
+        for user in users:
+            username = user[1]
+            membership = user[7]
 
-        f.write("%s %s\n" % (username, membership))
+            f.write("%s %s\n" % (username, membership))
 
     f.close()
 
@@ -235,14 +206,15 @@ def savedJobsAPI():
 
     databaseCursor.execute("SELECT * FROM jobApplications WHERE saved=?", (1, ))
     savedJobs = databaseCursor.fetchall()
-   
-    for savedJob in savedJobs:
-        userId = savedJob[0]
-        jobId = savedJob[1]
+    
+    if savedJobs:
+        for savedJob in savedJobs:
+            userId = savedJob[0]
+            jobId = savedJob[1]
 
-        jobTitle = getJobById(jobId)
-        username = checkUsername(userId)
+            jobTitle = getJobById(jobId)
+            username = checkUsername(userId)
 
-        f.write("%s %s\n=====\n" % (jobTitle, username))
+            f.write("%s %s\n=====\n" % (jobTitle, username))
 
     f.close()

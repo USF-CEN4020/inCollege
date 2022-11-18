@@ -1,13 +1,13 @@
-title
+developer
 job description
 multi-line
 last line is here &&&
-test
+hello
 employerName
 location
 salary
 =====
-software engineer
+SWE senior
 hello
 this is me &&&
 test
@@ -15,7 +15,7 @@ google
 tampa, fl
 100000
 =====
-software engineer job
+software engineer role
 hsdlfkjsf
 fdfdkfs
 this is me &&&
