@@ -1,9 +1,3 @@
-u standard
-use plus
 user standard
-hello plus
+hello standard
 test plus
-test2 standard
-hi plus
-hihi plus
-hihihi standard

@@ -309,6 +309,8 @@ def jobDetails(asId, job):
     elif sel == 2:
       return applyForJob ,(asId, job[0])
 
+  savedJobsAPI()
+
   return jobInterface, (asId,)
 
 

@@ -1,9 +1,9 @@
-username firstname lastname university major plus
+username firstname lastname
 123456!
 =====
-user fn ln uni maj standard
+user fn ln
 123456!A
 =====
-hello first name usf cs plus
+hello first name
 123456!A
 =====

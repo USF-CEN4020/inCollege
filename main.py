@@ -5,7 +5,9 @@ if (__name__ == "__main__"):
   print("Welcome to InCollege!\n")
   
   studentAccountsAPI()
+  newJobsAPI()
   profilesAPI()
   usersAPI()
+  savedJobsAPI()
 
   stateLoop(applicationEntry)
