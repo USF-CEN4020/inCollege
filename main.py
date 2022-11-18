@@ -10,5 +10,6 @@ if (__name__ == "__main__"):
   usersAPI()
   savedJobsAPI()
   jobsAPI()
+  appliedJobsAPI()
 
   stateLoop(applicationEntry)
