@@ -1,8 +1,10 @@
-from .commons import *
+from inCollege.commons import *
+import inCollege.api as api
 import sqlite3
 import time
 import datetime
 from datetime import datetime
+
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -283,6 +285,13 @@ def initAcct(username, password, firstname, lastname, uni, major, membership):
 
   return newId
 
+def initJob(title, description, employer, location, salary, posterId):
+  databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)", (title, description, employer, location, salary, posterId))
+
+  database.commit()
+
+  return databaseCursor.lastrowid
+
 def checkExistingAccts(username, password):
   '''
   Looks up an account from a username and password
@@ -453,7 +462,12 @@ def getProfile(userId):
     return -1
 
 
-def queryAllJobs(userId):
+def queryAllProfiles():
+	databaseCursor.execute("SELECT * FROM profiles")
+	return databaseCursor.fetchall()
+
+
+def queryAllJobs():
   databaseCursor.execute("SELECT * FROM jobs")
   return databaseCursor.fetchall()
 
@@ -485,6 +499,10 @@ def querySavedJobs(userId):
                             WHERE jobApplications.userId = ? AND jobApplications.saved = 1''', (userId,))
   return databaseCursor.fetchall()
 
+def queryAllSavedJobs():
+    databaseCursor.execute("SELECT * FROM jobApplications WHERE saved=? ORDER BY userId", (1, ))
+    return databaseCursor.fetchall()
+
 def getApplicationByIds(userId, jobId):
   return databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId)).fetchone()
 
@@ -500,6 +518,10 @@ def toggleSavedJob(userId, jobId):
 
     databaseCursor.execute("UPDATE jobApplications SET saved = ? WHERE userId = ? AND jobId = ?", (savedState, userId, jobId))
     database.commit()
+
+def queryAllApplicationsForJob(jobId):
+    databaseCursor.execute("SELECT * FROM jobApplications WHERE jobId= ? AND appliedTimestamp IS NOT NULL", (jobId,))
+    return databaseCursor.fetchall()
 
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
@@ -548,6 +570,8 @@ def deleteJob(jobId):
   databaseCursor.execute("DELETE FROM jobs WHERE jobId = ?", (jobId,))
   database.commit()
 
+  api.jobsAPI()
+
 
 def removeDeletions(userId):
   databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted != ''", (userId,))
@@ -569,6 +593,9 @@ def getAllUsersExcept(userId):
     plus = databaseCursor.execute("SELECT * FROM users WHERE id !=?", (userId,)).fetchall() #return userID
     return plus
 
+def getAllUsers():
+    databaseCursor.execute("SELECT * FROM users")
+    return databaseCursor.fetchall()
 
 def confirmFriendship(senderId, receiverId):
   

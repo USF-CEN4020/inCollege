@@ -1,7 +1,9 @@
 from os.path import exists
 import os.path
 
-from inCollege.manageDB import *
+import inCollege.manageDB as manageDB
+#from inCollege.manageDB.import clearUsers, initAcct, dbFull, unique, checkExistingUsername, checkUserId, jobsFull, checkExistingJob, getJobById, checkUsername
+from inCollege.commons import passwordValidator
 
 
 # INPUT: studentAccounts.txt api
@@ -12,54 +14,46 @@ from inCollege.manageDB import *
 # If the maximum number of student accounts, 10 is reached, then no more student accounts will be created. 
 # Each student account information will be separated by a line with "=====".
 def studentAccountsAPI():
+    manageDB.clearUsers()
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "studentAccounts.txt")
     fileExists = exists(txtFilePath)
 
     if fileExists: 
         with open(txtFilePath) as f:
-            initFlag = 1
+            lines = f.read()
+            accounts = lines.split('=====\n')
 
-            lines = f.readlines()
-            for line in lines:
-                if dbFull():
+            for account in accounts:
+                username = ''
+                password = ''
+                firstname = ''
+                lastname = ''
+
+                if account == "":
+                    break
+
+                if manageDB.dbFull():
                     print("INPUT API WARNING: All permitted accounts have been created")
-                    break   
+                    break 
+
+                account = account.split("\n")
+                nameInfo = account[0].split(" ")
                 
-                # initialize data to the empty string
-                if initFlag == 1:
-                    username = ''
-                    password = ''
-                    firstname = ''
-                    lastname = ''
+                if manageDB.unique(nameInfo[0]):
+                    username = nameInfo[0]
+                firstname = nameInfo[1]
+                lastname = nameInfo[2]
+                if passwordValidator(account[1]):
+                    password = account[1]
 
-                if line == "=====\n" or line == "=====":
-                    if username == '' or password == '' or firstname == '' or lastname == '':
-                        # all information from input txt file should have the value, if not the user is not created
-                        initFlag = 1
-                    else:
-                        defaultMembership = "standard"
-                        defaultValue = "None"
-                        initAcct(username, password, firstname, lastname, defaultValue, defaultValue, defaultMembership)
-                        initFlag = 1
-
-                elif ' ' in line:
-                    accountInfo = line.split()
-                    if unique(accountInfo[0]): # check if username is unique
-                        username = accountInfo[0]
-                        firstname = accountInfo[1]
-                        lastname = accountInfo[2]
-                        initFlag = 0
-                    else:
-                        initFlag = 1
-                        continue
+                defaultMembership = "standard"
+                defaultValue = "None"
+                if username == '' or password == '' or firstname == '' or lastname == '':
+                    continue
                 else:
-                    if passwordValidator(line):
-                        password = line
-                        initFlag = 0
-                    else: 
-                        initFlag = 1
-                        continue
+                    manageDB.initAcct(username, password, firstname, lastname, defaultValue, defaultValue, defaultMembership)
+
 
 # INPUT: newJobs.txt api
 
@@ -71,7 +65,7 @@ def studentAccountsAPI():
 # If the maximum number of jobs, 10 is reached, then no more job notices will be created. 
 # Each job listing will be separated by a line with "====="
 def newJobsAPI():
-    clearJobs()
+    manageDB.clearJobs()
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "newJobs.txt")
     fileExists = exists(txtFilePath)
@@ -93,7 +87,7 @@ def newJobsAPI():
                 if newJob == "":
                     break
 
-                if jobsFull():
+                if manageDB.jobsFull():
                     print("INPUT API WARNING: All permitted jobs have been created")
                     break
 
@@ -104,19 +98,18 @@ def newJobsAPI():
                 title = jobInfo1[0]
                 description = jobInfo1[1]
                 posterName = jobInfo2[0]
-                if checkExistingUsername(posterName) != -1:  # check if username/posterName exists
-                    posterId = checkUserId(posterName) # convert posterName to according posterId
+                if manageDB.checkExistingUsername(posterName) != -1:  # check if username/posterName exists
+                    posterId = manageDB.checkUserId(posterName) # convert posterName to according posterId
                 else: 
                     continue
                 employerName = jobInfo2[1]
                 location = jobInfo2[2]
                 salary = jobInfo2[3]
 
-                if checkExistingJob(title, description, posterId, employerName, location, salary) != -1:
+                if manageDB.checkExistingJob(title, description, posterId, employerName, location, salary) != -1:
                         continue
                 else:
-                    databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)", (title, description, employerName, location, salary, posterId))
-                    database.commit()
+                    manageDB.initJob(title, description, employerName, location, salary, posterId)
 
 
 # OUTPUT: MyCollege_profiles.txt api
@@ -127,43 +120,44 @@ def newJobsAPI():
 # When a new user joins the system, their profile information will be added to this file. 
 # Each user's profile information will be separated by a line with "=====".
 def profilesAPI():
-    absPath = os.path.abspath(os.path.dirname(__file__))
-    txtFilePath = os.path.join(absPath, "api", "MyCollege_profiles.txt")
+	absPath = os.path.abspath(os.path.dirname(__file__))
+	txtFilePath = os.path.join(absPath, "api", "MyCollege_profiles.txt")
 
-    f = open(txtFilePath, 'w')
+	f = open(txtFilePath, 'w')
 
-    databaseCursor.execute("SELECT * FROM profiles")
-    profiles = databaseCursor.fetchall()
+	
+	profiles = manageDB.queryAllProfiles()
 
-    if profiles:
-        for profile in profiles:
-            userId = profile[0]
-            title = profile[1]
-            major = profile[2]
-            university = profile[3]
-            about = profile[4]
-            education = profile[5]
+	if profiles:
+		for profile in profiles:
+			userId = profile[0]
+			title = profile[1]
+			major = profile[2]
+			university = profile[3]
+			about = profile[4]
+			education = profile[5]
+			
+			# matches original functionality, not required functionality per epic
+			experiencesQuery = manageDB.getExperiences(userId)
+			experiences = [] if experiencesQuery == -1 else experiencesQuery[0]
+			if experiences:
+				jobTitle = experiences[2]
+				employer = experiences[3]
+				startDate = experiences[4]
+				endDate = experiences[5]
+				location = experiences[6]
+				description = experiences[7]
+			else: 
+				jobTitle = ''
+				employer = ''
+				startDate = ''
+				endDate = ''
+				location = ''
+				description = ''
+				
+			f.write("%s\n%s\n%s\n%s\n%s %s %s %s %s %s\n%s\n=====\n" % (title, major, university, about, jobTitle, employer, startDate, endDate, location, description, education))
 
-            databaseCursor.execute("SELECT * FROM workExperience WHERE userId = ?", (userId,))
-            experiences = databaseCursor.fetchone()
-            if experiences:
-                jobTitle = experiences[2]
-                employer = experiences[3]
-                startDate = experiences[4]
-                endDate = experiences[5]
-                location = experiences[6]
-                description = experiences[7]
-            else: 
-                jobTitle = ''
-                employer = ''
-                startDate = ''
-                endDate = ''
-                location = ''
-                description = ''
-
-            f.write("%s\n%s\n%s\n%s\n%s %s %s %s %s %s\n%s\n=====\n" % (title, major, university, about, jobTitle, employer, startDate, endDate, location, description, education))
-
-    f.close()
+	f.close()
 
 
 # OUTPUT: MyCollege_users.txt api
@@ -178,8 +172,7 @@ def usersAPI():
     
     f = open(txtFilePath, 'w')
 
-    databaseCursor.execute("SELECT * FROM users")
-    users = databaseCursor.fetchall()
+    users = manageDB.getAllUsers() 
 
     if users:
         for user in users:
@@ -204,16 +197,15 @@ def savedJobsAPI():
     
     f = open(txtFilePath, 'w')
 
-    databaseCursor.execute("SELECT * FROM jobApplications WHERE saved=?", (1, ))
-    savedJobs = databaseCursor.fetchall()
+    savedJobs = manageDB.queryAllSavedJobs() # works almost the same as previous but orders the results such that all jobs saved by the same user will be adjacent. getting the username to only print once at the start of each group should be fairly trivial
     
     if savedJobs:
         for savedJob in savedJobs:
             userId = savedJob[0]
             jobId = savedJob[1]
 
-            jobTitle = getJobById(jobId)
-            username = checkUsername(userId)
+            jobTitle = manageDB.getJobById(jobId)
+            username = manageDB.checkUsername(userId)
 
             f.write("%s %s\n=====\n" % (jobTitle, username))
 
@@ -234,8 +226,7 @@ def jobsAPI():
     
     f = open(txtFilePath, 'w')
 
-    databaseCursor.execute("SELECT * FROM jobs")
-    jobs = databaseCursor.fetchall()
+    jobs = manageDB.queryAllJobs()
     
     if jobs:
         for job in jobs:
@@ -257,4 +248,31 @@ def jobsAPI():
 # After this, if a user has applied for that job, their user name will be placed. 
 # Then the paragraph that they entered explaining why they were the right candidate for the job will be placed. 
 # Each job posting will be separated by a line with "=====".
+def appliedJobsAPI():
+    absPath = os.path.abspath(os.path.dirname(__file__))
+    txtFilePath = os.path.join(absPath, "api", "MyCollege_appliedJobs.txt")
+    
+    f = open(txtFilePath, 'w')
 
+    jobs = manageDB.queryAllJobs()
+    
+    if jobs:
+        for job in jobs:
+            jobId = job[0]
+            title = job[1]
+
+            f.write("%s\n" % (title,))
+
+            appliedJobUsers = manageDB.queryAllApplicationsForJob(jobId)
+
+            if appliedJobUsers:
+                for appliedJobUser in appliedJobUsers:
+                    userId = appliedJobUser[0]
+                    username = manageDB.checkUsername(userId)
+                    description = appliedJobUser[4]
+
+                    f.write("%s - %s\n" % (username, description))
+            
+            f.write("=====\n")
+
+    f.close()

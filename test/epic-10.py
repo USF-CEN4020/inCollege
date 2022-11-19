@@ -6,9 +6,9 @@ import sqlite3
 import os.path
 import os
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllUsersBaseInfo
-from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
-from inCollege.api import usersAPI, studentAccountsAPI
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllUsersBaseInfo, deleteJob, clearProfiles
+from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface, updateProfileSimple, myWorkExperience, myEducation
+from inCollege.api import usersAPI, studentAccountsAPI, jobsAPI
 # from inCollege.testFunc import 
 
 database = sqlite3.connect("inCollege.db")
@@ -33,10 +33,10 @@ def initTestAccounts():
 			newAcct()
    
 def initJobs():
-    jobs = [('ce', 'stuff', 'self', 'FL', '99999'),
-            ('ce', 'stuff', 'self', 'FL', '99999'),
-            ('ce', 'stuff', 'self', 'FL', '99999'),
-            ('ce', 'stuff', 'self', 'FL', '99999')
+    jobs = [('ce', 'stuff\n\non another line', 'self', 'FL', '99999'),
+            ('cs', 'stuff', 'self', 'FL', '99999'),
+            ('it', 'stuff', 'self', 'FL', '99999'),
+            ('aa', 'stuff', 'self', 'FL', '99999')
     ]
     userId = 2
     for job in jobs:
@@ -74,6 +74,17 @@ def initMessages():
             sendMessageInterface(userId, recipient)
         userId = userId + 1
         recipient = 'test' + str(userId + 1) if userId != 5 else 'test' + str(2)
+
+def initProfiles():
+	inputs = iter(['cool guy', 'cs', 'usf', 'i am cool', 'other guy', 'ce', 'usf', 'also cool', 'hard work', 'corpo', '01/01/0001', '11/19/2022', 'space', 'i did cool stuff', 'more work', 'corpo', '11/11/1111', '11/11/1111', 'space', 'i did lame stuff','usf', 'c', '1-1', 'usf','ce','2-2'])
+	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		for i in range(1,3):
+			for j in range(1,5):
+				updateProfileSimple(i, j)
+		myWorkExperience(1)
+		myWorkExperience(1)
+		myEducation(1)
+		myEducation(2)
 
 def setupEnv():
     clearUsers()
@@ -145,3 +156,110 @@ def test_userInAPI():
 	obtainedUsers = getAllUsersBaseInfo()
 
 	assert obtainedUsers == expectedUsers
+
+
+def test_jobOutAPIAfterInsertions():
+
+	clearUsers()
+	clearJobs()
+
+	initTestAccounts()
+	initJobs()
+
+	
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_jobs.txt")
+
+	if os.path.exists(apiFilePath):
+		os.remove(apiFilePath)
+
+	jobsAPI()
+	expectedLines = ['ce stuff\n','\n', 'on another line self FL 99999.0\n', 
+					 '=====\n', 
+					 'cs stuff self FL 99999.0\n', 
+					 '=====\n',
+					 'it stuff self FL 99999.0\n',
+					 '=====\n',
+					 'aa stuff self FL 99999.0\n',
+					 '=====\n']
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
+
+
+	
+def test_jobOutAPIAfterDeletion():
+
+	clearUsers()
+	clearJobs()
+
+	initTestAccounts()
+	initJobs()
+
+	
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_jobs.txt")
+
+	if os.path.exists(apiFilePath):
+		os.remove(apiFilePath)
+
+	jobsAPI()
+
+	deleteJob(1) # we expect this to force a refresh of the file
+	
+	expectedLines = ['cs stuff self FL 99999.0\n', 
+					 '=====\n',
+					 'it stuff self FL 99999.0\n',
+					 '=====\n',
+					 'aa stuff self FL 99999.0\n',
+					 '=====\n']
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
+
+def test_profilesOutAPI():
+
+	clearUsers()
+	clearProfiles()
+
+	initTestAccounts()
+	initProfiles()
+
+	
+	
+	expectedLines = ['cool guy\n', 
+					 'cs\n',
+					 'usf\n',
+					 'i am cool\n',
+					 'Experience:\n',
+					 '\thard work corpo 01/01/0001 1/19/2022 space i did cool stuff\n'
+					 '\tmore work corpo 11/11/1111 11/11/1111 space i did lame stuff\n',
+					 '1-1\n',
+					 '=====\n',
+					 'other guy\n'
+					 'ce\n',
+					 'usf\n',
+					 'also cool\n',
+					 '2-2\n',
+					 '=====\n']
+
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_profiles.txt")
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
