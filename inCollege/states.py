@@ -321,8 +321,6 @@ def applyForJob(asId, jobId):
   removeOldApplication(asId, jobId)
   addJobApplication(asId, jobId, gradDate, jobAvailabilityDate, qualifications)
 
-  appliedJobsAPI()
-
   print("Job application processed.\n")
   enterToContinue()
 
@@ -454,7 +452,7 @@ def loginNotifications(asId):
   now = datetime.now() #get now time
   timeNowInSec = int(round(now.timestamp())) # convert current time to second
 
-  if (timeAppliedJob != None): # when time applied job is after time account created
+  if ((timeAppliedJob > timeAccountCreated) and (timeAppliedJob != None)): # when time applied job is after time account created
         timeNotApply = timeNowInSec - timeAppliedJob #get time difference 
   else:
         timeNotApply = timeNowInSec - timeAccountCreated

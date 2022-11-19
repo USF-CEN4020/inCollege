@@ -12,46 +12,54 @@ from inCollege.manageDB import *
 # If the maximum number of student accounts, 10 is reached, then no more student accounts will be created. 
 # Each student account information will be separated by a line with "=====".
 def studentAccountsAPI():
-    clearUsers()
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "studentAccounts.txt")
     fileExists = exists(txtFilePath)
 
     if fileExists: 
         with open(txtFilePath) as f:
-            lines = f.read()
-            accounts = lines.split('=====\n')
+            initFlag = 1
 
-            for account in accounts:
-                username = ''
-                password = ''
-                firstname = ''
-                lastname = ''
-
-                if account == "":
-                    break
-
+            lines = f.readlines()
+            for line in lines:
                 if dbFull():
                     print("INPUT API WARNING: All permitted accounts have been created")
-                    break 
-
-                account = account.split("\n")
-                nameInfo = account[0].split(" ")
+                    break   
                 
-                if unique(nameInfo[0]):
-                    username = nameInfo[0]
-                firstname = nameInfo[1]
-                lastname = nameInfo[2]
-                if passwordValidator(account[1]):
-                    password = account[1]
+                # initialize data to the empty string
+                if initFlag == 1:
+                    username = ''
+                    password = ''
+                    firstname = ''
+                    lastname = ''
 
-                defaultMembership = "standard"
-                defaultValue = "None"
-                if username == '' or password == '' or firstname == '' or lastname == '':
-                    continue
+                if line == "=====\n" or line == "=====":
+                    if username == '' or password == '' or firstname == '' or lastname == '':
+                        # all information from input txt file should have the value, if not the user is not created
+                        initFlag = 1
+                    else:
+                        defaultMembership = "standard"
+                        defaultValue = "None"
+                        initAcct(username, password, firstname, lastname, defaultValue, defaultValue, defaultMembership)
+                        initFlag = 1
+
+                elif ' ' in line:
+                    accountInfo = line.split()
+                    if unique(accountInfo[0]): # check if username is unique
+                        username = accountInfo[0]
+                        firstname = accountInfo[1]
+                        lastname = accountInfo[2]
+                        initFlag = 0
+                    else:
+                        initFlag = 1
+                        continue
                 else:
-                    initAcct(username, password, firstname, lastname, defaultValue, defaultValue, defaultMembership)
-
+                    if passwordValidator(line):
+                        password = line
+                        initFlag = 0
+                    else: 
+                        initFlag = 1
+                        continue
 
 # INPUT: newJobs.txt api
 
@@ -249,33 +257,4 @@ def jobsAPI():
 # After this, if a user has applied for that job, their user name will be placed. 
 # Then the paragraph that they entered explaining why they were the right candidate for the job will be placed. 
 # Each job posting will be separated by a line with "=====".
-def appliedJobsAPI():
-    absPath = os.path.abspath(os.path.dirname(__file__))
-    txtFilePath = os.path.join(absPath, "api", "MyCollege_appliedJobs.txt")
-    
-    f = open(txtFilePath, 'w')
 
-    databaseCursor.execute("SELECT * FROM jobs")
-    jobs = databaseCursor.fetchall()
-    
-    if jobs:
-        for job in jobs:
-            jobId = job[0]
-            title = job[1]
-
-            f.write("%s\n" % (title,))
-
-            databaseCursor.execute("SELECT * FROM jobApplications WHERE jobId= ? AND appliedTimestamp IS NOT NULL", (jobId,))
-            appliedJobUsers = databaseCursor.fetchall()
-
-            if appliedJobUsers:
-                for appliedJobUser in appliedJobUsers:
-                    userId = appliedJobUser[0]
-                    username = checkUsername(userId)
-                    description = appliedJobUser[4]
-
-                    f.write("%s - %s\n" % (username, description))
-            
-            f.write("=====\n")
-
-    f.close()

@@ -624,3 +624,5 @@ def getTimeAppliedJob(userId):
     else:
       return -1
 
+def getAllUsersBaseInfo():
+	return databaseCursor.execute("SELECT username, firstname, lastname, password FROM users").fetchall()
