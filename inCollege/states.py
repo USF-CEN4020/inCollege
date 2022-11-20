@@ -460,8 +460,6 @@ def loginNotifications(asId):
   dayNotApply = int(abs(timeNotApply) / 86400) #convert to day: 1 day = 86400 sec
   if ((dayNotApply >= 7) and (dayNotApply != None)): # if more than 7 days not applied for a job
     print("Remember - you're going to want to have a job when you graduate. Make sure that you start to apply for jobs Today!")
-  else:
-    print("The time you did not apply for a job in Second(for quick test): ", timeNotApply)
 
   if currMembership == "plus":
     print("Your current membership is Plus. You need to pay $10 per Month.")
@@ -505,8 +503,6 @@ def loginNotifications(asId):
   if userProfile == -1:    
     print("Don't forget to create a profile\n")
 
-    return mainInterface, (asId,)
-    
     
   if pendingRequests:
     
