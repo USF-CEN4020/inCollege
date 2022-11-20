@@ -1108,7 +1108,7 @@ def generalLinks(asId):
   elif sel == 5 or sel == 6 or sel == 7:
     clear()
     
-    return underConstruction(asId, generalLinks)
+    return underConstruction, (asId, generalLinks)
 
   elif sel == 8:
     clear()
