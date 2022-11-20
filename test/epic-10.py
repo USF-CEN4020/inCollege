@@ -6,8 +6,9 @@ import sqlite3
 import os.path
 import os
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllUsersBaseInfo, deleteJob, clearProfiles
-from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface, updateProfileSimple, myWorkExperience, myEducation
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllUsersBaseInfo, deleteJob, clearProfiles, removeWorkExperience
+
+from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface, updateProfileSimple, myWorkExperience, myEducation, myProfile
 from inCollege.api import usersAPI, studentAccountsAPI, jobsAPI
 # from inCollege.testFunc import 
 
@@ -76,8 +77,10 @@ def initMessages():
         recipient = 'test' + str(userId + 1) if userId != 5 else 'test' + str(2)
 
 def initProfiles():
-	inputs = iter(['cool guy', 'cs', 'usf', 'i am cool', 'other guy', 'ce', 'usf', 'also cool', 'hard work', 'corpo', '01/01/0001', '11/19/2022', 'space', 'i did cool stuff', 'more work', 'corpo', '11/11/1111', '11/11/1111', 'space', 'i did lame stuff','usf', 'c', '1-1', 'usf','ce','2-2'])
+	inputs = iter(['1','1', 'cool guy', 'cs', 'usf', 'i am cool', 'other guy', 'ce', 'usf', 'also cool', 'hard work', 'corpo', '01/01/0001', '11/19/2022', 'space', 'i did cool stuff', 'more work', 'corpo', '11/11/1111', '11/11/1111', 'space', 'i did lame stuff','usf', 'c', '1-1', 'usf','ce','2-2'])
 	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+		myProfile(1)
+		myProfile(2)
 		for i in range(1,3):
 			for j in range(1,5):
 				updateProfileSimple(i, j)
@@ -231,6 +234,7 @@ def test_profilesOutAPI():
 
 	clearUsers()
 	clearProfiles()
+	removeWorkExperience()
 
 	initTestAccounts()
 	initProfiles()
@@ -238,17 +242,16 @@ def test_profilesOutAPI():
 	
 	
 	expectedLines = ['cool guy\n', 
-					 'cs\n',
-					 'usf\n',
+					 'Cs\n',
+					 'Usf\n',
 					 'i am cool\n',
-					 'Experience:\n',
-					 '\thard work corpo 01/01/0001 1/19/2022 space i did cool stuff\n'
-					 '\tmore work corpo 11/11/1111 11/11/1111 space i did lame stuff\n',
+					 'Hard Work Corpo 01/01/0001 11/19/2022 Space i did cool stuff\n',
+					 'More Work Corpo 11/11/1111 11/11/1111 Space i did lame stuff\n',
 					 '1-1\n',
 					 '=====\n',
-					 'other guy\n'
-					 'ce\n',
-					 'usf\n',
+					 'other guy\n',
+					 'Ce\n',
+					 'Usf\n',
 					 'also cool\n',
 					 '2-2\n',
 					 '=====\n']

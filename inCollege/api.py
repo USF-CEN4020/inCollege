@@ -128,6 +128,7 @@ def profilesAPI():
 	
 	profiles = manageDB.queryAllProfiles()
 
+
 	if profiles:
 		for profile in profiles:
 			userId = profile[0]
@@ -135,30 +136,29 @@ def profilesAPI():
 			major = profile[2]
 			university = profile[3]
 			about = profile[4]
-			education = profile[5]
+			education = profile[7]
+
+			f.write("%s\n%s\n%s\n%s\n"  % (title, major, university, about))
 			
 			# matches original functionality, not required functionality per epic
-			experiencesQuery = manageDB.getExperiences(userId)
-			experiences = [] if experiencesQuery == -1 else experiencesQuery[0]
-			if experiences:
-				jobTitle = experiences[2]
-				employer = experiences[3]
-				startDate = experiences[4]
-				endDate = experiences[5]
-				location = experiences[6]
-				description = experiences[7]
-			else: 
-				jobTitle = ''
-				employer = ''
-				startDate = ''
-				endDate = ''
-				location = ''
-				description = ''
-				
-			f.write("%s\n%s\n%s\n%s\n%s %s %s %s %s %s\n%s\n=====\n" % (title, major, university, about, jobTitle, employer, startDate, endDate, location, description, education))
+			experiences = manageDB.getExperience(userId)
+			
+			if experiences != -1:
+				for experience in experiences:
+					
+					jobTitle = experience[2]
+					employer = experience[3]
+					startDate = experience[4]
+					endDate = experience[5]
+					location = experience[6]
+					description = experience[7]
+					f.write("%s %s %s %s %s %s\n" % (jobTitle, employer, startDate, endDate, location, description))
 
+			
+
+	
+			f.write("%s\n=====\n" % (education,))
 	f.close()
-
 
 # OUTPUT: MyCollege_users.txt api
 
