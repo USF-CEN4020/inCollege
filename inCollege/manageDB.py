@@ -374,9 +374,8 @@ def checkUserId(username):
   else:
     return -1
 
-def checkExistingJob(title, description, posterId, employer, location, salary):
-  databaseCursor.execute("SELECT * FROM jobs WHERE title= ? AND description= ? AND employer=? AND location=? AND salary=? AND posterId= ?",
-    (title, description, employer, location, salary, posterId))
+def checkExistingJobTitle(title):
+  databaseCursor.execute("SELECT * FROM jobs WHERE title= ?", (title,))
   found = databaseCursor.fetchone()
   if found:
     return found[0]

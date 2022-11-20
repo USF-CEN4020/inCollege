@@ -106,8 +106,9 @@ def newJobsAPI():
                 location = jobInfo2[2]
                 salary = jobInfo2[3]
 
-                if manageDB.checkExistingJob(title, description, posterId, employerName, location, salary) != -1:
-                        continue
+                if manageDB.checkExistingJobTitle(title) != -1:
+                    # only accept new jobs via the API if they have a different title than the jobs already in the system 
+                    continue
                 else:
                     manageDB.initJob(title, description, employerName, location, salary, posterId)
 
