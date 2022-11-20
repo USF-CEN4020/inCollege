@@ -4,7 +4,7 @@ import builtins
 from unittest import mock
 import sqlite3
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, clearProfiles
 from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
 # from inCollege.testFunc import 
 
@@ -90,6 +90,7 @@ def test_setupEnv():
     clearJobs()
     clearApplications()
     clearMessages()
+    clearProfiles()
 
     initTestAccounts()
     initJobs()
