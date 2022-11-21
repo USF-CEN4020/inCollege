@@ -4,7 +4,7 @@ import builtins
 from unittest import mock
 import sqlite3
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, clearProfiles
 from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
 # from inCollege.testFunc import 
 
@@ -90,6 +90,7 @@ def test_setupEnv():
     clearJobs()
     clearApplications()
     clearMessages()
+    clearProfiles()
 
     initTestAccounts()
     initJobs()
@@ -113,7 +114,8 @@ def test_jobInterfaceNotification(capfd, userId):
 @pytest.mark.parametrize('userId', [2, 3, 4, 5])
 def test_lastApp7DaysAgo(capfd, userId):
     for i in range(2, 6):
-        databaseCursor.execute('UPDATE jobApplications SET appliedTimestamp = 9999999999 WHERE userID = ?', (i, ))
+        databaseCursor.execute('UPDATE jobApplications SET appliedTimestamp = 1 WHERE userID = ?', (i, ))
+        databaseCursor.execute('UPDATE users SET accountCreatedTimestamp = -999999999 WHERE id = ?', (i, ))
         database.commit()
     notification = "Remember - you're going to want to have a job when you graduate. Make sure that you start to apply for jobs Today!"
     inputs = iter(['', '', '', ''])
@@ -143,6 +145,7 @@ def test_createProfileNotification(capfd, userId):
     with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
         output, dataOut = loginNotifications(userId)
         out, err = capfd.readouterr()
+        print(out)
         assert True if notification in out else False == True
         
 

@@ -44,7 +44,7 @@ def initTestAccounts():
 
 
 def initTestFriendships():
-	inputs = iter([' ',' ',' ',' ',' ','yes','accept', 'accept', 'yes', 'accept', 'yes', 'accept', 'yes', 'accept'])
+	inputs = iter([' ',' ',' ',' ',' ',' ','yes','accept', 'accept','', 'yes', 'accept','', 'yes', 'accept','', 'yes', 'accept'])
 	
 	with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
 

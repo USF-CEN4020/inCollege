@@ -1,8 +1,10 @@
-from .commons import *
+from inCollege.commons import *
+import inCollege.api as api
 import sqlite3
 import time
 import datetime
 from datetime import datetime
+
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -162,7 +164,7 @@ def clearUserSetting(uId):
   database.commit()
 	
 
-def idLookup(uId):
+def getUserById(uId):
   lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", (uId,))
   return lookup.fetchone()
 
@@ -283,6 +285,39 @@ def initAcct(username, password, firstname, lastname, uni, major, membership):
 
   return newId
 
+def initJob(title, description, employer, location, salary, posterId):
+  databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)", (title, description, employer, location, salary, posterId))
+
+  database.commit()
+
+  return databaseCursor.lastrowid
+
+def initFriendRequest(senderId, receiverId):
+  databaseCursor.execute("INSERT INTO friendships (senderId, receiverId, acceptRequest) VALUES (?, ?, 0)", (senderId, receiverId))
+  database.commit()
+
+def initEmptyProfile(userId):
+    databaseCursor.execute("""
+                INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (userId, " ", " ", " ", " ", " ", " ", " "))
+    database.commit()
+
+def initWorkExperience(userId, title, employer, dateStarted, dateEnded, location, description):
+
+  databaseCursor.execute("""
+                INSERT INTO workExperience (userId, title, employer, dateStarted, dateEnded, location, description) VALUES
+                    (?, ?, ?, ?, ?, ?, ?)
+                """, (userId, title.title(), employer.title(), dateStarted, dateEnded, location.title(), description))
+  database.commit()
+
+def initJob(title, description, employer, location, salary, userId):
+
+  databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)",
+          (title, description, employer, location, salary, userId))
+
+  database.commit()
+
 def checkExistingAccts(username, password):
   '''
   Looks up an account from a username and password
@@ -356,11 +391,27 @@ def checkExistingFriend(userId, friendId):
   else:
     return -1
 
+def getUsersWithLastname(name):
+    return databaseCursor.execute("SELECT * FROM users WHERE lastname IS ?", (name,)).fetchall()
+
+def getUsersWithUniversity(uni):
+    return databaseCursor.execute("SELECT * FROM users WHERE university IS ?", (uni,)).fetchall()
+
+def getUsersWithMajor(major):
+    return databaseCursor.execute("SELECT * FROM users WHERE major IS ?", (major,)).fetchall()
 
 def checkUserId(username):
   databaseCursor.execute("SELECT * FROM users WHERE username= ?", (username,))
   found = databaseCursor.fetchone()
   if found: # return user id
+    return found[0]
+  else:
+    return -1
+
+def checkExistingJobTitle(title):
+  databaseCursor.execute("SELECT * FROM jobs WHERE title= ?", (title,))
+  found = databaseCursor.fetchone()
+  if found:
     return found[0]
   else:
     return -1
@@ -376,6 +427,9 @@ def checkExistingPendingRequest(userId):
   returns: a list of tuples corosponding to rows of the friendships table. Trivially returns an empty list if the user has no incoming friend requests.
   '''
   return databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest = 0 AND receiverId= ?", (userId,)).fetchall()
+
+def queryAllFriendsOf(userId):
+  return databaseCursor.execute("SELECT * FROM friendships WHERE (acceptRequest = 1 AND senderId = ?) OR (acceptRequest = 1 AND receiverId = ?)", (userId, userId)).fetchall()
   
   
 def checkProfileExists(userId):
@@ -444,7 +498,12 @@ def getProfile(userId):
     return -1
 
 
-def queryAllJobs(userId):
+def queryAllProfiles():
+	databaseCursor.execute("SELECT * FROM profiles")
+	return databaseCursor.fetchall()
+
+
+def queryAllJobs():
   databaseCursor.execute("SELECT * FROM jobs")
   return databaseCursor.fetchall()
 
@@ -476,6 +535,10 @@ def querySavedJobs(userId):
                             WHERE jobApplications.userId = ? AND jobApplications.saved = 1''', (userId,))
   return databaseCursor.fetchall()
 
+def queryAllSavedJobs():
+    databaseCursor.execute("SELECT * FROM jobApplications WHERE saved=? ORDER BY userId", (1, ))
+    return databaseCursor.fetchall()
+
 def getApplicationByIds(userId, jobId):
   return databaseCursor.execute("SELECT * FROM jobApplications WHERE userId = ? AND jobId = ?", (userId, jobId)).fetchone()
 
@@ -491,6 +554,10 @@ def toggleSavedJob(userId, jobId):
 
     databaseCursor.execute("UPDATE jobApplications SET saved = ? WHERE userId = ? AND jobId = ?", (savedState, userId, jobId))
     database.commit()
+
+def queryAllApplicationsForJob(jobId):
+    databaseCursor.execute("SELECT * FROM jobApplications WHERE jobId= ? AND appliedTimestamp IS NOT NULL", (jobId,))
+    return databaseCursor.fetchall()
 
 
 def addJobApplication(userId, jobId, gradDate, jobAvailabilityDate, qualifications):
@@ -539,6 +606,8 @@ def deleteJob(jobId):
   databaseCursor.execute("DELETE FROM jobs WHERE jobId = ?", (jobId,))
   database.commit()
 
+  api.jobsAPI()
+
 
 def removeDeletions(userId):
   databaseCursor.execute("DELETE FROM jobApplications WHERE userId = ? AND deleted != ''", (userId,))
@@ -560,6 +629,9 @@ def getAllUsersExcept(userId):
     plus = databaseCursor.execute("SELECT * FROM users WHERE id !=?", (userId,)).fetchall() #return userID
     return plus
 
+def getAllUsers():
+    databaseCursor.execute("SELECT * FROM users")
+    return databaseCursor.fetchall()
 
 def confirmFriendship(senderId, receiverId):
   
@@ -615,3 +687,32 @@ def getTimeAppliedJob(userId):
     else:
       return -1
 
+def getAllUsersBaseInfo():
+	return databaseCursor.execute("SELECT username, firstname, lastname, password FROM users").fetchall()
+
+def getAllJobsInfo():
+  return databaseCursor.execute("SELECT title, description, employer, location, salary FROM jobs").fetchall()
+
+def initOrUpdateUserLanguage(userId, lang):
+
+  if (not acctSettingsInitilized(userId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (userId, 1, 1, 1, lang))
+  else:
+    databaseCursor.execute("UPDATE userSettings SET language = ? WHERE userId = ?", (lang, userId))
+  
+  database.commit()
+
+def initOrUpdateUserControls(userId, email, sms, targetedAds):
+
+  if (not acctSettingsInitilized(userId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (userId, isYes(email), isYes(sms), isYes(targetedAds), "english"))
+    
+  else:
+    databaseCursor.execute('''UPDATE userSettings SET
+                                                    receiveEmail = ?,
+                                                    receiveSMS = ?,
+                                                    targetedAds = ?
+                                                  WHERE
+                                                    userId = ?''', (isYes(email), isYes(sms), isYes(targetedAds), userId)) 
+
+  database.commit()

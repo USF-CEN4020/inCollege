@@ -1,5 +1,6 @@
 from inCollege.commons import *
 from inCollege.manageDB import *
+from inCollege.api import *
 import datetime
 import random
 from datetime import datetime
@@ -53,6 +54,7 @@ def applicationEntry():
 
 # main state
 def mainInterface(asId):
+  usersAPI()
   prompt = "Please select an option below:\n"\
           "\t1. Jobs and Internships\n"\
           "\t2. Find your network\n"\
@@ -155,7 +157,7 @@ def newAcct():
   university = gatherInput("\nEnter your university (if no, enter NONE): \n", "", vacuouslyTrue)
   major = gatherInput("\nEnter your major (if no, enter NONE): \n", "", vacuouslyTrue)
   membership =  gatherInput("\nChoose your membership (Standard or Plus): \n"\
-                            "\n\tStandard Can't send message to stranger."\
+                            "\n\tStandard can't send message to stranger."\
                             "\n\tPlus can send message to everyone."\
                             "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
 
@@ -308,6 +310,8 @@ def jobDetails(asId, job):
     elif sel == 2:
       return applyForJob ,(asId, job[0])
 
+  savedJobsAPI()
+
   return jobInterface, (asId,)
 
 
@@ -332,10 +336,9 @@ def jobPost(asId):
   location = gatherInput("Enter job location: ", "", vacuouslyTrue)
   salary = float(gatherInput("Enter salary (no dollar sign): ", "PLease enter a valid number without a dollar sign", numberValidator))
 
-  databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)",
-          (title, description, employer, location, salary, asId))
+  initJob(title, description, employer, location, salary, asId)
 
-  database.commit()
+  jobsAPI()
 
   return jobInterface, (asId,)
 
@@ -423,8 +426,6 @@ def findPpl(asId):
 # Notifications upon login
 def loginNotifications(asId):
   
-  
-
   pendingRequests = checkExistingPendingRequest(asId)
   
   deletions = queryDeletions(asId)
@@ -449,7 +450,7 @@ def loginNotifications(asId):
   now = datetime.now() #get now time
   timeNowInSec = int(round(now.timestamp())) # convert current time to second
 
-  if ((timeAppliedJob > timeAccountCreated) and (timeAppliedJob != None)): # when time applied job is after time account created
+  if (timeAppliedJob != None): # when time applied job is after time account created
         timeNotApply = timeNowInSec - timeAppliedJob #get time difference 
   else:
         timeNotApply = timeNowInSec - timeAccountCreated
@@ -457,8 +458,6 @@ def loginNotifications(asId):
   dayNotApply = int(abs(timeNotApply) / 86400) #convert to day: 1 day = 86400 sec
   if ((dayNotApply >= 7) and (dayNotApply != None)): # if more than 7 days not applied for a job
     print("Remember - you're going to want to have a job when you graduate. Make sure that you start to apply for jobs Today!")
-  else:
-    print("The time you did not apply for a job in Second(for quick test): ", timeNotApply)
 
   if currMembership == "plus":
     print("Your current membership is Plus. You need to pay $10 per Month.")
@@ -502,8 +501,7 @@ def loginNotifications(asId):
   if userProfile == -1:    
     print("Don't forget to create a profile\n")
 
-    return mainInterface, (asId,)
-    
+  print(userProfile)
     
   if pendingRequests:
     
@@ -582,25 +580,19 @@ def findFriends(asId, sel):
     findLastname = gatherInput("Enter last name: ", "", vacuouslyTrue)
     findLastname.lower()
     print("\n")
-    lastnameCursor =  databaseCursor.execute("SELECT * FROM users WHERE lastname IS ?", (findLastname,))
-    lastnameRows = lastnameCursor.fetchall()
-    rows = lastnameRows
+    rows = getUsersWithLastname(findLastname)
 
   elif sel == '2':
     findUniversity = gatherInput("Enter the University: ", "", vacuouslyTrue)
     findUniversity.lower()
     print("\n")
-    universityCursor =  databaseCursor.execute("SELECT * FROM users WHERE university IS ?", (findUniversity,))
-    universityRows = universityCursor.fetchall()
-    rows = universityRows
+    rows = getUsersWithUniversity(findUniversity)
 
   elif sel == '3':
     findMajor = gatherInput("Enter the major: ", "", vacuouslyTrue)
     findMajor.lower()
     print("\n")
-    majorCursor = databaseCursor.execute("SELECT * FROM users WHERE major IS ?", (findMajor,))
-    majorRows = majorCursor.fetchall()
-    rows = majorRows
+    rows = getUsersWithMajor(findMajor)
 
   if not rows:
     print("No such data in inCollege. Please find other options.\n")
@@ -667,8 +659,8 @@ def requestFriends(asId, selectedUsername, selectedFriendId):
     return findFriendsbyType, (asId,)
 
   elif isAccepted == -1: # not added to the network list
-    databaseCursor.execute("INSERT INTO friendships (acceptRequest, senderId, receiverId) VALUES (?, ?, ?)", (0, asId, selectedFriendId))
-    database.commit() 
+
+    initFriendRequest(asId,  selectedFriendId)
 
     print("Your network request to <", selectedUsername, "> has been sent succesfully.\n")
     print("<", selectedUsername, "> will be added to your network list as soon as they accept your request.\n\n\n")
@@ -679,8 +671,7 @@ def requestFriends(asId, selectedUsername, selectedFriendId):
 def friendsList(asId):
   print("Your Network List: \n")
 
-  friendshipsCursor =  databaseCursor.execute("SELECT * FROM friendships WHERE (acceptRequest = 1 AND senderId = ?) OR (acceptRequest = 1 AND receiverId = ?)", (asId, asId))
-  friendshipsRows = friendshipsCursor.fetchall()
+  friendshipsRows = queryAllFriendsOf(asId) 
 
   friendsKeyList = []
 
@@ -700,19 +691,18 @@ def friendsList(asId):
     friendsList = []
 
     for friendKey in friendsKeyList:
-      friendsCursor = databaseCursor.execute("SELECT * FROM users WHERE id = ?", (friendKey,))
-      friendsRows = friendsCursor.fetchall()
 
-      for friend in friendsRows:
-        friendsList.append([friend[0], friend[1]]) # contain key and username 
-        count += 1
-        print(count)
-        print("Username  : ", friend[1])
-        print("Firstname : ", friend[3])
-        print("Lastname  : ", friend[4])
-        print("University: ", friend[5])
-        print("Major     : ", friend[6])
-        print("\n")
+      friend = getUserById(friendKey)
+
+      friendsList.append([friend[0], friend[1]]) # contain key and username 
+      count += 1
+      print(count)
+      print("Username  : ", friend[1])
+      print("Firstname : ", friend[3])
+      print("Lastname  : ", friend[4])
+      print("University: ", friend[5])
+      print("Major     : ", friend[6])
+      print("\n")
 
     print("\n")
 
@@ -983,19 +973,7 @@ def guestControls(asId):
                       "Please enter either \"yes\" or \"no\".",
                       binaryOptionValidatorBuilder("yes", "no"))
 
-  if (not acctSettingsInitilized(asId)):
-    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (asId, isYes(email), isYes(sms), isYes(targetedAds), "english"))
-    
-  else:
-    databaseCursor.execute('''UPDATE userSettings SET
-                                                    receiveEmail = ?,
-                                                    receiveSMS = ?,
-                                                    targetedAds = ?
-                                                  WHERE
-                                                    userId = ?''', (isYes(email), isYes(sms), isYes(targetedAds), asId)) 
-
-  database.commit()
-
+  initOrUpdateUserControls(asId, email, sms, targetedAds)
   clear()
   return privacyPolicy, (asId,)
 
@@ -1056,12 +1034,8 @@ def setLanguage(asId):
                       "Only English and Spanish are available at this time.",
                       binaryOptionValidatorBuilder("english", "spanish")).lower()
 
-  if (not acctSettingsInitilized(asId)):
-    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (asId, 1, 1, 1, lang))
-  else:
-    databaseCursor.execute("UPDATE userSettings SET language = ? WHERE userId = ?", (lang, asId))
-  
-  database.commit()
+  initOrUpdateUserLanguage(asId, lang)
+
 
   clear()
   return languages, (asId,)
@@ -1105,7 +1079,7 @@ def generalLinks(asId):
   elif sel == 5 or sel == 6 or sel == 7:
     clear()
     
-    return underConstruction(asId, generalLinks)
+    return underConstruction, (asId, generalLinks)
 
   elif sel == 8:
     clear()
@@ -1146,11 +1120,7 @@ def myProfile(asId):
     print("\n")
 
   else:
-    databaseCursor.execute("""
-                INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?)
-                """, (asId, " ", " ", " ", " ", " ", " ", " "))
-    database.commit()
+    initEmptyProfile(asId)
   prompt = ("Please select one of the following to update:\n"\
         "\t1. Title\n"\
         "\t2. Major\n"\
@@ -1198,7 +1168,8 @@ def updateProfileSimple(asId, sel):
     field = "about"
     value = input("About Me: ")
   updateDB(table, field, asId, value)
-  
+  profilesAPI()
+
   clear()
   return myProfile, (asId, )
 
@@ -1217,12 +1188,11 @@ def myWorkExperience(asId):
   location = input("Location (i.e. Tampa, FL): ")
   description = input("Description: ")
   
-  databaseCursor.execute("""
-                INSERT INTO workExperience (userId, title, employer, dateStarted, dateEnded, location, description) VALUES
-                    (?, ?, ?, ?, ?, ?, ?)
-                """, (asId, title.title(), employer.title(), dateStarted, dateEnded, location.title(), description))
-  database.commit()
   
+  initWorkExperience(asId, title, employer, dateStarted, dateEnded, location, description)
+
+  profilesAPI()
+
   clear()
   return myProfile, (asId, )
 
@@ -1234,6 +1204,9 @@ def myEducation(asId):
   updateDB("profiles", "school", asId, school.title())
   updateDB("profiles", "degree", asId, degree.title())
   updateDB("profiles", "years", asId, years)
+
+  profilesAPI()
+
   clear()
   return myProfile, (asId, )
 
