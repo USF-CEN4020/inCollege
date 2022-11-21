@@ -6,6 +6,8 @@ from inCollege.commons import *
 from inCollege.states import *
 from inCollege.manageDB import *
 
+database = sqlite3.connect("inCollege.db")
+databaseCursor = database.cursor()
 
 # ==================================================================================
 # ==================================================================================
@@ -101,22 +103,34 @@ def test_jobPost(title, description, employer, location, salary, posterID, resul
 # testing whether the user can look up the existing first and last name
 # and the extended account creation function
 
-clearUsers()
+def initTestAccounts():
+	accounts = [
+    ('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
+    ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce', 'standard'),
+    ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs', 'plus'),
+    ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE', 'standard'),
+    ('test5', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
+	]
+	for account in accounts:
+		inputs = iter(account)
+		with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+			newAcct()
+
 
 @pytest.mark.extendedAccountCreation
-@pytest.mark.parametrize('username, password, firstname, lastname, university, major, membership, result',
+@pytest.mark.parametrize('username, password, result',
                         [
-                          ('test1', 'aaaaaaa!A1', 'first', 'last', 'NONE', 'NONE', 'plus', 1),
-                          ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'NONE', 'NONE', 'plus', 2),
-                          ('test3', 'aaaaaaa!A1', 'f', 'l', 'NONE', 'NONE', 'plus', 3),
-                          ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE', 'plus', 4)
+                          ('test1', 'aaaaaaa!A1', 1),
+                          ('test2', 'aaaaaaa!A1', 2),
+                          ('test3', 'aaaaaaa!A1', 3),
+                          ('test4', 'aaaaaaa!A1', 4)
                         ]
                         )
-def test_extendedAccountCreation(username, password, firstname, lastname, university, major, membership, result):
-  inputs = iter([username, password, firstname, lastname, university, major, membership])
-  with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
-    state, data = newAcct() 
-    assert checkExistingAccts(username, password) == result
+def test_extendedAccountCreation(username, password, result):
+  clearUsers()
+  initTestAccounts()
+  assert checkExistingAccts(username, password) == result
+
 
 @pytest.mark.userLookup
 @pytest.mark.parametrize('firstname, lastname, result',

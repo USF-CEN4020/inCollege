@@ -4,9 +4,10 @@ import builtins
 from unittest import mock
 import sqlite3
 
-from inCollege.manageDB import clearUsers, unique, clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, clearProfiles
-from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
+from inCollege.manageDB import unique, clearUsers, checkExistingAccts
+from inCollege.states import newAcct
 from inCollege.testFunc import *
+from inCollege.commons import passwordValidator
 
 database = sqlite3.connect("inCollege.db")
 databaseCursor = database.cursor()
@@ -40,9 +41,6 @@ def initTestAccounts():
 		with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
 			newAcct()
 
-clearUsers()
-initTestAccounts()
-
 '''
   Story: Account Creation
   - Username is unique
@@ -59,6 +57,8 @@ initTestAccounts()
                         ]
 )
 def test_usernameUnique(username, result):
+  clearUsers()
+  initTestAccounts()
   output = unique(username)
   assert output == result
 
