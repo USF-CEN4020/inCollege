@@ -2,7 +2,6 @@ from os.path import exists
 import os.path
 
 import inCollege.manageDB as manageDB
-#from inCollege.manageDB.import clearUsers, initAcct, dbFull, unique, checkExistingUsername, checkUserId, jobsFull, checkExistingJob, getJobById, checkUsername
 from inCollege.commons import passwordValidator
 
 
@@ -14,7 +13,6 @@ from inCollege.commons import passwordValidator
 # If the maximum number of student accounts, 10 is reached, then no more student accounts will be created. 
 # Each student account information will be separated by a line with "=====".
 def studentAccountsAPI():
-    manageDB.clearUsers()
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "studentAccounts.txt")
     fileExists = exists(txtFilePath)
@@ -65,7 +63,6 @@ def studentAccountsAPI():
 # If the maximum number of jobs, 10 is reached, then no more job notices will be created. 
 # Each job listing will be separated by a line with "====="
 def newJobsAPI():
-    manageDB.clearJobs()
     absPath = os.path.abspath(os.path.dirname(__file__))
     txtFilePath = os.path.join(absPath, "api", "newJobs.txt")
     fileExists = exists(txtFilePath)
