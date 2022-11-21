@@ -84,7 +84,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS profiles(
                             about TEXT,
                             school TEXT,
                             degree TEXT,
-                            years TEXT)''')
+                            years TEXT,
+                            FOREIGN KEY(userId) REFERENCES users(id))''')
 database.commit()
 
 
@@ -96,7 +97,8 @@ databaseCursor.execute('''CREATE TABLE IF NOT EXISTS workExperience (
                             dateStarted TEXT,
                             dateEnded TEXT,
                             location TEXT,
-                            description TEXT)''')
+                            description TEXT,
+                            FOREIGN KEY(id) REFERENCES users(id))''')
 database.commit()
 
 
