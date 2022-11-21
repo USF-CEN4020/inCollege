@@ -96,7 +96,7 @@ def newJobsAPI():
                 description = jobInfo1[1]
                 posterName = jobInfo2[0]
                 if manageDB.checkExistingUsername(posterName) != -1:  # check if username/posterName exists
-                    posterId = manageDB.checkUserId(posterName) # convert posterName to according posterId
+                    posterId = manageDB.checkUserId(posterName) # convert posterName to posterId
                 else: 
                     continue
                 employerName = jobInfo2[1]

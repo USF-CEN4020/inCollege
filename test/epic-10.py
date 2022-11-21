@@ -356,33 +356,33 @@ def test_savedJobs():
 
 
 def test_newJobAPI():
-    
-	clearUsers()
-	
-	initTestAccounts()
+
+	clearJobs()
 
 	apiInputFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "newJobs.txt")
 
 	inputFile = open(apiInputFilePath, "w")
 	
 	initialJobs = [
-		('title1',
-		'description1 &&&',
-		'tester1',
-		'employerName1',
-		'location1',
-		'111')
+		("title1", "description1 &&&", "test1", "employerName1", "location1", 11111.0),
+		("title2", "description2 &&&", "test2", "employerName2", "location2", 22222.0),
+		("title3", "description3 &&&", "test3", "employerName3", "location3", 33333.0),
+		("title4", "description4 &&&", "test4", "employerName4", "location4", 44444.0),
+		("title5", "description5 &&&", "test5", "employerName5", "location5", 55555.0)
 	]
 
-	
-
-	for jobs in initialJobs:
-		inputFile.write("{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n=====\n".format(jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5]))
-	
 	expectedJobs = [
-		
+		("title1", "description1 ", "employerName1", "location1", 11111.0),
+		("title2", "description2 ", "employerName2", "location2", 22222.0),
+		("title3", "description3 ", "employerName3", "location3", 33333.0),
+		("title4", "description4 ", "employerName4", "location4", 44444.0),
+		("title5", "description5 ", "employerName5", "location5", 55555.0)
 	]
+	
 
+	for job in initialJobs:
+		inputFile.write("{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n=====\n".format(job[0], job[1], job[2], job[3], job[4], job[5]))
+	
 	inputFile.close()
 
 	newJobsAPI()
