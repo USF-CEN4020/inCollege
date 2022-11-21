@@ -1,6 +1,4 @@
-cs stuff self FL 99999.0
+developer job description employerName location salary
 =====
-it stuff self FL 99999.0
-=====
-aa stuff self FL 99999.0
+SWE senior hello google tampa, fl 100000.0
 =====

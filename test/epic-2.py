@@ -2,8 +2,8 @@ import pytest
 import builtins
 from unittest import mock
 import sqlite3
-from commons import *
-from inCollege.states.baseStates import *
+from inCollege.commons import *
+from inCollege.states import *
 from inCollege.manageDB import *
 
 
@@ -29,7 +29,7 @@ from inCollege.manageDB import *
 @pytest.mark.backtracking
 def test_mainInterfaceTrue():
   state = applicationEntry
-  with mock.patch.object(builtins, 'input', lambda _: '4'):
+  with mock.patch.object(builtins, 'input', lambda _: '8'):
     output, dataOut = mainInterface(-1)
     assert output == state
     
@@ -43,7 +43,7 @@ def test_mainInterfaceFalse():
 @pytest.mark.backtracking
 def test_jobInterfaceTrue():
   state = mainInterface
-  with mock.patch.object(builtins, 'input', lambda _: '3'):
+  with mock.patch.object(builtins, 'input', lambda _: '4'):
     output, dataOut = jobInterface(-1)
     assert output == state
     
@@ -84,7 +84,12 @@ clearJobs()
                            ('CS', 'stuff', 'Company4', 'Tampa, FL', '100000', '2', False),
                            ('ME', 'stuff', 'Company4', 'Tampa, FL', '100000', '3', False),
                            ('EE', 'stuff', 'Company4', 'Tampa, FL', '100000', '4', False),
-                           ('BIO', 'stuff', 'Company4', 'Tampa, FL', '100000', '5', True)
+                           ('BIO', 'stuff', 'Company4', 'Tampa, FL', '100000', '5', False),
+                           ('C', 'stuff', 'Company4', 'Tampa, FL', '100000', '1', False),
+                           ('CC', 'stuff', 'Company4', 'Tampa, FL', '100000', '2', False),
+                           ('M', 'stuff', 'Company4', 'Tampa, FL', '100000', '3', False),
+                           ('E', 'stuff', 'Company4', 'Tampa, FL', '100000', '4', False),
+                           ('B', 'stuff', 'Company4', 'Tampa, FL', '100000', '5', True)
                          ]
 )
 def test_jobPost(title, description, employer, location, salary, posterID, result):
@@ -99,16 +104,16 @@ def test_jobPost(title, description, employer, location, salary, posterID, resul
 clearUsers()
 
 @pytest.mark.extendedAccountCreation
-@pytest.mark.parametrize('username, password, firstname, lastname, result',
+@pytest.mark.parametrize('username, password, firstname, lastname, university, major, membership, result',
                         [
-                          ('test1', 'aaaaaaa!A1', 'first', 'last', 1),
-                          ('test2', 'aaaaaaa!A1', 'fname', 'lname', 2),
-                          ('test3', 'aaaaaaa!A1', 'f', 'l', 3),
-                          ('test4', 'aaaaaaa!A1', 'fff', 'lll', 4)
+                          ('test1', 'aaaaaaa!A1', 'first', 'last', 'NONE', 'NONE', 'plus', 1),
+                          ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'NONE', 'NONE', 'plus', 2),
+                          ('test3', 'aaaaaaa!A1', 'f', 'l', 'NONE', 'NONE', 'plus', 3),
+                          ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE', 'plus', 4)
                         ]
                         )
-def test_extendedAccountCreation(username, password, firstname, lastname, result):
-  inputs = iter([username, password, firstname, lastname])
+def test_extendedAccountCreation(username, password, firstname, lastname, university, major, membership, result):
+  inputs = iter([username, password, firstname, lastname, university, major, membership])
   with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
     state, data = newAcct() 
     assert checkExistingAccts(username, password) == result
