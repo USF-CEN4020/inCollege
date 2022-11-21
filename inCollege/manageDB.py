@@ -164,7 +164,7 @@ def clearUserSetting(uId):
   database.commit()
 	
 
-def idLookup(uId):
+def getUserById(uId):
   lookup = databaseCursor.execute("SELECT * FROM users WHERE id IS ?", (uId,))
   return lookup.fetchone()
 
@@ -292,6 +292,32 @@ def initJob(title, description, employer, location, salary, posterId):
 
   return databaseCursor.lastrowid
 
+def initFriendRequest(senderId, receiverId):
+  databaseCursor.execute("INSERT INTO friendships (senderId, receiverId, acceptRequest) VALUES (?, ?, 0)", (senderId, receiverId))
+  database.commit()
+
+def initEmptyProfile(userId):
+    databaseCursor.execute("""
+                INSERT INTO profiles (userId, title, major, university, about, school, degree, years) VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (userId, " ", " ", " ", " ", " ", " ", " "))
+    database.commit()
+
+def initWorkExperience(userId, title, employer, dateStarted, dateEnded, location, description):
+
+  databaseCursor.execute("""
+                INSERT INTO workExperience (userId, title, employer, dateStarted, dateEnded, location, description) VALUES
+                    (?, ?, ?, ?, ?, ?, ?)
+                """, (userId, title.title(), employer.title(), dateStarted, dateEnded, location.title(), description))
+  database.commit()
+
+def initJob(title, description, employer, location, salary, userId):
+
+  databaseCursor.execute("INSERT INTO jobs (title, description, employer, location, salary, posterID) VALUES (?,?,?,?,?,?)",
+          (title, description, employer, location, salary, userId))
+
+  database.commit()
+
 def checkExistingAccts(username, password):
   '''
   Looks up an account from a username and password
@@ -365,6 +391,14 @@ def checkExistingFriend(userId, friendId):
   else:
     return -1
 
+def getUsersWithLastname(name):
+    return databaseCursor.execute("SELECT * FROM users WHERE lastname IS ?", (name,)).fetchall()
+
+def getUsersWithUniversity(uni):
+    return databaseCursor.execute("SELECT * FROM users WHERE university IS ?", (uni,)).fetchall()
+
+def getUsersWithMajor(major):
+    return databaseCursor.execute("SELECT * FROM users WHERE major IS ?", (major,)).fetchall()
 
 def checkUserId(username):
   databaseCursor.execute("SELECT * FROM users WHERE username= ?", (username,))
@@ -393,6 +427,9 @@ def checkExistingPendingRequest(userId):
   returns: a list of tuples corosponding to rows of the friendships table. Trivially returns an empty list if the user has no incoming friend requests.
   '''
   return databaseCursor.execute("SELECT * FROM friendships WHERE acceptRequest = 0 AND receiverId= ?", (userId,)).fetchall()
+
+def queryAllFriendsOf(userId):
+  return databaseCursor.execute("SELECT * FROM friendships WHERE (acceptRequest = 1 AND senderId = ?) OR (acceptRequest = 1 AND receiverId = ?)", (userId, userId)).fetchall()
   
   
 def checkProfileExists(userId):
@@ -652,3 +689,27 @@ def getTimeAppliedJob(userId):
 
 def getAllUsersBaseInfo():
 	return databaseCursor.execute("SELECT username, firstname, lastname, password FROM users").fetchall()
+
+def initOrUpdateUserLanguage(userId, lang):
+
+  if (not acctSettingsInitilized(userId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (userId, 1, 1, 1, lang))
+  else:
+    databaseCursor.execute("UPDATE userSettings SET language = ? WHERE userId = ?", (lang, userId))
+  
+  database.commit()
+
+def initOrUpdateUserControls(userId, email, sms, targetedAds):
+
+  if (not acctSettingsInitilized(userId)):
+    databaseCursor.execute("INSERT INTO userSettings (userId, receiveEmail, receiveSMS, targetedAds,language) VALUES (?, ?, ?, ?, ?)", (userId, isYes(email), isYes(sms), isYes(targetedAds), "english"))
+    
+  else:
+    databaseCursor.execute('''UPDATE userSettings SET
+                                                    receiveEmail = ?,
+                                                    receiveSMS = ?,
+                                                    targetedAds = ?
+                                                  WHERE
+                                                    userId = ?''', (isYes(email), isYes(sms), isYes(targetedAds), userId)) 
+
+  database.commit()
