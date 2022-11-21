@@ -1,29 +1,15 @@
 import pytest
+import sys
+import builtins
+from unittest import mock
 import sqlite3
-from inCollege.commons import *
+
+from inCollege.manageDB import clearUsers, unique, clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, clearProfiles
+from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface
 from inCollege.testFunc import *
 
-
-
-@pytest.fixture(scope='module')
-def setupDatabase():
-  print("-----INSERT TO A DB-----\n")
-  database = sqlite3.connect("inCollege.db")
-  databaseCursor = database.cursor()
-  # databaseCursor.execute('''CREATE TABLE users(
-  #                           id INTEGER PRIMARY KEY ASC, 
-  #                           username TEXT, 
-  #                           password TEXT)''')
-  sampleAccounts = [
-        (1, 'test1', 'aaaaaaa!A1', 'first', 'last', 1),
-        (2, 'test2', 'aaaaaaa!A1', 'fname', 'lname', 2),
-        (3, 'test3', 'aaaaaaa!A1', 'f', 'l', 3),
-  ]                         
-  databaseCursor.executemany('''INSERT INTO users VALUES (?, ?, ?, ?, ?)''', sampleAccounts)
-  database.commit()
-  databaseCursor.execute("SELECT Count(*) FROM users")
-  yield database
-  database.close()
+database = sqlite3.connect("inCollege.db")
+databaseCursor = database.cursor()
 
 # ==================================================================================
 # ==================================================================================
@@ -40,6 +26,22 @@ def setupDatabase():
 
 # ==================================================================================
 # ==================================================================================
+
+def initTestAccounts():
+	accounts = [
+    ('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
+    ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce', 'standard'),
+    ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs', 'plus'),
+    ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE', 'standard'),
+    ('test5', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
+	]
+	for account in accounts:
+		inputs = iter(account)
+		with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
+			newAcct()
+
+clearUsers()
+initTestAccounts()
 
 '''
   Story: Account Creation
@@ -58,8 +60,8 @@ def setupDatabase():
 )
 def test_usernameUnique(username, result):
   output = unique(username)
-  print('Output = ' + str(output))
   assert output == result
+
 
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('password, result',
@@ -75,14 +77,15 @@ def test_usernameUnique(username, result):
 def test_passwordValidation(password, result):
   assert passwordValidator(password) == result
 
+
 @pytest.mark.accountCreation
 @pytest.mark.parametrize('username, password, result',
-                         [
-                           ('test1', 'aaaaaaa!A1', -1), # user exists
-                           ('test2', 'aaaaaaa!A1', -1), # user exists
-                           ('test3', 'aaaaaaa!A1', -1), # user exists
-                           ('test', 'aaaaaaa!A1', -1) # No such user
-                         ]
+                        [
+                          ('test1', 'aaaaaaa!A1', -1), # user exists
+                          ('test2', 'aaaaaaa!A1', -1), # user exists
+                          ('test3', 'aaaaaaa!A1', -1), # user exists
+                          ('test', 'aaaaaaa!A1', -1) # No such user
+                        ]
 )
 def test_checkUsernameSaved(username, password, result):
   if username == 'test':
@@ -136,6 +139,7 @@ def test_loginStatus(username, password, result):
 def test_stateMainInterface(username, password, result):
   assert stateMainInterface(username, password) == result
 
+
 @pytest.mark.userOptions
 @pytest.mark.parametrize('sel, result',
                         [
@@ -168,6 +172,7 @@ def test_listOptions(sel, result):
 )
 def test_skillsOptions(sel, result):
    assert listSkillsOptions(sel) == result
+
 
 '''
   Story: Under Construction

@@ -1,10 +1,8 @@
-ce stuff
-
-on another line self FL 99999.0
+ce stuff self FL 99999.0
 =====
-cs stuff self FL 99999.0
+ce stuff self FL 99999.0
 =====
-it stuff self FL 99999.0
+ce stuff self FL 99999.0
 =====
-aa stuff self FL 99999.0
+ce stuff self FL 99999.0
 =====
