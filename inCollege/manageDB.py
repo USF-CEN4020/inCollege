@@ -690,6 +690,9 @@ def getTimeAppliedJob(userId):
 def getAllUsersBaseInfo():
 	return databaseCursor.execute("SELECT username, firstname, lastname, password FROM users").fetchall()
 
+def getAllJobsInfo():
+  return databaseCursor.execute("SELECT title, description, employer, location, salary FROM jobs").fetchall()
+
 def initOrUpdateUserLanguage(userId, lang):
 
   if (not acctSettingsInitilized(userId)):

@@ -161,6 +161,7 @@ def newAcct():
                             "\n\tPlus can send message to everyone."\
                             "\nEnter your membership choice (standard or plus): ", "", vacuouslyTrue)
 
+
   clear()
 
   return mainInterface, (initAcct(username, password, firstname, lastname, university, major, membership),)
@@ -449,7 +450,7 @@ def loginNotifications(asId):
   now = datetime.now() #get now time
   timeNowInSec = int(round(now.timestamp())) # convert current time to second
 
-  if ((timeAppliedJob > timeAccountCreated) and (timeAppliedJob != None)): # when time applied job is after time account created
+  if (timeAppliedJob != None): # when time applied job is after time account created
         timeNotApply = timeNowInSec - timeAppliedJob #get time difference 
   else:
         timeNotApply = timeNowInSec - timeAccountCreated
@@ -1410,5 +1411,5 @@ def stateLoop(state):
 
 if (__name__ == "__main__"):
   print("Welcome to InCollege!\n")
-
+	
   stateLoop(applicationEntry)

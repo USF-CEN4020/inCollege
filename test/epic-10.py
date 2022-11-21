@@ -6,10 +6,10 @@ import sqlite3
 import os.path
 import os
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllUsersBaseInfo, deleteJob, clearProfiles, removeWorkExperience
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllJobsInfo, getAllUsersBaseInfo, deleteJob, clearProfiles, removeWorkExperience, toggleSavedJob
 
 from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface, updateProfileSimple, myWorkExperience, myEducation, myProfile
-from inCollege.api import usersAPI, studentAccountsAPI, jobsAPI
+from inCollege.api import usersAPI, studentAccountsAPI, jobsAPI, newJobsAPI, profilesAPI, savedJobsAPI, appliedJobsAPI
 # from inCollege.testFunc import 
 
 database = sqlite3.connect("inCollege.db")
@@ -58,6 +58,8 @@ def initApplications():
         inputs = iter(app)
         with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
             applyForJob(userId, jobId)
+			#toggleSavedJob(userId, jobId)
+
         userId = userId + 1 if userId != 5 else 2
         jobId = jobId + 1
         
@@ -266,3 +268,125 @@ def test_profilesOutAPI():
 	outputFile.close()
 
 	assert expectedLines == outputLines
+
+
+def test_appliedJobs():
+	clearUsers()
+	clearJobs()
+	clearApplications()
+	
+	initTestAccounts()
+	initJobs()
+	initApplications()
+
+
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_appliedJobs.txt")
+
+	if os.path.exists(apiFilePath):
+		os.remove(apiFilePath)
+
+	appliedJobsAPI()
+
+	expectedLines = [
+		'ce\n',
+		'test3 - because\n',
+		'=====\n',
+		'cs\n',
+		'test4 - because\n',
+		'=====\n',
+		'it\n',
+		'test5 - because\n',
+		'=====\n',
+		'aa\n',
+		'test2 - because\n',
+		'=====\n'
+	]
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
+
+
+def test_savedJobs():
+	clearUsers()
+	clearJobs()
+	clearApplications()
+
+	initTestAccounts()
+	initJobs()
+	initApplications()
+
+
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_savedJobs.txt")
+
+	if os.path.exists(apiFilePath):
+		os.remove(apiFilePath)
+
+	toggleSavedJob(3,1)
+	toggleSavedJob(4,2)
+	toggleSavedJob(5,3)
+	toggleSavedJob(2,4)
+
+	savedJobsAPI()
+
+	expectedLines = [
+		'aa test2\n',
+		'=====\n',
+		'ce test3\n',
+		'=====\n',
+		'cs test4\n',
+		'=====\n',
+		'it test5\n',
+		'=====\n',
+	]
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
+
+
+def test_newJobAPI():
+
+	clearJobs()
+
+	apiInputFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "newJobs.txt")
+
+	inputFile = open(apiInputFilePath, "w")
+	
+	initialJobs = [
+		("title1", "description1 &&&", "test1", "employerName1", "location1", 11111.0),
+		("title2", "description2 &&&", "test2", "employerName2", "location2", 22222.0),
+		("title3", "description3 &&&", "test3", "employerName3", "location3", 33333.0),
+		("title4", "description4 &&&", "test4", "employerName4", "location4", 44444.0),
+		("title5", "description5 &&&", "test5", "employerName5", "location5", 55555.0)
+	]
+
+	expectedJobs = [
+		("title1", "description1 ", "employerName1", "location1", 11111.0),
+		("title2", "description2 ", "employerName2", "location2", 22222.0),
+		("title3", "description3 ", "employerName3", "location3", 33333.0),
+		("title4", "description4 ", "employerName4", "location4", 44444.0),
+		("title5", "description5 ", "employerName5", "location5", 55555.0)
+	]
+	
+
+	for job in initialJobs:
+		inputFile.write("{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n=====\n".format(job[0], job[1], job[2], job[3], job[4], job[5]))
+	
+	inputFile.close()
+
+	newJobsAPI()
+
+	obtainedJobs = getAllJobsInfo()
+
+	assert obtainedJobs == expectedJobs

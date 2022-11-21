@@ -8,7 +8,7 @@ import sqlite3
 from inCollege.manageDB import *
 from inCollege.testFunc import *
 from inCollege.manageDB import clearFriendships, clearUsers, friendshipsCount
-from inCollege.states import friendsList, mainInterface, myEducation, newAcct, friendsProfileView, myProfile, findFriends, requestFriends, pendingRequest, myWorkExperience, updateProfileSimple
+from inCollege.states import friendsList, mainInterface, myEducation, newAcct, friendsProfileView, myProfile, findFriends, requestFriends, myWorkExperience, updateProfileSimple, handleFriendRequests
 
 
 # ==================================================================================
@@ -28,11 +28,11 @@ from inCollege.states import friendsList, mainInterface, myEducation, newAcct, f
 # ==================================================================================
 def initTestAccounts():
     accounts = [
-        ('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs'),
-        ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce'),
-        ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs'),
-        ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE'),
-        ('test5', 'aaaaaaa!A1', 'firstname', 'lastname', 'usf', 'cse')
+        ('test1', 'aaaaaaa!A1', 'first', 'last', 'usf', 'cs', 'plus'),
+        ('test2', 'aaaaaaa!A1', 'fname', 'lname', 'usf', 'ce', 'standard'),
+        ('test3', 'aaaaaaa!A1', 'f', 'l', 'hcc', 'cs', 'plus'),
+        ('test4', 'aaaaaaa!A1', 'fff', 'lll', 'NONE', 'NONE', 'standard'),
+        ('test5', 'aaaaaaa!A1', 'firstname', 'lastname', 'usf', 'cse', 'plus')
 	]
     for account in accounts:
         inputs = iter(account)
@@ -71,7 +71,6 @@ def test_jobExperience(asId, title, employer, dateStarted, dateEnded, location, 
                         ('4', updateProfileSimple),
                         ('5', myWorkExperience),
                         ('6', myEducation)])
-
 def test_myProfile(select, result):
 
     clearUsers()
@@ -134,26 +133,22 @@ def initDummyProfile(asId):
                             [
                                 (True, friendsProfileView),
                                 (False, mainInterface)
-                            ]
-)
-
+                            ])
 def test_friendsProfileView(shouldHaveProfile, result):
 
     clearUsers()
     clearFriendships()
     clearProfiles()
-
     initTestAccounts()
-
-
 
     if (shouldHaveProfile):
         initDummyProfile(2)
 
-    inputs = iter([' ','yes',' ', '1','test2',' '])
+    inputs = iter([' ', 'accept', 'yes',' ', '1','test2',' '])
     with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
         requestFriends(1, 'test2', 2) # hard-coded friend request from test1 to test2
-        pendingRequest(2)
+        pendingRequests = checkExistingPendingRequest(2) # get friend requests from database
+        handleFriendRequests(2, pendingRequests)
         state, data = friendsList(1)
         assert state == result
 
