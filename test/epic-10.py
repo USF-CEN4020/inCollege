@@ -6,10 +6,10 @@ import sqlite3
 import os.path
 import os
 
-from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllUsersBaseInfo, deleteJob, clearProfiles, removeWorkExperience
+from inCollege.manageDB import 	clearJobs, clearApplications, clearUsers, clearMessages, queryNewJobsAndUpdate, getAllJobsInfo, getAllUsersBaseInfo, deleteJob, clearProfiles, removeWorkExperience, toggleSavedJob
 
 from inCollege.states import deleteJobPosting, jobPost, applyForJob, jobInterface, loginNotifications, newAcct, sendMessageInterface, updateProfileSimple, myWorkExperience, myEducation, myProfile
-from inCollege.api import usersAPI, studentAccountsAPI, jobsAPI
+from inCollege.api import usersAPI, studentAccountsAPI, jobsAPI, newJobsAPI, profilesAPI, savedJobsAPI, appliedJobsAPI
 # from inCollege.testFunc import 
 
 database = sqlite3.connect("inCollege.db")
@@ -58,6 +58,8 @@ def initApplications():
         inputs = iter(app)
         with mock.patch.object(builtins, 'input', lambda _: next(inputs)):
             applyForJob(userId, jobId)
+			#toggleSavedJob(userId, jobId)
+
         userId = userId + 1 if userId != 5 else 2
         jobId = jobId + 1
         
@@ -266,3 +268,125 @@ def test_profilesOutAPI():
 	outputFile.close()
 
 	assert expectedLines == outputLines
+
+
+def test_appliedJobs():
+	clearUsers()
+	clearJobs()
+	clearApplications()
+	
+	initTestAccounts()
+	initJobs()
+	initApplications()
+
+
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_appliedJobs.txt")
+
+	if os.path.exists(apiFilePath):
+		os.remove(apiFilePath)
+
+	appliedJobsAPI()
+
+	expectedLines = [
+		'ce\n',
+		'test3 - because\n',
+		'=====\n',
+		'cs\n',
+		'test4 - because\n',
+		'=====\n',
+		'it\n',
+		'test5 - because\n',
+		'=====\n',
+		'aa\n',
+		'test2 - because\n',
+		'=====\n'
+	]
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
+
+
+def test_savedJobs():
+	clearUsers()
+	clearJobs()
+	clearApplications()
+
+	initTestAccounts()
+	initJobs()
+	initApplications()
+
+
+	apiFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "MyCollege_savedJobs.txt")
+
+	if os.path.exists(apiFilePath):
+		os.remove(apiFilePath)
+
+	toggleSavedJob(3,1)
+	toggleSavedJob(4,2)
+	toggleSavedJob(5,3)
+	toggleSavedJob(2,4)
+
+	savedJobsAPI()
+
+	expectedLines = [
+		'aa test2\n',
+		'=====\n',
+		'ce test3\n',
+		'=====\n',
+		'cs test4\n',
+		'=====\n',
+		'it test5\n',
+		'=====\n',
+	]
+
+	assert os.path.exists(apiFilePath)
+
+	outputFile = open(apiFilePath, "r")
+
+	outputLines = outputFile.readlines()
+	outputFile.close()
+
+	assert expectedLines == outputLines
+
+
+def test_newJobAPI():
+    
+	clearUsers()
+	
+	initTestAccounts()
+
+	apiInputFilePath = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "inCollege", "api", "newJobs.txt")
+
+	inputFile = open(apiInputFilePath, "w")
+	
+	initialJobs = [
+		('title1',
+		'description1 &&&',
+		'tester1',
+		'employerName1',
+		'location1',
+		'111')
+	]
+
+	
+
+	for jobs in initialJobs:
+		inputFile.write("{0}\n{1}\n{2}\n{3}\n{4}\n{5}\n=====\n".format(jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5]))
+	
+	expectedJobs = [
+		
+	]
+
+	inputFile.close()
+
+	newJobsAPI()
+
+	obtainedJobs = getAllJobsInfo()
+
+	assert obtainedJobs == expectedJobs
